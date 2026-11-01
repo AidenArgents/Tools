@@ -1679,29 +1679,49 @@
           20
         ],
         [
+          "汇率(￥/USD)",
+          "rate",
+          6.7
+        ],
+        [
           "佣金(%)",
           "comm",
           15
         ],
         [
-          "退款预估(%)",
+          "退款率(%)",
           "refund",
           0
         ],
         [
-          "汇损预估(%)",
+          "汇损(%)",
           "fxloss",
           0
         ],
         [
-          "税费预估(%)",
-          "tax",
+          "达人(%)",
+          "inf",
           0
         ],
         [
-          "汇率(￥/USD)",
-          "rate",
-          6.7
+          "平台包邮(%)",
+          "shipSub",
+          0
+        ],
+        [
+          "VAT(%)",
+          "vat",
+          0
+        ],
+        [
+          "订单处理费(USD/单)",
+          "orderFee",
+          0
+        ],
+        [
+          "中国企业所得税(%)",
+          "cit",
+          5
         ],
         [
           "打包杂费(￥/单)",
@@ -1746,7 +1766,7 @@
   "defaultChannel": "wfsSea",
   "commissionFavorites": []
 }
-  </script>
+</script>
   <script id="pricing-code">
     const DEFAULT_CONFIG = JSON.parse(document.getElementById('pricing-defaults').textContent);
     const SETTINGS_KEY = 'pricing_us_settings_v3';
@@ -2282,10 +2302,10 @@
     }
 
 
-    const FEE_PARAMS = ['comm', 'refund', 'fxloss', 'tax'];
+    const FEE_PARAMS = ['comm', 'refund', 'fxloss', 'inf', 'shipSub', 'vat', 'cit'];
     const COLORS = { cost: '#78909c', head: '#3860e8', delivery: '#4db6ac', lowPrice: '#00897b', storage: '#90a4ae', service: '#0aab7c',
-      international: '#3860e8', registration: '#7986cb', domestic: '#90a4ae', packing: '#8d6e63',
-      comm: '#6c3fe8', refund: '#d63030', fxloss: '#e8604a', tax: '#ff7043', profit: '#7cb342', ad: '#f97316' };
+      international: '#3860e8', registration: '#7986cb', domestic: '#90a4ae', packing: '#8d6e63', orderFee: '#a16207',
+      comm: '#6c3fe8', refund: '#d63030', fxloss: '#e8604a', inf: '#db2777', shipSub: '#0f766e', vat: '#ff7043', cit: '#ea580c', profit: '#7cb342', ad: '#f97316' };
     const CHANNELS = {
       wfsSea: { name: 'WFS 海运', kind: 'warehouse', cls: 'rcb' },
       wfsAir: { name: 'WFS 空运', kind: 'warehouse', cls: 'rca' },
@@ -2327,7 +2347,7 @@
     function totalSvc(first, next, count) { return first + next * Math.max(count - 1, 0); }
     function validateParams(p, requireTarget = true) {
       if (!Number.isFinite(p.rate) || p.rate <= 0) throw new Error('请填写有效的人民币 / 美元汇率');
-      for (const key of [...FEE_PARAMS, 'profit', 'packingCNY']) {
+      for (const key of [...FEE_PARAMS, 'profit', 'packingCNY', 'orderFee']) {
         if (!Number.isFinite(p[key]) || p[key] < 0) throw new Error('费用和利润参数须为非负数');
       }
       if (p.commissionCategory && !referralRule(p)) throw new Error('佣金类目无效，请重新选择');
@@ -2404,6 +2424,7 @@
           { key: 'registration', label: '挂号费', amount: fees.registrationCNY / p.rate },
           { key: 'domestic', label: '国内快递费', amount: fees.domesticCNY / p.rate });
       }
+      if (p.orderFee > 0) rows.push({ key: 'orderFee', label: '订单处理费', amount: p.orderFee });
       if (p.packingCNY > 0) rows.push({ key: 'packing', label: '打包杂费', amount: p.packingCNY / p.rate });
       return rows;
     }
@@ -2447,12 +2468,12 @@
     function orderBreakdown(revenue, product, fees, p, channel, adRate, reverse = false, extraRevenue = 0) {
       validateParams(p, false);
       const rows = fixedCostRows(product, fees, p, channel, revenue).concat(FEE_PARAMS.map(key => ({ key,
-        label: { comm: '佣金', refund: '退款预估', fxloss: '汇损预估', tax: '税费预估' }[key], amount: key === 'comm' ? commissionAmount(revenue, product, p, extraRevenue) : revenue * p[key] / 100 })));
+        label: { comm: '佣金', refund: '退款率预估', fxloss: '汇损预估', inf: '达人佣金', shipSub: '平台包邮', vat: 'VAT', cit: '中国企业所得税' }[key], amount: key === 'comm' ? commissionAmount(revenue, product, p, extraRevenue) : revenue * p[key] / 100 })));
       // 汇损仍按原商品收入计；额外收入触发佣金换档时使用该笔订单的实际有效佣金率。
       if (reverse) {
         const gross = revenue + extraRevenue;
         const effectiveCommission = gross > 0 ? commissionAmount(revenue, product, p, extraRevenue) / gross : 0;
-        rows.find(row => row.key === 'fxloss').amount = revenue * (1 - effectiveCommission - p.tax / 100) * p.fxloss / 100;
+        rows.find(row => row.key === 'fxloss').amount = revenue * (1 - effectiveCommission - (p.vat + p.cit) / 100) * p.fxloss / 100;
       }
       const profit = revenue - rows.reduce((sum, row) => sum + row.amount, 0), ad = revenue * adRate / 100;
       return { rows, profit, ad, afterAd: profit - ad };
