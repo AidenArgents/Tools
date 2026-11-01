@@ -1699,7 +1699,7 @@
           0
         ],
         [
-          "达人(%)",
+          "联盟(%)",
           "inf",
           0
         ],
@@ -2468,7 +2468,7 @@
     function orderBreakdown(revenue, product, fees, p, channel, adRate, reverse = false, extraRevenue = 0) {
       validateParams(p, false);
       const rows = fixedCostRows(product, fees, p, channel, revenue).concat(FEE_PARAMS.map(key => ({ key,
-        label: { comm: '佣金', refund: '退款率预估', fxloss: '汇损预估', inf: '达人佣金', shipSub: '平台包邮', vat: 'VAT', cit: '中国企业所得税' }[key], amount: key === 'comm' ? commissionAmount(revenue, product, p, extraRevenue) : revenue * p[key] / 100 })));
+        label: { comm: '佣金', refund: '退款率预估', fxloss: '汇损预估', inf: '联盟佣金', shipSub: '平台包邮', vat: 'VAT', cit: '中国企业所得税' }[key], amount: key === 'comm' ? commissionAmount(revenue, product, p, extraRevenue) : revenue * p[key] / 100 })));
       // 汇损仍按原商品收入计；额外收入触发佣金换档时使用该笔订单的实际有效佣金率。
       if (reverse) {
         const gross = revenue + extraRevenue;
