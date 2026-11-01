@@ -1482,7 +1482,7 @@
               <button class="tb" id="fill-kit-btn" onclick="setProductFillMode('kit')">组合装</button>
             </div>
           </div>
-          <div class="g4" style="margin-bottom:11px">
+          <div class="g3" style="margin-bottom:11px">
             <div class="f"><label>商品成本 (￥)</label><input type="text" inputmode="decimal" id="cost" data-expr-input
                 style="background:#f0fdf8;border-color:#b2f2e0"></div>
             <div class="f"><label id="weight-label" for="weight">重量 (kg)</label><input type="text" inputmode="decimal" id="weight" data-expr-input
@@ -1490,13 +1490,12 @@
               <label for="weight-lb" style="margin-top:6px">重量 (lb)</label><input type="text" inputmode="decimal" id="weight-lb" data-expr-input
                 style="background:#f0fdf8;border-color:#b2f2e0">
             </div>
-            <div class="f"><label title="当前填写数据为一个单位，多少个放一起的组合，如填2，则代表填写商品成本和重量会x2." style="cursor:help">个数 / 套</label><input type="number" id="qty" value="1" min="1" step="1"
+            <div class="f"><label title="此项代表同一订单购买多少个独立销售单位，不是组合装内部的件数。WFS按每个销售单位收取配送费；数量大于1时显示整单售价。单件SKU算价通常填1；组合装配件数量请到组合装模式填写。" style="cursor:help">订单销售数量</label><input type="number" id="qty" value="1" min="1" step="1"
                 style="background:#fffbf0;border-color:#ffd08a"></div>
-            <div class="f"><label title="系统绑定但仓库包装未绑定，由外仓组合发货，只计算仓库服务费，如系统绑定sku是外仓实际的2件商品，则填2" style="cursor:help">内含件数</label><input type="number" id="dqty" value="1" min="1" step="1"
-                style="background:#fefce8;border-color:#fde047"></div>
+            
           </div>
           <div class="kit-panel" id="kit-panel" style="display:none">
-            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">开发阶段组合装：每行一个配件，可填数字或算式，按数量汇总成本和重量。请核对内含件数（仓库服务费）；长宽高填<strong>组合后的包装尺寸</strong>，不要把各件尺寸相加。</div>
+            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：每行填写配件成本、重量和配件数量，汇总为一个独立销售SKU。长宽高应填写<strong>组合完成后的包装尺寸</strong>，不要把配件尺寸相加。订单销售数量通常填1。</div>
             <div class="kit-head"><span>配件</span><span>成本 ￥</span><span>重量 kg</span><span>×</span><span></span></div>
             <div id="kit-rows"></div>
             <div id="kit-warning" role="alert" style="display:none;color:#b91c1c;font-size:11px;margin:3px 0 8px"></div>
@@ -1515,7 +1514,7 @@
           <div class="hr"></div>
           <div class="ch"><div class="dot" style="background:var(--green)"></div>物流方式参数</div>
           <div class="f" style="margin-bottom:10px"><label for="wfs-type">WFS 商品属性</label><select id="wfs-type"><option value="0">普通商品</option><option value="1">服装（+$0.50/单位）</option><option value="2">危险品（+$0.50/单位）</option><option value="3">服装及危险品（+$1.00/单位）</option></select></div>
-          <div class="fee-note" style="margin-bottom:12px">两种入仓方式共用 <a href="https://marketplacelearn.walmart.com/guides/Walmart%20Fulfillment%20Services%20(WFS)/WFS%20basics/WFS-fees" target="_blank" rel="noopener">WFS 官方配送费表 ↗</a>（2026-05-27 更新）：按每个填写单位的包装重量、尺寸计算；个数/套沿用原有逐单位计费。售价低于 $10/单位另加 $1。<br>仓储按体积 × 单价 × 天数/30 估算：常规 $0.75；旺季仓龄超30天、或仓龄366–450天 $2.25；仓龄超450天 $7.50/ft³/月，请按预计仓龄修改。<br>头程按实重与材积重较大值摊估；系数默认6000，可按货代调整。物流计费步长默认0（未指定额外进位），可按货代实际规则调整。报价档位针对整票货物，外箱最低计费、外箱重量及偏远等附加费需另摊，不能把单个小件当作独立整票。</div>
+          <div class="fee-note" style="margin-bottom:12px">两种入仓方式共用 <a href="https://marketplacelearn.walmart.com/guides/Walmart%20Fulfillment%20Services%20(WFS)/WFS%20basics/WFS-fees" target="_blank" rel="noopener">WFS 官方配送费表 ↗</a>（2026-05-27 更新）：按每个填写单位的包装重量、尺寸计算；订单多件按每个独立销售单位计费。售价低于 $10/单位另加 $1。<br>仓储按体积 × 单价 × 天数/30 估算：常规 $0.75；旺季仓龄超30天、或仓龄366–450天 $2.25；仓龄超450天 $7.50/ft³/月，请按预计仓龄修改。<br>头程按实重与材积重较大值摊估；系数默认6000，可按货代调整。物流计费步长默认0（未指定额外进位），可按货代实际规则调整。报价档位针对整票货物，外箱最低计费、外箱重量及偏远等附加费需另摊，不能把单个小件当作独立整票。</div>
           <div class="card" style="padding:12px 14px;margin-bottom:10px;border-left:3px solid #3860e8">
             <div style="font-size:12px;font-weight:700;color:#3860e8;margin-bottom:8px">WFS 海运</div>
             <div class="g2" style="margin-bottom:8px"><div class="f"><label for="wfs-sea-rate">头程单价 (￥/kg)</label><input type="number" id="wfs-sea-rate" value="15.5" min="0" step="any"></div><div class="f"><label for="wfs-sea-divisor">材积系数 (cm³/kg)</label><input type="number" id="wfs-sea-divisor" value="6000" min="1" step="any"></div><div class="f"><label for="wfs-sea-step" title="每件头程按此进位，0为未设置，按原始计费重量×公斤单价估算">头程进位(kg，0不进位)</label><input type="text" inputmode="decimal" data-freight-step id="wfs-sea-step" value="0" autocomplete="off" spellcheck="false"></div><div class="f"><button type="button" class="commission-trigger" data-storage-title="wfsSea" aria-haspopup="dialog" onclick="openStorageRatePicker('wfsSea','main')">仓储单价 (USD/ft³/月)</button><input type="number" id="wfs-sea-storage-rate" value="0.75" min="0" step="any"></div><div class="f"><label for="wfs-sea-storage-days" title="指每件商品从WFS入库到售出的平均存放天数，不是整批售罄周期。例如100件同日入库，60天内匀速售罄，则平均约30天；若全部在第60天卖出，则约60天。若跨旺季和长期库龄费率，请按各区间核算。">预估仓储天数 ⓘ</label><input type="number" id="wfs-sea-storage-days" value="30" min="0" step="any" title="平均每件在仓天数；例如60天匀速卖完约填30天。"></div></div>
@@ -1884,7 +1883,7 @@
       });
     }
     let productFillMode = 'single';
-    const PRODUCT_FORM_IDS = ['cost', 'weight', 'weight-lb', 'qty', 'dqty', 'diml', 'dimw', 'dimh', 'wfs-type'];
+    const PRODUCT_FORM_IDS = ['cost', 'weight', 'weight-lb', 'qty', 'diml', 'dimw', 'dimh', 'wfs-type'];
     const productDrafts = { single: null, kit: null };
     let kitParts = [{ name: '', cost: '', wt: '', qty: 1 }, { name: '', cost: '', wt: '', qty: 1 }];
 
@@ -1904,7 +1903,7 @@
       PRODUCT_FORM_IDS.forEach(id => {
         const el = $(id), saved = draft && draft[id];
         if (el.hasAttribute('data-expr-input')) clearExprState(el);
-        el.value = saved ? saved.value : ((id === 'qty' || id === 'dqty') ? '1' : (id === 'wfs-type' ? '0' : ''));
+        el.value = saved ? saved.value : (id === 'qty' ? '1' : (id === 'wfs-type' ? '0' : ''));
         ['num', 'weightKg', 'syncedWeightValue'].forEach(key => {
           if (saved && saved[key] !== undefined) el.dataset[key] = saved[key];
           else delete el.dataset[key];
@@ -2618,10 +2617,10 @@
     function readProduct() {
       if (productFillMode === 'kit') validKitTotals();
       if ($('cost').value === '') throw new Error('请填写商品成本');
-      return { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), dqty: integer(gv('dqty')), l: gv('diml'), w: gv('dimw'), h: gv('dimh'), wfsType: gv('wfs-type') };
+      return { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), l: gv('diml'), w: gv('dimw'), h: gv('dimh'), wfsType: gv('wfs-type') };
     }
     function updateWfsPreview() {
-      const product = { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), dqty: integer(gv('dqty')), l: gv('diml'), w: gv('dimw'), h: gv('dimh'), wfsType: gv('wfs-type') };
+      const product = { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), l: gv('diml'), w: gv('dimw'), h: gv('dimh'), wfsType: gv('wfs-type') };
       for (const [channel, slug] of [['wfsSea', 'sea'], ['wfsAir', 'air']]) {
         const out = $('wfs-' + slug + '-preview'); if (!out) continue;
         try {
@@ -2795,7 +2794,7 @@
       const main = copy.querySelector('.main-content'); main.classList.remove('sidebar-pinned'); main.style.display = '';
       copy.querySelector('#batch-wrap').style.display = 'none';
       ['cost', 'weight', 'weight-lb', 'diml', 'dimw', 'dimh', 'skuQueryInput', 'rev-price', 'rev-total', 'referral-search'].forEach(id => copy.querySelector('#' + id).setAttribute('value', ''));
-      ['qty', 'dqty'].forEach(id => copy.querySelector('#' + id).setAttribute('value', '1'));
+      ['qty'].forEach(id => copy.querySelector('#' + id).setAttribute('value', '1'));
       copy.querySelectorAll('#wfs-type option').forEach(option => { option.removeAttribute('selected'); });
       copy.querySelector('#wfs-type option[value="0"]').setAttribute('selected', '');
       ['sea', 'air'].forEach(slug => { copy.querySelector('#wfs-' + slug + '-preview').textContent = '填写重量和长宽高后计算 WFS 配送费'; });
@@ -2809,7 +2808,7 @@
 
     const BATCH_FIELDS = [
       ['国家(US)', 'country'], ['SKU / 名称', 'sku'], ['成本(￥)', 'cost'], ['重量(kg)', 'wt'], ['重量(lb)', 'wtlb'],
-      ['长(cm)', 'l'], ['宽(cm)', 'w'], ['高(cm)', 'h'], ['个数 / 套', 'qty'], ['内含件数', 'dqty'],
+      ['长(cm)', 'l'], ['宽(cm)', 'w'], ['高(cm)', 'h'], ['订单销售数量', 'qty'],
       ['物流方式(wfsSea/wfsAir/sff)', 'fulfill'], ['WFS属性(0普通/1服装/2危险品/3两者)', 'wfsType'], ['汇率(￥/USD)', 'rate'], ['头程单价(￥/kg)', 'headRateCNY'], ['打包杂费(￥/单)', 'packingCNY'], ['利润率(%)', 'pr'], ['折扣(% off)', 'disc']
     ];
     const BATCH_COLUMNS = BATCH_FIELDS.filter(([, key]) => key !== 'wtlb');
@@ -2819,7 +2818,7 @@
     }
     function addBatchRow(data = {}) {
       const id = ++batchRowId, channel = CHANNELS[data.fulfill] ? data.fulfill : defaultChannel;
-      const values = { qty: 1, dqty: 1, wfsType: 0, ...data }, isDirect = CHANNELS[channel].kind === 'direct';
+      const values = { qty: 1, wfsType: 0, ...data }, isDirect = CHANNELS[channel].kind === 'direct';
       const weightKg = normalizeWeightPair(values.wt, values.wtlb);
       const tr = document.createElement('tr'); tr.id = 'batch-row-' + id;
       tr.innerHTML = BATCH_COLUMNS.map(([, key]) => {
@@ -2831,7 +2830,7 @@
           <label style="font-size:10px;color:var(--t3)">lb <input type="number" class="w-sm" id="b${id}-wtlb" min="0" step="any" aria-label="重量 lb"></label>
         </div></td>`;
         const value = values[key === 'pr' ? 'profit' : key] ?? '';
-        const help = key === 'qty' ? $('qty').previousElementSibling.title : key === 'dqty' ? $('dqty').previousElementSibling.title : '';
+        const help = key === 'qty' ? $('qty').previousElementSibling.title : '';
         const sharedKey = key === 'pr' ? 'profit' : key;
         const fallback = ['headRateCNY'].includes(key) ? F[channel][key] : getParams()[sharedKey];
         return `<td><input type="${key === 'sku' ? 'text' : 'number'}" class="${key === 'sku' ? 'w-sku' : 'w-sm'}" id="b${id}-${key}" value="${escapeHTML(value)}" step="any" ${key !== 'sku' ? 'min="0"' : ''} title="${escapeHTML(help)}" ${isDirect && ['headRateCNY'].includes(key) ? 'disabled' : ''} ${fallback !== undefined ? `placeholder="${['headRateCNY'].includes(key) ? '跟随物流参数' : '跟随共享参数'}"` : ''}></td>`;
@@ -2855,7 +2854,7 @@
       if (value('cost') === '') return false;
       try {
         captureFulfillment(); const channel = value('fulfill'), fees = clone(F[channel]);
-        const product = { cost: Number(value('cost')), weightKg: readWeightKg(id), qty: integer(value('qty')), dqty: integer(value('dqty')), l: Number(value('l')), w: Number(value('w')), h: Number(value('h')), wfsType: Number(value('wfsType')) };
+        const product = { cost: Number(value('cost')), weightKg: readWeightKg(id), qty: integer(value('qty')), l: Number(value('l')), w: Number(value('w')), h: Number(value('h')), wfsType: Number(value('wfsType')) };
         ['headRateCNY'].forEach(key => { if (CHANNELS[channel].kind === 'warehouse' && value(key) !== '') fees[key] = Number(value(key)); });
         for (const key of Object.keys(C)) {
           const p = getParams(key);
@@ -2884,15 +2883,25 @@
     function downloadTemplate() {
       try {
         requireXLSX();
-        const examples = Object.entries(CHANNELS).map(([channel, info]) => ({ country: 'US', sku: info.name + '示例', cost: channel === 'sff' ? 6.9 : 20, wt: channel === 'sff' ? 0.18 : 0.1, wtlb: kgToLb(channel === 'sff' ? 0.18 : 0.1), l: 10, w: 5, h: 5, qty: 1, dqty: 1, fulfill: channel, wfsType: 0 }));
+        const examples = Object.entries(CHANNELS).map(([channel, info]) => ({ country: 'US', sku: info.name + '示例', cost: channel === 'sff' ? 6.9 : 20, wt: channel === 'sff' ? 0.18 : 0.1, wtlb: kgToLb(channel === 'sff' ? 0.18 : 0.1), l: 10, w: 5, h: 5, qty: 1, fulfill: channel, wfsType: 0 }));
         const data = [BATCH_FIELDS.map(([label]) => label), ...examples.map(item => BATCH_FIELDS.map(([, key]) => item[key] ?? ''))];
         const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(data), '批量算价模板'); XLSX.writeFile(workbook, '美国算价_批量模板.xlsx');
       } catch (error) { $('batch-note').textContent = error.message; }
     }
     function parseBatchData(rows) {
       const accepted = [], errors = [];
-      if (!rows[0] || BATCH_FIELDS.some(([label], index) => String(rows[0][index] || '').trim() !== label)) return { accepted, errors: ['表头与当前模板不一致，请下载当前人民币/kg头程与WFS自动计费模板'] };
-      rows.slice(1).forEach((cols, index) => {
+      const header = rows[0] || [];
+      const qtyIndex = BATCH_FIELDS.findIndex(([, key]) => key === 'qty');
+      const current = BATCH_FIELDS.every(([label], index) => String(header[index] || '').trim() === label);
+      // Old spreadsheets may still have "个数 / 套" and a redundant "内含件数" column.
+      // Read them without counting the retired warehouse-service field.
+      const legacy = !current && String(header[qtyIndex] || '').trim() === '个数 / 套'
+        && String(header[qtyIndex + 1] || '').trim() === '内含件数'
+        && BATCH_FIELDS.every(([label], index) => String(header[index + (index > qtyIndex ? 1 : 0)] || '').trim()
+          === (index === qtyIndex ? '个数 / 套' : label));
+      if (!current && !legacy) return { accepted, errors: ['表头与当前模板不一致，请下载最新版批量算价模板'] };
+      rows.slice(1).forEach((originalCols, index) => {
+        const cols = legacy ? originalCols.filter((_, i) => i !== qtyIndex + 1) : originalCols;
         if (!cols.some(value => String(value ?? '').trim()) || String(cols[0]).startsWith('#')) return;
         if (!['US', '美国'].includes(String(cols[0] || '').trim().toUpperCase())) { errors.push(`第 ${index + 2} 行国家须为 US`); return; }
         if (!String(cols[1] ?? '').trim()) { errors.push(`第 ${index + 2} 行缺少 SKU`); return; }
@@ -2997,7 +3006,7 @@
         });
         el.addEventListener('input', () => el.setCustomValidity(''));
       });
-      ['cost', 'qty', 'dqty', 'diml', 'dimw', 'dimh', 'wfs-type', ...Object.values(FIELD_IDS).flatMap(Object.values)].forEach(id => $(id).addEventListener('input', () => {
+      ['cost', 'qty', 'diml', 'dimw', 'dimh', 'wfs-type', ...Object.values(FIELD_IDS).flatMap(Object.values)].forEach(id => $(id).addEventListener('input', () => {
         if (document.activeElement?.hasAttribute('data-freight-step')) {
           const raw = document.activeElement.value.trim().replace(/[,，]/g, '.');
           if (raw !== '' && !/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)) return;
