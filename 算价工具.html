@@ -1697,7 +1697,7 @@
         [
           "目标利润率(%)",
           "profit",
-          20
+          40
         ],
         [
           "汇率(￥/USD)",
@@ -1787,6 +1787,7 @@
   <script id="pricing-code">
     const DEFAULT_CONFIG = JSON.parse(document.getElementById('pricing-defaults').textContent);
     const SETTINGS_KEY = 'pricing_us_settings_v3';
+    const PROFIT_40_MIGRATION_KEY = 'pricing_us_profit_40_migrated_v1';
     const clone = value => JSON.parse(JSON.stringify(value));
     let C = clone(DEFAULT_CONFIG.platforms), F = clone(DEFAULT_CONFIG.fulfillment);
     let cur = 'US-Walmart', defaultChannel = DEFAULT_CONFIG.defaultChannel, sCurTab = 'platform', batchRowId = 0;
@@ -3024,12 +3025,20 @@
     }
     function initializePricing() {
       try {
+        const migrateProfit = localStorage.getItem(PROFIT_40_MIGRATION_KEY) !== 'done';
+        let profitMigrated = false;
         const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
         if (saved) {
           const config = clone(DEFAULT_CONFIG);
           config.platforms[cur].p.forEach(param => {
             const previous = saved.platforms?.[cur]?.p?.find(([, key]) => key === param[1]);
-            if (previous && Number.isFinite(Number(previous[2]))) param[2] = Number(previous[2]);
+            if (previous && Number.isFinite(Number(previous[2]))) {
+              param[2] = Number(previous[2]);
+              if (param[1] === 'profit' && migrateProfit && param[2] === 20) {
+                param[2] = 40;
+                profitMigrated = true;
+              }
+            }
           });
           Object.entries(MODE_FIELDS).forEach(([channel, fields]) => fields.forEach(([, key]) => {
             const value = saved.fulfillment?.[channel]?.[key];
@@ -3047,7 +3056,9 @@
           config.platforms[cur].commissionCategory = REFERRAL_RULES.some(rule => rule.id === category) ? category : null;
           if (CHANNELS[saved.defaultChannel]) config.defaultChannel = saved.defaultChannel;
           validateConfig(config); C = config.platforms; F = config.fulfillment; defaultChannel = config.defaultChannel;
+          if (profitMigrated) localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentConfig()));
         }
+        if (migrateProfit) localStorage.setItem(PROFIT_40_MIGRATION_KEY, 'done');
       } catch (_) {}
       $('side-platform-list').innerHTML = '<div class="slbl">美国 · United States</div>' + Object.entries(C).map(([key, cfg]) => `<button class="pb" id="btn-${key}" onclick="go('${key}')"><div class="pi" style="background:#e5f1ff;color:#0071ce">W</div><div class="pn"><div class="pm">${escapeHTML(cfg.platform)}</div><div class="ps">美国站 · ${cfg.currency}</div></div></button>`).join('');
       go(cur); renderFulfillment(); renderBatchHead(); addBatchRow(); _setupExprInputs(); bindKitEvents(); setProductFillMode('single');
