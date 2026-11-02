@@ -1545,7 +1545,7 @@
               </select></div>
               <div class="f"><label for="sff-domestic-fee">国内快递费 (￥/单)</label><input type="number" id="sff-domestic-fee" value="1.72" min="0" step="any"></div>
             </div>
-            <div class="fee-note">直邮按整单商品实重直接匹配所选渠道的报价档位：国际运费 = 重量 × 该档¥/kg；挂号费取该档¥/单。不会额外进位。没有报价覆盖的重量会报错。</div>
+            <div class="fee-note">直邮按整单实重匹配报价档位：国际运费 = 重量 × 档位单价 + 该档挂号费（合并计入一项）；国内快递费另外计算。不额外进位，报价表未覆盖的重量会提示核对。</div>
             <div class="fee-preview" id="sff-preview">填写订单商品重量后，自动显示命中的报价档位和整单物流成本</div>
             <details style="margin-top:10px"><summary style="font-size:12px;color:#0aab7c;cursor:pointer">查看所选渠道的完整报价表</summary><div id="sff-tariff-table" style="margin-top:8px;overflow:auto"></div></details>
           </div>
@@ -2349,7 +2349,8 @@
     function sffTariffDisplay(product, fees) {
       const q = findSffTariff(product.weightKg * integer(product.qty),fees.serviceId);
       return q.serviceName + ' · 整单 ' + formatWeight(q.weightKg) + 'kg · 档位 ' + q.min + '–' + q.max
-        + 'kg · 运费 ¥' + q.rate + '/kg · 挂号 ¥' + q.registration + '/单';
+        + 'kg · 国际运费 ¥' + formatWeight(q.weightKg * q.rate + q.registration)
+        + '（含该档挂号 ¥' + q.registration + '/单，运费单价 ¥' + q.rate + '/kg）';
     }
     function renderSffTariffTable() {
       const el = $('sff-tariff-table'); if (!el) return;
@@ -2362,7 +2363,7 @@
 
     const FEE_PARAMS = ['comm', 'refund', 'fxloss', 'inf', 'shipSub', 'vat', 'cit'];
     const COLORS = { cost: '#78909c', head: '#3860e8', delivery: '#4db6ac', lowPrice: '#00897b', storage: '#90a4ae',
-      international: '#3860e8', registration: '#7986cb', domestic: '#90a4ae', packing: '#8d6e63', orderFee: '#a16207',
+      international: '#3860e8', domestic: '#90a4ae', packing: '#8d6e63', orderFee: '#a16207',
       comm: '#6c3fe8', refund: '#d63030', fxloss: '#e8604a', inf: '#db2777', shipSub: '#0f766e', vat: '#ff7043', cit: '#ea580c', profit: '#7cb342', ad: '#f97316' };
     const CHANNELS = {
       wfsSea: { name: 'WFS 海运', kind: 'warehouse', cls: 'rcb' },
@@ -2558,8 +2559,7 @@
       } else {
         const tariff = findSffTariff(product.weightKg * qty, fees.serviceId);
         rows.push(
-          { key: 'international', label: '国际运费', amount: tariff.weightKg * tariff.rate / p.rate },
-          { key: 'registration', label: '挂号费', amount: tariff.registration / p.rate },
+          { key: 'international', label: '国际运费', amount: (tariff.weightKg * tariff.rate + tariff.registration) / p.rate },
           { key: 'domestic', label: '国内快递费', amount: fees.domesticCNY / p.rate });
       }
       if (p.orderFee > 0) rows.push({ key: 'orderFee', label: '订单处理费', amount: p.orderFee });
@@ -2704,15 +2704,16 @@
           try {
             const q = findSffTariff(product.weightKg * product.qty, F.sff.serviceId);
             const totalCNY = q.weightKg * q.rate + q.registration + F.sff.domesticCNY;
-            direct.textContent = q.serviceName + ' · 整单 ' + formatWeight(q.weightKg) + 'kg · ' + q.min + '–' + q.max + 'kg档：国际运费 ¥'
-              + formatWeight(q.weightKg * q.rate) + ' + 挂号 ¥' + q.registration + ' + 国内快递 ¥' + F.sff.domesticCNY
+            direct.textContent = q.serviceName + ' · 整单 ' + formatWeight(q.weightKg) + 'kg · ' + q.min + '–' + q.max
+              + 'kg档：国际运费 ¥' + formatWeight(q.weightKg * q.rate + q.registration)
+              + '（含挂号费 ¥' + q.registration + '） + 国内快递 ¥' + F.sff.domesticCNY
               + ' = 合计 ¥' + formatWeight(totalCNY);
           } catch (error) { direct.textContent = error.message; }
         }
       }
     }
     function feeBasisView(product, fees, channel) {
-      if (CHANNELS[channel].kind !== 'warehouse') return escapeHTML(sffTariffDisplay(product, fees)) + '<br>挂号费、国内快递费按订单各收一次';
+      if (CHANNELS[channel].kind !== 'warehouse') return escapeHTML(sffTariffDisplay(product, fees)) + '<br>国际运费已包含挂号费（每单一次）；国内快递费按订单一次';
       const m = wfsMetrics(product);
       return `头程计费 ${formatWeight(headBillableKg(product, fees))} kg/单位 · WFS 计费 ${m.shippingLb} lb/单位<br>仓储体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³ · 在仓 ${fees.storageDays} 天 · 单价 $${fees.storageRateUSD}/ft³/月`;
     }
