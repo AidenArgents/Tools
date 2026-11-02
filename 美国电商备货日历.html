@@ -27,7 +27,7 @@
 <body>
 <header class="top">
  <div><div class="eyebrow">US COMMERCE PLANNER · 2027—2028</div><h1>美国电商 · 营销与备货日历</h1><p>重要消费节点 × 4 种运输方式 × 自动倒排最迟行动日期</p></div>
- <div class="topright"><span class="savehint" id="saveStatus">设置保存在此浏览器</span><button class="smallbtn" id="todayBtn">回到近期</button><button class="smallbtn" id="exportHtmlBtn" title="把目前新增节日、Walmart 日期及所有设置封装为独立 HTML 文件">↓ 保存含数据 HTML</button><button class="smallbtn" id="exportBtn" title="只保存数据，后续可导入">导出 JSON</button><button class="smallbtn" id="importBtn">导入 JSON</button><button class="primary" id="addEvent">＋ 新增事件</button><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+ <div class="topright"><span class="savehint" id="saveStatus">浏览器自动暂存 · 请另存 HTML 文件</span><button class="smallbtn" id="todayBtn">回到近期</button><button class="primary" id="saveHtmlBtn" title="在 Chrome 中选择一个本地 HTML 文件，保存全部当前数据；本次打开网页期间以后可直接保存到同一文件">💾 保存到本地 HTML</button><button class="smallbtn" id="exportHtmlBtn" title="下载一个包含当前事件和参数的完整 HTML 文件，发送给别人即可查看">下载 HTML 副本</button><button class="smallbtn" id="exportBtn" title="只保存数据，后续可导入">导出 JSON</button><button class="smallbtn" id="importBtn">导入 JSON</button><button class="smallbtn" id="addEvent">＋ 新增事件</button><input type="file" id="importFile" accept=".json,application/json" hidden></div>
 </header>
 <div class="wrap">
  <div class="summary"><div class="metric"><div class="m-label">2027–2028 事件总数</div><div class="m-value" id="statEvents">—</div><div class="m-info">含节日、季节性需求、供应链风险</div></div><div class="metric"><div class="m-label">启用物流方案</div><div class="m-value" id="statRoutes">—</div><div class="m-info">变更参数，全局即时重算</div></div><div class="metric"><div class="m-label">下一次行动截止</div><div class="m-value" id="statNext">—</div><div class="m-info" id="statNextNote">查看计划中</div></div><div class="metric"><div class="m-label">日期待公布</div><div class="m-value" id="statTba">—</div><div class="m-info">平台活动不虚构官方日期</div></div></div>
@@ -67,7 +67,7 @@
   <div class="filters"><input id="search" placeholder="搜索节日 / 事件 / 品类..." aria-label="搜索"><select id="importance"><option value="all">全部重要程度</option><option value="high">仅重点事件</option></select><span class="counter" id="visibleCount"></span></div>
   <div class="categorybar"><span class="categorybar-title">事件分类 · 多选</span><button class="cat-action" id="catAll" type="button">全选</button><button class="cat-action" id="catNone" type="button">清空</button><label class="cat-pill"><input type="checkbox" class="catToggle" value="shopping">购物节日 <small data-category-count="shopping"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="season">消费旺季 <small data-category-count="season"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="culture">人群文化 <small data-category-count="culture"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="sport">体育事件 <small data-category-count="sport"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="supply">供应链提醒 <small data-category-count="supply"></small></label></div>
   <div id="calendarArea"></div>
-  <div class="notice">节日为美国当地日期；“入库日”是活动前可售目标日，并非平台保证入库时效。历史日期和已逾期节点依然保留，便于复盘。<strong>浏览器自动保存不会更新 GitHub 源码。</strong>要把新增 Walmart 活动及日期带走，请点击顶部「保存含数据 HTML」。</div>
+  <div class="notice">节日采用美国当地日期；“入库日”是活动前可售目标日，并非平台保证入库时效。<strong>浏览器自动暂存 ≠ 写入 HTML 文件。</strong>修改后点击「保存到本地 HTML」，在 Chrome 中首次选择存放位置或已有文件（覆盖前请确认）。保存后的 HTML 包含新增事件、Walmart 日期和全部参数，可直接发给同事。若浏览器不支持写入文件，使用「下载 HTML 副本」。</div>
  </main>
  </div>
  <footer class="footer">US COMMERCE PLANNER · 离线单文件 HTML · 2027—2028 · 数据来源：OPM / US Census / FIFA / LA28 / 节日日历。请以平台、货代及仓库最终通知为准。</footer>
@@ -124,10 +124,16 @@ try{var embeddedNode=el('embedded-state');if(embeddedNode&&embeddedNode.textCont
 var preferred=embeddedState&&(!storedState||Number(embeddedState._savedAt||0)>Number(storedState._savedAt||0))?embeddedState:storedState;
 state=normalizeState(preferred);
 var view='month',visibleYear=2027,visibleMonth=1,query='',importance='all',events=[],entriesMap={},allItems=[];
+var savedFileHandle=null;
 function save(){
  state._savedAt=Date.now();
- try{localStorage.setItem(STORE,JSON.stringify(state));el('saveStatus').textContent='✓ 已保存到此浏览器'}
- catch(err){el('saveStatus').textContent='⚠ 本地保存失败，请导出 HTML';console.warn('本地存储失败',err)}
+ try{
+  localStorage.setItem(STORE,JSON.stringify(state));
+  el('saveStatus').textContent='✓ 浏览器已暂存 · 未写入 HTML';
+ }catch(err){
+  el('saveStatus').textContent='⚠ 暂存失败！请立即保存 HTML';
+  console.warn('本地存储失败',err);
+ }
 }
 function addEvent(arr,y,id,name,date,category,priority,products,note,source,status,end,extra){
  arr.push({id:'builtin-'+y+'-'+id,name:name,date:date,end:end||'',category:category,priority:priority||'normal',products:products||'',note:note||'',source:source||'',status:status||'confirmed',supply:category==='supply',lead:null,...(extra||{})});
@@ -376,14 +382,58 @@ function bind(){
  el('addEvent').addEventListener('click',function(){openEditor(null,null)});
  function downloadText(content,name,mime){var blob=new Blob([content],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1500)}
  el('exportBtn').addEventListener('click',function(){downloadText(JSON.stringify({version:1,exportedAt:new Date().toISOString(),data:state},null,2),'美国电商备货日历_备份_'+todayKey+'.json','application/json;charset=utf-8')});
- el('exportHtmlBtn').addEventListener('click',function(){
+ function buildDataHtml(snapshot){
+  // 把当前事件、物流参数等数据写入 HTML 本体，分享文件时无需浏览器缓存或 JSON。
   var clone=document.documentElement.cloneNode(true);
   var embedded=clone.querySelector('#embedded-state');if(embedded)embedded.remove();
   var modal=clone.querySelector('#modalRoot');if(modal)modal.innerHTML='';
-  var snapshot=Object.assign({},state,{_savedAt:Date.now()});
-  var tag=document.createElement('script');tag.id='embedded-state';tag.type='application/json';tag.textContent=encodeURIComponent(JSON.stringify(snapshot));
+  var tag=document.createElement('script');tag.id='embedded-state';tag.type='application/json';
+  tag.textContent=encodeURIComponent(JSON.stringify(snapshot));
   clone.querySelector('head').appendChild(tag);
-  downloadText('<!doctype html>\n'+clone.outerHTML,'美国电商备货日历_含数据_'+todayKey+'.html','text/html;charset=utf-8');
+  return '<!doctype html>\n'+clone.outerHTML;
+ }
+ function getSnapshot(){
+  var now=Date.now();
+  return Object.assign({},state,{_savedAt:now,_fileSavedAt:now});
+ }
+ el('exportHtmlBtn').addEventListener('click',function(){
+  var snapshot=getSnapshot();
+  downloadText(buildDataHtml(snapshot),'美国电商备货日历_含数据_'+todayKey+'.html','text/html;charset=utf-8');
+  el('saveStatus').textContent='↧ HTML 副本已发起下载 · 请确认已保存';
+ });
+ el('saveHtmlBtn').addEventListener('click',async function(){
+  var button=this,old=button.textContent,snapshot=getSnapshot(),html=buildDataHtml(snapshot);
+  // Chrome / Edge 支持授权写入用户选定的本地 HTML；其他浏览器回退为下载。
+  if(typeof window.showSaveFilePicker!=='function'){
+   downloadText(html,'美国电商备货日历_工作版.html','text/html;charset=utf-8');
+   el('saveStatus').textContent='↧ 已发起下载 HTML · 浏览器不支持直接覆盖文件';
+   return;
+  }
+  try{
+   if(!savedFileHandle){
+    savedFileHandle=await window.showSaveFilePicker({
+     suggestedName:'美国电商备货日历_工作版.html',
+     types:[{description:'HTML 网页文件',accept:{'text/html':['.html']}}],
+     excludeAcceptAllOption:true
+    });
+   }
+   button.disabled=true;button.textContent='正在写入文件...';
+   var writable=await savedFileHandle.createWritable();
+   await writable.write(html);
+   await writable.close();
+   // 文件成功写入后也保存本地临时副本。
+   state._savedAt=snapshot._savedAt;state._fileSavedAt=snapshot._fileSavedAt;
+   try{localStorage.setItem(STORE,JSON.stringify(state))}catch(err){console.warn('临时备份失败',err)}
+   el('saveStatus').textContent='✓ 已写入 '+savedFileHandle.name;
+  }catch(err){
+   if(err.name!=='AbortError'){
+    console.warn('本地 HTML 写入失败',err);
+    el('saveStatus').textContent='⚠ 文件未写入，请下载 HTML 副本';
+    alert('未能保存到指定 HTML 文件：'+err.message+'\n可尝试「下载 HTML 副本」，不会丢失当前网页中的编辑。');
+    // 如果用户撤回了文件权限，下一次可以重新选择。
+    if(err.name==='NotAllowedError')savedFileHandle=null;
+   }
+  }finally{button.disabled=false;button.textContent=old}
  });
  el('importBtn').addEventListener('click',function(){el('importFile').click()});
  el('importFile').addEventListener('change',function(){var file=this.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(){try{var v=JSON.parse(reader.result);if(v.version!==1||!v.data||!Array.isArray(v.data.routes)||v.data.routes.length!==4)throw new Error('文件格式不符合本工具备份规范');if(!confirm('导入会覆盖当前设置及自定义事件。确定继续吗？'))return;state=normalizeState(v.data);initControls();updateAndRender();alert('已导入 '+file.name)}catch(e){alert('导入失败：'+e.message)}};reader.readAsText(file,'UTF-8');this.value=''});
