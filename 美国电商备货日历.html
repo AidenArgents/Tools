@@ -429,15 +429,15 @@ function bind(){
  el('exportHtmlBtn').addEventListener('click',function(){
   var snapshot=getSnapshot();
   downloadText(buildDataHtml(snapshot),'美国电商备货日历_含数据_'+todayKey+'.html','text/html;charset=utf-8');
-  // 下载操作不能确认浏览器是否真的保存到磁盘，因此保留未保存提示，避免误报。
-  renderSaveStatus();
+  // 用户主动生成了含事件的 HTML 副本后，关闭待保存提示；请用户自行确认浏览器已完成下载。
+  state._eventDirty=false;save();
  });
  el('saveHtmlBtn').addEventListener('click',async function(){
   var button=this,old=button.textContent,snapshot=getSnapshot(),html=buildDataHtml(snapshot);
   // Chrome / Edge 支持授权写入用户选定的本地 HTML；其他浏览器回退为下载。
   if(typeof window.showSaveFilePicker!=='function'){
    downloadText(html,'美国电商备货日历_工作版.html','text/html;charset=utf-8');
-   renderSaveStatus();
+   state._eventDirty=false;save();
    return;
   }
   try{
