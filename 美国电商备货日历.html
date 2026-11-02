@@ -43,7 +43,7 @@
    <div class="route" data-index="0"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#3773e8"></span><strong>普通海运</strong></label><span class="total">—</span></div><div class="twocol"><label class="field"><span>海运运输（天）</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到仓入库（天）</span><input class="inbound" type="number" min="0" max="365"></label></div></div>
    <div class="route" data-index="1"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#e99030"></span><strong>普通空运</strong></label><span class="total">—</span></div><div class="twocol"><label class="field"><span>空运运输（天）</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到仓入库（天）</span><input class="inbound" type="number" min="0" max="365"></label></div></div>
    <div class="route" data-index="2"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#9166d8"></span><strong>特殊空运</strong></label><span class="total">—</span></div><div class="twocol"><label class="field"><span>空运运输（天）</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>快速入库（天）</span><input class="inbound" type="number" min="0" max="365"></label></div></div>
-   <div class="route" data-index="3"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#169d85"></span><strong>方案四 · 自定义</strong></label><span class="total">未填写</span></div><div class="twocol"><label class="field"><span>选品阶段（天）</span><input class="pickCustom" type="number" min="0" max="365" placeholder="留空"></label><label class="field"><span>备货阶段（天）</span><input class="prepCustom" type="number" min="0" max="365" placeholder="留空"></label><label class="field"><span>运输阶段（天）</span><input class="transit" type="number" min="0" max="365" placeholder="留空"></label><label class="field"><span>入库阶段（天）</span><input class="inbound" type="number" min="0" max="365" placeholder="留空"></label></div><div class="hint">四项均填写后才可显示；填 0 也有效。</div></div>
+   <div class="route" data-index="3"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#169d85"></span><strong>方案四 · 自定义</strong></label><span class="total">未填写</span></div><div class="twocol"><label class="field"><span>选品阶段（天）</span><input class="pickCustom" type="number" min="0" max="365" placeholder="留空"></label><label class="field"><span>备货阶段（天）</span><input class="prepCustom" type="number" min="0" max="365" placeholder="留空"></label><label class="field"><span>运输阶段（天）</span><input class="transit" type="number" min="0" max="365" placeholder="留空"></label><label class="field"><span>入库阶段（天）</span><input class="inbound" type="number" min="0" max="365" placeholder="留空"></label></div><div class="hint">默认关闭并灰显，四项全部填写后才可勾选；填 0 也有效。</div></div>
    <div class="warning warnrow" id="routeWarning" hidden>自定义方案还未填完整，暂不显示其日期。</div>
   </section>
   <section class="panel">
@@ -102,11 +102,14 @@ function nth(y,m,w,n){var first=1+(w-weekday(y,m,1)+7)%7;return key(y,m,first+(n
 function lastWeekday(y,m,w){var last=new Date(Date.UTC(y,m,0,12)).getUTCDate();return key(y,m,last-(weekday(y,m,last)-w+7)%7)}
 function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k+7)%7,m=Math.floor((a+11*h+22*l)/451),n=h+l-7*m+114;return key(y,Math.floor(n/31),n%31+1)}
 function safeNumber(v){if(v===''||v===null||v===undefined)return null;var x=Number(v);return Number.isInteger(x)&&x>=0&&x<=365?x:null}
+function customRouteReady(r){return !!r&&['pick','prep','transit','inbound'].every(function(k){return safeNumber(r[k])!==null})}
 var defaultCategories={shopping:true,season:true,culture:true,sport:true,supply:true};
-var defaults={pick:7,prep:7,lead:14,routes:[{enabled:true,transit:20,inbound:15},{enabled:true,transit:5,inbound:15},{enabled:true,transit:5,inbound:2},{enabled:true,pick:'',prep:'',transit:'',inbound:''}],show:{start:true,finish:false,depart:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
+var defaults={pick:7,prep:7,lead:14,routes:[{enabled:true,transit:20,inbound:15},{enabled:true,transit:5,inbound:15},{enabled:true,transit:5,inbound:2},{enabled:false,pick:'',prep:'',transit:'',inbound:''}],show:{start:true,finish:false,depart:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
 function normalizeState(raw){
  var s=Object.assign({},defaults,raw||{});
  s.routes=(Array.isArray(s.routes)&&s.routes.length===4)?s.routes:JSON.parse(JSON.stringify(defaults.routes));
+ // 兼容旧版本：旧版未填写的第四方案曾默认勾选；现在统一关闭。
+ if(!customRouteReady(s.routes[3]))s.routes[3].enabled=false;
  s.show=Object.assign({},defaults.show,s.show||{});
  s.categories=Object.assign({},defaultCategories,s.categories||{});
  s.custom=Array.isArray(s.custom)?s.custom:[];
@@ -212,10 +215,15 @@ function initControls(){
 function syncRouteUI(){
  var active=activeRoutes();
  document.querySelectorAll('.route').forEach(function(w,i){
- var enabled=!!state.routes[i].enabled;w.classList.toggle('disabled',!enabled);
- var r=active.find(function(a){return a.index===i});w.querySelector('.total').textContent=r?r.total+' 天':i===3?'未填写/未启用':'已关闭';
+  var enabled=!!state.routes[i].enabled,checkbox=w.querySelector('.routeEnabled');
+  // 第四方案填完整前不允许勾选，但输入框始终可填写。
+  if(i===3){checkbox.disabled=!customRouteReady(state.routes[3]);checkbox.title=checkbox.disabled?'请先填写下方四个阶段天数':'勾选后将加入日历和方案统计'}
+  checkbox.checked=enabled;
+  w.classList.toggle('disabled',!enabled);
+  var r=active.find(function(a){return a.index===i});
+  w.querySelector('.total').textContent=r?r.total+' 天':i===3?(checkbox.disabled?'填写后可启用':'未启用'):'已关闭';
  });
- var custom=state.routes[3];var missing=['pick','prep','transit','inbound'].some(function(k){return safeNumber(custom[k])===null});el('routeWarning').hidden=!(custom.enabled&&missing);
+ el('routeWarning').hidden=true;
 }
 function renderStats(){
  var act=activeRoutes(),next=allItems.filter(function(it){return it.type==='stage'&&it.date>=todayKey}).sort(function(a,b){return a.date.localeCompare(b.date)})[0];
@@ -345,8 +353,15 @@ function updateAndRender(){save();render()}
 function bind(){
  ['pick','prep','lead'].forEach(function(k){var node=el(k+'Days');node.addEventListener('input',function(){var v=safeNumber(node.value);if(v!==null){state[k]=v;updateAndRender()}})});
  document.querySelectorAll('.route').forEach(function(w,i){
-  var enabled=w.querySelector('.routeEnabled');enabled.addEventListener('change',function(){state.routes[i].enabled=enabled.checked;updateAndRender()});
-  [['.transit','transit'],['.inbound','inbound'],['.pickCustom','pick'],['.prepCustom','prep']].forEach(function(pair){var node=w.querySelector(pair[0]);if(node)node.addEventListener('input',function(){var v=node.value;state.routes[i][pair[1]]=i===3?v:(safeNumber(v)!==null?safeNumber(v):state.routes[i][pair[1]]);updateAndRender()})});
+  var enabled=w.querySelector('.routeEnabled');enabled.addEventListener('change',function(){
+   if(i===3&&!customRouteReady(state.routes[3])){enabled.checked=false;return}
+   state.routes[i].enabled=enabled.checked;updateAndRender();
+  });
+  [['.transit','transit'],['.inbound','inbound'],['.pickCustom','pick'],['.prepCustom','prep']].forEach(function(pair){var node=w.querySelector(pair[0]);if(node)node.addEventListener('input',function(){
+   var v=node.value;state.routes[i][pair[1]]=i===3?v:(safeNumber(v)!==null?safeNumber(v):state.routes[i][pair[1]]);
+   if(i===3&&!customRouteReady(state.routes[3]))state.routes[3].enabled=false;
+   updateAndRender();
+  })});
  });
  Object.keys(state.show).forEach(function(k){var node=el('show'+k[0].toUpperCase()+k.slice(1));if(node)node.addEventListener('change',function(){state.show[k]=node.checked;updateAndRender()})});
  el('prevBtn').addEventListener('click',function(){shift(-1)});el('nextBtn').addEventListener('click',function(){shift(1)});
