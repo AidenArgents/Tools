@@ -2858,10 +2858,12 @@
           + '<input type="number" id="sf-wfsSea-storageRateUSD" min="0" step="any" value="' + rate + '"></div>'
           + '<div class="spc2">' + settingsFeeLabel('wfsSea','预估仓储天数','storageDays')
           + '<input type="number" id="sf-wfsSea-storageDays" min="0" step="any" value="' + days + '"></div></div>'
-          + '<div class="ssec">SFF 默认直邮渠道</div><div class="srow"><div class="spc2"><label>直邮渠道</label><select id="sf-sff-serviceId">'
-          + Object.entries(SFF_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === settingsDraft.fulfillment.sff.serviceId ? ' selected' : '') + '>' + escapeHTML(svc.name) + '</option>').join('')
-          + '</select></div></div>'
           + Object.entries(CHANNELS).map(([channel, info]) => `<div class="ssec">${info.name}</div><div class="srow">`
+            + (channel === 'sff'
+              ? '<div class="spc2"><label for="sf-sff-serviceId">直邮渠道</label><select id="sf-sff-serviceId">'
+                + Object.entries(SFF_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === settingsDraft.fulfillment.sff.serviceId ? ' selected' : '') + '>' + escapeHTML(svc.name) + '</option>').join('')
+                + '</select></div>'
+              : '')
             + MODE_FIELDS[channel].map(([label, key]) => `<div class="spc2">${settingsFeeLabel(channel, label, key)}<input type="number" id="sf-${channel}-${key}" value="${settingsDraft.fulfillment[channel][key]}" min="0" step="0.01"></div>`).join('') + '</div>').join('');
       }
     }
