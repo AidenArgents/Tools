@@ -1538,15 +1538,14 @@
             <button type="button" class="kit-add" onclick="addKitPart()">＋ 添加配件</button>
             <div id="kit-summary" class="kit-summary" aria-live="polite">配件累计体积：—（可选填配件长、宽、高）</div>
           </div>
-          <div style="font-size:11px;color:var(--t3);line-height:1.7;margin-bottom:10px">
-            <span id="weight-summary" style="color:var(--t2)">整单实际总重：—</span><br>
-            单品可直接填数字或等式（如 9+1+2+4，失焦显示合计）。kg ↔ lb 双向换算；WFS 根据包装重量和长宽高自动确定计费档。
-          </div>
-          <div class="hr"></div>
           <div class="g3" id="vdims">
             <div class="f"><label title="每个填写单位的完整包装尺寸；组合重新打包时请先确认包装尺寸和计费单位">长 (cm)</label><input type="text" inputmode="decimal" id="diml" data-expr-input style="background:#f0fdf8;border-color:#b2f2e0"></div>
             <div class="f"><label>宽 (cm)</label><input type="text" inputmode="decimal" id="dimw" data-expr-input style="background:#f0fdf8;border-color:#b2f2e0"></div>
             <div class="f"><label>高 (cm)</label><input type="text" inputmode="decimal" id="dimh" data-expr-input style="background:#f0fdf8;border-color:#b2f2e0"></div>
+          </div>
+          <div style="font-size:11px;color:var(--t3);line-height:1.7;margin:9px 0 10px">
+            <span id="weight-summary" style="color:var(--t2)">整单实际总重：—</span><br>
+            商品成本、重量、包装尺寸（长、宽、高）均可输入数字或算式（如 9+1+2+4），失焦后显示计算结果；包装体积根据长宽高自动计算。重量 kg ↔ lb 双向换算；WFS 根据最终包装重量和尺寸确定计费档。
           </div>
           <div class="hr"></div>
           <div class="ch"><div class="dot" style="background:var(--green)"></div>物流方式参数</div>
