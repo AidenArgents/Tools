@@ -450,11 +450,47 @@
     }
 
     .kit-row {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #cfebe0
+    }
+    .kit-row-main {
       display: grid;
       grid-template-columns: minmax(0, 1.3fr) 88px 88px 52px 28px;
       gap: 6px;
+      align-items: center
+    }
+    .kit-row-dims {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(90px, 1.35fr);
+      gap: 6px;
       align-items: center;
-      margin-bottom: 6px
+      margin-top: 5px
+    }
+    .kit-row-dims input { height: 29px; font-size: 12px; }
+    .kit-row-volume {
+      color: var(--t2);
+      font-size: 11px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap
+    }
+    .kit-summary {
+      margin-top: 9px;
+      padding: 8px 10px;
+      background: #e9f8f1;
+      border: 1px solid #ccecdf;
+      border-radius: 6px;
+      color: #175d45;
+      font-size: 11px;
+      line-height: 1.7;
+      overflow-wrap: anywhere
+    }
+    @media(max-width:440px) {
+      .kit-row-main { grid-template-columns: minmax(0,1fr) 64px 64px 42px 24px; gap: 4px; }
+      .kit-row-main input { padding: 0 4px; font-size: 11px; }
+      .kit-row-dims { gap: 4px; grid-template-columns: repeat(3,minmax(0,1fr)) minmax(64px,1.1fr); }
+      .kit-row-volume { white-space: normal; font-size: 10px; }
     }
 
     .kit-row input {
@@ -1495,11 +1531,12 @@
             
           </div>
           <div class="kit-panel" id="kit-panel" style="display:none">
-            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：每行填写配件成本、重量和配件数量，汇总为一个独立销售SKU。长宽高应填写<strong>组合完成后的包装尺寸</strong>，不要把配件尺寸相加。订单销售数量通常填1。</div>
+            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：按配件数量汇总成本、重量和体积。配件长宽高用于估算累计占用空间；下方商品长宽高必须填写<strong>组合完成后的实际包装外尺寸</strong>，不自动套用配件体积。订单销售数量通常填1。</div>
             <div class="kit-head"><span>配件</span><span>成本 ￥</span><span>重量 kg</span><span>×</span><span></span></div>
             <div id="kit-rows"></div>
             <div id="kit-warning" role="alert" style="display:none;color:#b91c1c;font-size:11px;margin:3px 0 8px"></div>
             <button type="button" class="kit-add" onclick="addKitPart()">＋ 添加配件</button>
+            <div id="kit-summary" class="kit-summary" aria-live="polite">配件累计体积：—（可选填配件长、宽、高）</div>
           </div>
           <div style="font-size:11px;color:var(--t3);line-height:1.7;margin-bottom:10px">
             <span id="weight-summary" style="color:var(--t2)">整单实际总重：—</span><br>
@@ -1897,7 +1934,7 @@
     let productFillMode = 'single';
     const PRODUCT_FORM_IDS = ['cost', 'weight', 'weight-lb', 'qty', 'diml', 'dimw', 'dimh', 'wfs-type'];
     const productDrafts = { single: null, kit: null };
-    let kitParts = [{ name: '', cost: '', wt: '', qty: 1 }, { name: '', cost: '', wt: '', qty: 1 }];
+    let kitParts = [{ name: '', cost: '', wt: '', l: '', w: '', h: '', qty: 1 }, { name: '', cost: '', wt: '', l: '', w: '', h: '', qty: 1 }];
 
     // 单品和组合装各自保留输入；切换时不再把上一种模式的成本/尺寸误带入另一种模式。
     function saveProductDraft() {
@@ -1955,11 +1992,16 @@
       box.innerHTML = kitParts.map((p, i) => {
         const delDisabled = kitParts.length <= 2 ? ' disabled' : '';
         return '<div class="kit-row" data-kit-index="' + i + '">' +
+          '<div class="kit-row-main">' +
           '<input data-kit-field="name" aria-label="配件名称" placeholder="配件' + (i + 1) + '" value="' + escapeHTML(p.name) + '">' +
           '<input data-kit-field="cost" aria-label="配件成本" inputmode="decimal" placeholder="成本或算式" value="' + escapeHTML(kitDisplayValue(p.cost)) + '">' +
           '<input data-kit-field="wt" aria-label="配件重量 kg" inputmode="decimal" placeholder="kg或算式" value="' + escapeHTML(kitDisplayValue(p.wt)) + '">' +
           '<input data-kit-field="qty" aria-label="配件数量" type="number" min="1" step="1" value="' + escapeHTML(p.qty) + '">' +
-          '<button type="button" class="kit-del" onclick="removeKitPart(' + i + ')"' + delDisabled + ' title="删除配件">×</button></div>';
+          '<button type="button" class="kit-del" onclick="removeKitPart(' + i + ')"' + delDisabled + ' title="删除配件">×</button></div>' +
+          '<div class="kit-row-dims">' +
+          [['l','长'],['w','宽'],['h','高']].map(([key,label]) =>
+            '<input data-kit-field="' + key + '" aria-label="配件' + (i+1) + label + ' cm" inputmode="decimal" placeholder="' + label + ' cm" value="' + escapeHTML(kitDisplayValue(p[key] ?? '')) + '">').join('') +
+          '<span class="kit-row-volume" id="kit-part-volume-' + i + '">体积：—</span></div></div>';
       }).join('');
       const addButton = document.querySelector('.kit-add');
       if (addButton) addButton.disabled = kitParts.length >= 8;
@@ -1979,14 +2021,14 @@
       });
       box.addEventListener('focusin', event => {
         const hit = locate(event);
-        if (hit && (hit.field === 'cost' || hit.field === 'wt')) {
+        if (hit && ['cost','wt','l','w','h'].includes(hit.field)) {
           hit.input.value = kitParts[hit.index][hit.field];
           hit.input.title = '';
         }
       });
       box.addEventListener('focusout', event => {
         const hit = locate(event);
-        if (hit && (hit.field === 'cost' || hit.field === 'wt')) {
+        if (hit && ['cost','wt','l','w','h'].includes(hit.field)) {
           hit.input.value = kitDisplayValue(kitParts[hit.index][hit.field]);
           const raw = String(kitParts[hit.index][hit.field]).trim();
           if (/[+\-*/]/.test(raw.replace(/^-/, '')) && Number.isFinite(_evalExpr(raw)))
@@ -2009,7 +2051,7 @@
     }
     function addKitPart() {
       if (kitParts.length >= 8) return;
-      kitParts.push({ name: '', cost: '', wt: '', qty: 1 });
+      kitParts.push({ name: '', cost: '', wt: '', l: '', w: '', h: '', qty: 1 });
       renderKitRows();
       applyKitTotals();
     }
@@ -2022,10 +2064,11 @@
     function computeKitTotals() {
       // The original component inputs are authoritative, never the rounded summary fields.
       const active = kitParts.map((part, i) => ({ part, i })).filter(({ part }) =>
-        [part.name, part.cost, part.wt].some(value => String(value).trim() !== ''));
+        [part.name, part.cost, part.wt, part.l, part.w, part.h].some(value => String(value ?? '').trim() !== ''));
       const requiresWeight = active.some(({ part }) => String(part.wt).trim() !== '');
       const errors = [];
-      let cost = 0, weight = 0;
+      let cost = 0, weight = 0, volume = 0, volumeCount = 0;
+      const volumeErrors = [], partVolumes = {};
       active.forEach(({ part, i }) => {
         const label = '第' + (i + 1) + '行', qty = Number(part.qty);
         const c = _evalExpr(part.cost), w = _evalExpr(part.wt);
@@ -2036,8 +2079,20 @@
           if (Number.isFinite(c)) cost += c * qty;
           if (Number.isFinite(w)) weight += w * qty;
         }
+        const dimensions = ['l','w','h'].map(k => String(part[k] ?? '').trim());
+        if (!dimensions.some(Boolean)) return;
+        const values = dimensions.map(v => _evalExpr(v));
+        if (values.every(n => Number.isFinite(n) && n > 0) && Number.isSafeInteger(qty) && qty >= 1) {
+          const subtotal = values[0] * values[1] * values[2] * qty;
+          volume += subtotal;
+          volumeCount++;
+          partVolumes[i] = subtotal;
+        } else {
+          volumeErrors.push(label + '配件长宽高须全部填写有效正数');
+        }
       });
-      return { cost, weight, hasParts: active.length > 0, requiresWeight, errors };
+      return { cost, weight, volume, volumeCount, volumeMissing: active.length - volumeCount,
+        partVolumes, volumeErrors, hasParts: active.length > 0, requiresWeight, errors };
     }
     function validKitTotals() {
       const totals = computeKitTotals();
@@ -2050,6 +2105,32 @@
       const totals = computeKitTotals(), warning = $('kit-warning');
       warning.textContent = totals.errors.join('；');
       warning.style.display = totals.errors.length ? 'block' : 'none';
+      kitParts.forEach((part, i) => {
+        const el = $('kit-part-volume-' + i);
+        if (!el) return;
+        if (totals.partVolumes[i] !== undefined) {
+          el.textContent = '小计 ' + shownNumber(totals.partVolumes[i]) + ' cm³';
+          el.title = '本配件体积（长 × 宽 × 高）× 配件数量，不是整套包装外尺寸';
+        } else {
+          el.textContent = ['l','w','h'].some(k => String(part[k] ?? '').trim() !== '')
+            ? '尺寸待补齐' : '体积：—';
+          el.title = '';
+        }
+      });
+      const summary = $('kit-summary');
+      if (summary) {
+        const costText = totals.hasParts && !totals.errors.length ? '¥' + shownNumber(totals.cost) : '—';
+        const weightTextValue = totals.hasParts && totals.requiresWeight && !totals.errors.length
+          ? shownNumber(totals.weight) + ' kg' : '—';
+        const volumeText = !totals.hasParts || totals.volumeCount === 0
+          ? '—（填写配件的长宽高后计算）'
+          : shownNumber(totals.volume) + ' cm³（约 ' + shownNumber(totals.volume / Math.pow(30.48,3)) + ' ft³）'
+            + (totals.volumeMissing ? '；仅 ' + totals.volumeCount + '/' + (totals.volumeCount + totals.volumeMissing) + ' 行已填写完整尺寸，尚非整套累计值' : '');
+        summary.textContent = '配件合计：成本 ' + costText + ' · 重量 ' + weightTextValue
+          + ' · 累计体积 ' + volumeText
+          + (totals.volumeErrors.length ? '；' + totals.volumeErrors.join('；') : '')
+          + '。物流计算仍以下方的组合装最终包装长宽高为准。';
+      }
       applyExprValue($('cost'), totals.errors.length || !totals.hasParts ? '' : totals.cost);
       if (!totals.errors.length && totals.requiresWeight) writeWeightPair(totals.weight, undefined, 'both');
       else {
