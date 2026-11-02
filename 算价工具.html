@@ -2336,7 +2336,28 @@
 
     // User-uploaded 物流报价表.xlsx: [minKg, maxKg, freightCNYPerKg, registrationCNYPerOrder].
     // Exact order weight selects the quoted interval. No direct-mail step rounding is applied.
-    const SFF_TARIFFS = {"sfGeneral":{"name":"顺丰普货","tiers":[[0,0.099,101.5,20],[0.1,0.199,98,18],[0.2,0.449,93.8,16],[0.45,0.699,92.4,16],[0.7,0.999,91,9],[1,1.499,91,9],[1.5,30,85.4,9]]},"sfSensitive":{"name":"顺丰敏货","tiers":[[0,0.099,136,20],[0.1,0.199,124.8,20],[0.2,0.449,124.8,18],[0.45,0.999,117.6,16],[1,1.499,117.6,9],[1.5,30,117.6,9]]},"battery":{"name":"带电","tiers":[[0,0.1,134.4,20],[0.101,0.2,123.2,18],[0.201,0.7,118.4,16],[0.701,1.999,109.6,9],[2,30,109.6,9]]},"clothing":{"name":"服装","tiers":[[0,0.099,95.9,20],[0.1,0.199,92.4,18],[0.2,0.449,88.2,16],[0.45,0.699,86.8,16],[0.7,0.999,84.7,9],[1,1.499,84.7,9],[1.5,30,81.2,9]]}};
+    const SFF_TARIFF_DEFAULTS = {"sfGeneral":{"name":"顺丰普货","tiers":[[0,0.099,101.5,20],[0.1,0.199,98,18],[0.2,0.449,93.8,16],[0.45,0.699,92.4,16],[0.7,0.999,91,9],[1,1.499,91,9],[1.5,30,85.4,9]]},"sfSensitive":{"name":"顺丰敏货","tiers":[[0,0.099,136,20],[0.1,0.199,124.8,20],[0.2,0.449,124.8,18],[0.45,0.999,117.6,16],[1,1.499,117.6,9],[1.5,30,117.6,9]]},"battery":{"name":"带电","tiers":[[0,0.1,134.4,20],[0.101,0.2,123.2,18],[0.201,0.7,118.4,16],[0.701,1.999,109.6,9],[2,30,109.6,9]]},"clothing":{"name":"服装","tiers":[[0,0.099,95.9,20],[0.1,0.199,92.4,18],[0.2,0.449,88.2,16],[0.45,0.699,86.8,16],[0.7,0.999,84.7,9],[1,1.499,84.7,9],[1.5,30,81.2,9]]}};
+    let SFF_TARIFFS = clone(DEFAULT_CONFIG.sffTariffs || SFF_TARIFF_DEFAULTS);
+    function validateSffTariffs(tariffs) {
+      if (!tariffs || typeof tariffs !== 'object') throw new Error('直邮报价表缺失');
+      const keys = Object.keys(SFF_TARIFF_DEFAULTS);
+      if (Object.keys(tariffs).length !== keys.length || keys.some(key => !tariffs[key]))
+        throw new Error('直邮报价表必须包含全部四个渠道');
+      for (const key of keys) {
+        const svc = tariffs[key], original = SFF_TARIFF_DEFAULTS[key];
+        if (svc.name !== original.name || !Array.isArray(svc.tiers) || !svc.tiers.length || svc.tiers.length > 60)
+          throw new Error(original.name + '报价表结构不合法');
+        let end = -1;
+        svc.tiers.forEach((band,i) => {
+          if (!Array.isArray(band) || band.length !== 4 || band.some(v => typeof v !== 'number' || !Number.isFinite(v) || v < 0))
+            throw new Error(original.name + '第' + (i+1) + '档须填写非负数');
+          const [min,max] = band;
+          if (max < min || min <= end)
+            throw new Error(original.name + '第' + (i+1) + '档区间无效或与上一档重叠');
+          end = max;
+        });
+      }
+    }
     function findSffTariff(totalKg, serviceId) {
       const svc = SFF_TARIFFS[serviceId];
       if (!svc) throw new Error('请选择有效的直邮渠道');
@@ -2356,7 +2377,7 @@
       const el = $('sff-tariff-table'); if (!el) return;
       const svc = SFF_TARIFFS[F.sff.serviceId];
       if (!svc) { el.textContent = '请选择直邮渠道'; return; }
-      el.innerHTML = '<b>' + escapeHTML(svc.name) + ' · 原始报价档位</b><table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px">'
+      el.innerHTML = '<b>' + escapeHTML(svc.name) + ' · 当前报价档位（参数设置可编辑）</b><table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px">'
         + '<tr><th>重量区间(kg)</th><th>运费(¥/kg)</th><th>挂号(¥/单)</th></tr>'
         + svc.tiers.map(t => '<tr>' + [''+t[0]+'–'+t[1],t[2],t[3]].map(v => '<td style="padding:5px;border-bottom:1px solid #e5e7eb">' + v + '</td>').join('') + '</tr>').join('') + '</table>';
     }
@@ -2823,7 +2844,7 @@
     }
 
     let settingsDraft = null;
-    function currentConfig() { return { platforms: clone(C), fulfillment: clone(F), defaultChannel, commissionFavorites: [...referralFavorites] }; }
+    function currentConfig() { return { platforms: clone(C), fulfillment: clone(F), sffTariffs: clone(SFF_TARIFFS), defaultChannel, commissionFavorites: [...referralFavorites] }; }
     function openSettings() {
       captureParams(); captureFulfillment(); settingsDraft = currentConfig();
       $('settings-error').textContent = ''; $('s-overlay').style.display = 'flex'; renderSTabs(); renderSBody();
@@ -2849,6 +2870,69 @@
         `<button class="stab${sCurTab === key ? ' on' : ''}" onclick="switchSTab('${key}')">${label}</button>`).join('');
     }
     function switchSTab(tab) { flushSTab(); sCurTab = tab; renderSTabs(); renderSBody(); }
+
+    // Edit a copy, not the live tariff, until "保存参数" is pressed.
+    function setSettingsSffService(serviceId) {
+      if (!settingsDraft || !SFF_TARIFF_DEFAULTS[serviceId]) return;
+      settingsDraft.fulfillment.sff.serviceId = serviceId;
+      renderSettingsSffTariffEditor();
+    }
+    function updateSettingsSffTier(index, column, raw) {
+      if (!settingsDraft || ![0,1,2,3].includes(column)) return;
+      const id = settingsDraft.fulfillment.sff.serviceId;
+      const band = settingsDraft.sffTariffs[id]?.tiers[index];
+      if (!band) return;
+      band[column] = String(raw).trim() === '' ? NaN : Number(raw);
+      $('settings-error').textContent = '';
+    }
+    function addSettingsSffTier() {
+      if (!settingsDraft) return;
+      const tiers = settingsDraft.sffTariffs[settingsDraft.fulfillment.sff.serviceId].tiers;
+      if (tiers.length >= 60) { $('settings-error').textContent = '每条直邮渠道最多60个档位'; return; }
+      const previous = tiers[tiers.length-1];
+      const min = Number((previous[1] + 0.001).toFixed(3));
+      tiers.push([min, Number((min+1).toFixed(3)), previous[2], previous[3]]);
+      renderSettingsSffTariffEditor();
+    }
+    function removeSettingsSffTier(index) {
+      if (!settingsDraft) return;
+      const tiers = settingsDraft.sffTariffs[settingsDraft.fulfillment.sff.serviceId].tiers;
+      if (tiers.length <= 1) { $('settings-error').textContent = '每条直邮渠道至少保留一个报价档位'; return; }
+      if (index >= 0 && index < tiers.length) tiers.splice(index,1);
+      renderSettingsSffTariffEditor();
+    }
+    function restoreSettingsSffTierDefaults() {
+      if (!settingsDraft) return;
+      const id = settingsDraft.fulfillment.sff.serviceId;
+      settingsDraft.sffTariffs[id].tiers = clone(SFF_TARIFF_DEFAULTS[id].tiers);
+      $('settings-error').textContent = '';
+      renderSettingsSffTariffEditor();
+    }
+    function renderSettingsSffTariffEditor() {
+      const parent = $('sf-sff-tariff-editor');
+      if (!parent || !settingsDraft) return;
+      const id = settingsDraft.fulfillment.sff.serviceId, service = settingsDraft.sffTariffs[id];
+      if (!service) return;
+      const labels = ['起始kg','截止kg','运费¥/kg','挂号¥/单'];
+      const input = (i,col,v) => '<input type="number" min="0" step="any" value="' + (Number.isFinite(v) ? v : '')
+        + '" aria-label="第' + (i+1) + '档 ' + labels[col] + '"'
+        + ' oninput="updateSettingsSffTier(' + i + ',' + col + ',this.value)"'
+        + ' style="box-sizing:border-box;width:100%;min-width:66px;padding:5px 6px;border:1px solid var(--bd);border-radius:5px;font-size:12px;background:var(--w);color:var(--t)">';
+      parent.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+        + '<b style="font-size:12px">' + escapeHTML(service.name) + ' · ' + service.tiers.length + '档</b>'
+        + '<button type="button" class="s-btn s-btn-ghost" onclick="restoreSettingsSffTierDefaults()" title="只恢复当前渠道的原始报价">恢复此渠道原始报价</button></div>'
+        + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed"><thead><tr>'
+        + labels.map(x => '<th style="text-align:left;padding:5px 4px;white-space:nowrap">' + x + '</th>').join('')
+        + '<th style="width:32px"></th></tr></thead><tbody>'
+        + service.tiers.map((values,i) => '<tr>'
+          + values.map((v,col) => '<td style="padding:4px 3px">' + input(i,col,v) + '</td>').join('')
+          + '<td style="padding:4px 2px"><button type="button" aria-label="删除第' + (i+1) + '档" title="删除这一档"'
+          + ' onclick="removeSettingsSffTier(' + i + ')" style="border:0;background:none;color:#c63030;cursor:pointer;font-size:16px">×</button></td>'
+          + '</tr>').join('') + '</tbody></table></div>'
+        + '<button type="button" class="s-btn s-btn-ghost" style="margin-top:8px" onclick="addSettingsSffTier()">+ 新增重量档</button>'
+        + '<div style="margin-top:8px;color:var(--t3);font-size:11px;line-height:1.6">只修改当前选择的直邮渠道。各档按起始重量升序排列、区间不得重叠；原表中的小数间隙保留，不自动进位。保存参数后才影响单品、批量和反推利润。</div>';
+    }
+
     function renderSBody() {
       if (sCurTab === 'platform') $('s-body').innerHTML = '<div class="ssec">Walmart 共同费用 · 费用填 0 或留空时不计算该项</div><div class="srow">'
         + orderedParams(settingsDraft.platforms[cur]).map(([label, key, value]) => `<div class="spc2">${key === 'comm' ? `<button type="button" class="commission-trigger" data-commission-title="settings" aria-haspopup="dialog" onclick="openCommissionPicker('settings')">${escapeHTML(label)}</button>` : `<label>${escapeHTML(label)}</label>`}<input type="number" id="sp-${key}" ${key === 'comm' ? 'oninput="onSettingsCommissionInput()"' : ''} value="${value}" min="0" step="0.01"${key === 'disc' ? ' max="99.99"' : ''}></div>`).join('') + '</div>';
@@ -2861,16 +2945,21 @@
           + '<input type="number" id="sf-wfsSea-storageDays" min="0" step="any" value="' + days + '"></div></div>'
           + Object.entries(CHANNELS).map(([channel, info]) => `<div class="ssec">${info.name}</div><div class="srow">`
             + (channel === 'sff'
-              ? '<div class="spc2"><label for="sf-sff-serviceId">直邮渠道</label><select id="sf-sff-serviceId">'
+              ? '<div class="spc2"><label for="sf-sff-serviceId">直邮渠道</label><select id="sf-sff-serviceId" onchange="setSettingsSffService(this.value)">'
                 + Object.entries(SFF_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === settingsDraft.fulfillment.sff.serviceId ? ' selected' : '') + '>' + escapeHTML(svc.name) + '</option>').join('')
                 + '</select></div>'
               : '')
-            + MODE_FIELDS[channel].map(([label, key]) => `<div class="spc2">${settingsFeeLabel(channel, label, key)}<input type="number" id="sf-${channel}-${key}" value="${settingsDraft.fulfillment[channel][key]}" min="0" step="0.01"></div>`).join('') + '</div>').join('');
+            + MODE_FIELDS[channel].map(([label, key]) => `<div class="spc2">${settingsFeeLabel(channel, label, key)}<input type="number" id="sf-${channel}-${key}" value="${settingsDraft.fulfillment[channel][key]}" min="0" step="0.01"></div>`).join('') + '</div>'
+            + (channel === 'sff' ? `<details id="sf-sff-tariff-details" style="margin:8px 0 18px;border:1px solid var(--bd);border-radius:8px;padding:10px 12px" ontoggle="if(this.open)renderSettingsSffTariffEditor()">
+              <summary style="cursor:pointer;color:var(--blue);font-size:12px;font-weight:700">展开 / 修改直邮渠道报价表</summary>
+              <div id="sf-sff-tariff-editor" style="padding-top:10px"></div>
+            </details>` : '')).join('');
       }
     }
     function validateConfig(config) {
       const p = { ...Object.fromEntries(config.platforms[cur].p.map(([, key, value]) => [key, Number(value)])), commissionCategory: config.platforms[cur].commissionCategory || null };
       validateParams(p); originalPrice(0, p.disc);
+      validateSffTariffs(config.sffTariffs || SFF_TARIFF_DEFAULTS);
       Object.keys(CHANNELS).forEach(channel => validateFees(channel, config.fulfillment[channel]));
       for (const key of ['storageRateUSD','storageDays']) {
         if (!Number.isFinite(config.fulfillment.wfsSea[key]) || config.fulfillment.wfsSea[key] < 0)
@@ -2880,12 +2969,16 @@
     function saveSettings() {
       try {
         flushSTab(); validateConfig(settingsDraft);
-        C = clone(settingsDraft.platforms); F = clone(settingsDraft.fulfillment);
+        C = clone(settingsDraft.platforms); F = clone(settingsDraft.fulfillment); SFF_TARIFFS = clone(settingsDraft.sffTariffs);
         try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentConfig())); } catch (_) {}
         renderP(); renderFulfillment(); renderBatchParams(); invalidateResults(); closeSettings(); return true;
       } catch (error) { $('settings-error').textContent = error.message; return false; }
     }
-    function resetSettings() { settingsDraft = clone(DEFAULT_CONFIG); $('settings-error').textContent = ''; renderSTabs(); renderSBody(); }
+    function resetSettings() {
+      settingsDraft = clone(DEFAULT_CONFIG);
+      settingsDraft.sffTariffs = clone(DEFAULT_CONFIG.sffTariffs || SFF_TARIFF_DEFAULTS);
+      $('settings-error').textContent = ''; renderSTabs(); renderSBody();
+    }
     function saveAndDownload() {
       if (!saveSettings()) return;
       const copy = document.documentElement.cloneNode(true);
@@ -3109,7 +3202,8 @@
           }));
           // Existing settings retain the selected channel; old flat freight fields are obsolete.
           const savedServiceId = saved.fulfillment?.sff?.serviceId;
-          if (SFF_TARIFFS[savedServiceId]) config.fulfillment.sff.serviceId = savedServiceId;
+          if (SFF_TARIFF_DEFAULTS[savedServiceId]) config.fulfillment.sff.serviceId = savedServiceId;
+          config.sffTariffs = clone(saved.sffTariffs || DEFAULT_CONFIG.sffTariffs || SFF_TARIFF_DEFAULTS);
           // Backward compatibility: use previously saved sea storage as the canonical WFS rate/days.
           for (const key of ['storageRateUSD','storageDays']) {
             const value = saved.fulfillment?.wfsSea?.[key] ?? saved.fulfillment?.wfsAir?.[key];
@@ -3121,11 +3215,12 @@
           const category = saved.platforms?.[cur]?.commissionCategory;
           config.platforms[cur].commissionCategory = REFERRAL_RULES.some(rule => rule.id === category) ? category : null;
           if (CHANNELS[saved.defaultChannel]) config.defaultChannel = saved.defaultChannel;
-          validateConfig(config); C = config.platforms; F = config.fulfillment; defaultChannel = config.defaultChannel;
+          validateConfig(config); C = config.platforms; F = config.fulfillment; SFF_TARIFFS = clone(config.sffTariffs); defaultChannel = config.defaultChannel;
           if (profitMigrated) localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentConfig()));
         }
         if (migrateProfit) localStorage.setItem(PROFIT_40_MIGRATION_KEY, 'done');
       } catch (_) {}
+      if (!Object.values(SFF_TARIFFS).every(svc => svc && Array.isArray(svc.tiers))) SFF_TARIFFS = clone(SFF_TARIFF_DEFAULTS);
       $('side-platform-list').innerHTML = '<div class="slbl">美国 · United States</div>' + Object.entries(C).map(([key, cfg]) => `<button class="pb" id="btn-${key}" onclick="go('${key}')"><div class="pi" style="background:#e5f1ff;color:#0071ce">W</div><div class="pn"><div class="pm">${escapeHTML(cfg.platform)}</div><div class="ps">美国站 · ${cfg.currency}</div></div></button>`).join('');
       go(cur); renderFulfillment(); renderBatchHead(); addBatchRow(); _setupExprInputs(); bindKitEvents(); setProductFillMode('single');
       let mode = 'single'; try { mode = localStorage.getItem('pricing_us_last_mode') === 'batch' ? 'batch' : 'single'; } catch (_) {}
