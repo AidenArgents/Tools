@@ -8,7 +8,7 @@
 <style>
 :root{--bg:#f4f6fa;--ink:#18243b;--muted:#78849a;--line:#e6eaf1;--white:#fff;--navy:#111c31;--blue:#3773e8;--orange:#e99030;--purple:#9166d8;--green:#169d85;--red:#d95762;--shadow:0 8px 30px rgba(19,37,70,.05)}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.52 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #94b6ff;outline-offset:2px}
-.top{background:var(--navy);color:#fff;padding:26px max(24px,calc((100vw - 1720px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px}.eyebrow{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;color:#80abff}.top h1{margin:5px 0 4px;font-size:27px;letter-spacing:-.6px;line-height:1.3}.top p{margin:0;color:#b2c1d8;font-size:13px}.topright{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}.top .smallbtn{color:#dce6fa;border:1px solid #35445f;background:#202e46}.savehint{font-size:11px;color:#a8d8c7;white-space:nowrap}.top .smallbtn:hover{background:#31425d}
+.top{background:var(--navy);color:#fff;padding:26px max(24px,calc((100vw - 1720px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px}.eyebrow{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;color:#80abff}.top h1{margin:5px 0 4px;font-size:27px;letter-spacing:-.6px;line-height:1.3}.top p{margin:0;color:#b2c1d8;font-size:13px}.topright{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}.top .smallbtn{color:#dce6fa;border:1px solid #35445f;background:#202e46}.savehint{font-size:11px;color:#ffd49a;white-space:nowrap;font-weight:650}.savehint[hidden]{display:none}.top .smallbtn:hover{background:#31425d}
 .smallbtn{background:white;color:#4a5870;padding:8px 12px;border-radius:10px;border:1px solid var(--line);font-size:12px;font-weight:700}.smallbtn:hover{background:#f1f5fd}.primary{background:#346ce7;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:750}.primary:hover{background:#255cd3}
 .wrap{max-width:1780px;margin:auto;padding:22px 24px 54px}.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:17px}.metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 17px;box-shadow:var(--shadow)}.metric .m-label{font-size:11px;color:#8793a5;font-weight:700;letter-spacing:.4px}.metric .m-value{font-size:26px;font-weight:850;margin:4px 0 0;line-height:1.28;font-variant-numeric:tabular-nums}.metric .m-info{font-size:11px;color:#8190a7}.layout{display:grid;grid-template-columns:312px minmax(0,1fr);align-items:start;gap:16px}.sidebar{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin}.panel,.mainpanel{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}.panel{padding:17px;margin-bottom:13px}.sectiontitle{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;font-size:14px;font-weight:850}.subtle{font-size:11px;color:var(--muted)}.field{display:flex;flex-direction:column;gap:5px;min-width:0}.field span{font-size:11px;font-weight:650;color:#65728a}.field input,.field select,.field textarea{min-width:0;width:100%;border:1px solid #dfe5ef;background:#fff;color:#1a2d4a;border-radius:9px;padding:8px 10px;font-weight:650}.field textarea{min-height:65px;resize:vertical;font-weight:400}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}.route{padding:10px 0;border-top:1px solid #edf0f5}.route:first-of-type{border-top:0}.routehead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}.routehead strong{font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:7px}.routehead .total{color:#738299;font-size:11px;font-weight:750}.toggle{accent-color:#3875ec;width:16px;height:16px;margin:0 7px 0 0;vertical-align:middle}.checkline{display:flex;align-items:center;gap:1px;cursor:pointer}.route.disabled{opacity:.48}.route .twocol input{padding:7px}.hint{font-size:11px;color:#8995a9;line-height:1.55;margin-top:10px}.warning{background:#fff6e8;border:1px solid #f5ddbb;color:#966527;padding:9px 11px;border-radius:9px;font-size:11px;line-height:1.5}.warnrow{margin-top:10px}.line{border:0;border-top:1px solid var(--line);margin:14px 0}.legend{display:flex;flex-wrap:wrap;gap:10px}.legend span{color:#75849c;font-size:11px}.mainpanel{overflow:hidden;min-height:720px}.toolbar{padding:20px 22px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.toolbar h2{font-size:21px;line-height:1.25;margin:0;letter-spacing:-.4px}.toolbar .left,.toolbar .right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.navbutton{height:32px;min-width:32px;border:1px solid var(--line);background:#fff;border-radius:8px;color:#63738d;font-size:17px}.navbutton:hover{background:#edf3ff}.seg{display:flex;background:#f0f3f8;padding:3px;border-radius:10px}.seg button{background:transparent;border:0;color:#8290a4;border-radius:8px;padding:7px 12px;font-weight:750;font-size:12px}.seg button.active{color:#1b365e;background:#fff;box-shadow:0 1px 5px #dae2ef}.filters{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 16px;align-items:center;border-bottom:1px solid var(--line)}.filters input,.filters select{border:1px solid #e3e8f0;background:#fff;border-radius:9px;padding:8px 10px;color:#4b5a72;max-width:210px;min-width:100px;font-size:12px}.filters input{flex:1;min-width:130px}.filters .counter{margin-left:auto;font-size:11px;color:#8492a7}
 .categorybar{padding:9px 22px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line);background:#fcfdff}
@@ -27,7 +27,7 @@
 <body>
 <header class="top">
  <div><div class="eyebrow">US COMMERCE PLANNER · 2027—2028</div><h1>美国电商 · 营销与备货日历</h1><p>重要消费节点 × 4 种运输方式 × 自动倒排最迟行动日期</p></div>
- <div class="topright"><span class="savehint" id="saveStatus">浏览器自动暂存 · 请另存 HTML 文件</span><button class="smallbtn" id="todayBtn">回到近期</button><button class="primary" id="saveHtmlBtn" title="在 Chrome 中选择一个本地 HTML 文件，保存全部当前数据；本次打开网页期间以后可直接保存到同一文件">💾 保存到本地 HTML</button><button class="smallbtn" id="exportHtmlBtn" title="下载一个包含当前事件和参数的完整 HTML 文件，发送给别人即可查看">下载 HTML 副本</button><button class="smallbtn" id="exportBtn" title="只保存数据，后续可导入">导出 JSON</button><button class="smallbtn" id="importBtn">导入 JSON</button><button class="smallbtn" id="addEvent">＋ 新增事件</button><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+ <div class="topright"><span class="savehint" id="saveStatus" role="status" aria-live="polite" hidden></span><button class="smallbtn" id="todayBtn">回到近期</button><button class="smallbtn" id="saveHtmlBtn" title="只有新增、修改或删除事件才需要手动保存到 HTML；普通勾选、物流参数、筛选只缓存到浏览器">💾 保存到本地 HTML</button><button class="smallbtn" id="exportHtmlBtn" title="下载一个包含当前事件和参数的完整 HTML 文件，发送给别人即可查看">下载 HTML 副本</button><button class="smallbtn" id="exportBtn" title="只保存数据，后续可导入">导出 JSON</button><button class="smallbtn" id="importBtn">导入 JSON</button><button class="smallbtn" id="addEvent">＋ 新增事件</button><input type="file" id="importFile" accept=".json,application/json" hidden></div>
 </header>
 <div class="wrap">
  <div class="summary"><div class="metric"><div class="m-label">2027–2028 事件总数</div><div class="m-value" id="statEvents">—</div><div class="m-info">含节日、季节性需求、供应链风险</div></div><div class="metric"><div class="m-label">启用物流方案</div><div class="m-value" id="statRoutes">—</div><div class="m-info">变更参数，全局即时重算</div></div><div class="metric"><div class="m-label">下一次行动截止</div><div class="m-value" id="statNext">—</div><div class="m-info" id="statNextNote">查看计划中</div></div><div class="metric"><div class="m-label">日期待公布</div><div class="m-value" id="statTba">—</div><div class="m-info">平台活动不虚构官方日期</div></div></div>
@@ -67,7 +67,7 @@
   <div class="filters"><input id="search" placeholder="搜索节日 / 事件 / 品类..." aria-label="搜索"><select id="importance"><option value="all">全部重要程度</option><option value="high">仅重点事件</option></select><span class="counter" id="visibleCount"></span></div>
   <div class="categorybar"><span class="categorybar-title">事件分类 · 多选</span><button class="cat-action" id="catAll" type="button">全选</button><button class="cat-action" id="catNone" type="button">清空</button><label class="cat-pill"><input type="checkbox" class="catToggle" value="shopping">购物节日 <small data-category-count="shopping"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="season">消费旺季 <small data-category-count="season"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="culture">人群文化 <small data-category-count="culture"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="sport">体育事件 <small data-category-count="sport"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="supply">供应链提醒 <small data-category-count="supply"></small></label></div>
   <div id="calendarArea"></div>
-  <div class="notice">使用方式：在每一天的格子内上下滚动查看所有事项；点击<strong>红色节日条目</strong>查看该节日全部物流方案，点击<strong>日期顶部整行（数字与事项数量区域）</strong>查看当日所有事项。节日采用美国当地日期；“入库日”是活动前可售目标日，并非平台保证入库时效。<strong>浏览器自动暂存 ≠ 写入 HTML 文件。</strong>修改后点击「保存到本地 HTML」，在 Chrome 中首次选择存放位置或已有文件（覆盖前请确认）。保存后的 HTML 包含新增事件、Walmart 日期和全部参数，可直接发给同事。若浏览器不支持写入文件，使用「下载 HTML 副本」。</div>
+  <div class="notice">使用方式：在每一天的格子内上下滚动查看所有事项；点击<strong>红色节日条目</strong>查看该节日全部物流方案，点击<strong>日期顶部整行（数字与事项数量区域）</strong>查看当日所有事项。节日采用美国当地日期；“入库日”是活动前可售目标日，并非平台保证入库时效。<strong>分类勾选、方案开关和物流天数会自动记在浏览器中，不必另存文件。</strong>只有新增、修改、删除节日或填写 Walmart 活动日期时，才需要点击「保存到本地 HTML」或「下载 HTML 副本」，让新增事件随文件一起分享。</div>
  </main>
  </div>
  <footer class="footer">US COMMERCE PLANNER · 离线单文件 HTML · 2027—2028 · 数据来源：OPM / US Census / FIFA / LA28 / 节日日历。请以平台、货代及仓库最终通知为准。</footer>
@@ -125,15 +125,29 @@ var preferred=embeddedState&&(!storedState||Number(embeddedState._savedAt||0)>Nu
 state=normalizeState(preferred);
 var view='month',visibleYear=2027,visibleMonth=1,query='',importance='all',events=[],entriesMap={},allItems=[];
 var savedFileHandle=null;
+state._eventDirty=!!state._eventDirty;
+function eventRecordSignature(){
+ // 只有事件记录的增删改（含平台日期）才属于需要写入 HTML 的业务改动。
+ return JSON.stringify([state.custom,state.edits,state.hidden,state.tba]);
+}
+function renderSaveStatus(){
+ var status=el('saveStatus'),button=el('saveHtmlBtn');
+ status.hidden=!state._eventDirty;
+ if(state._eventDirty)status.textContent='● 有新增或修改的事件，尚未写入 HTML';
+ button.classList.toggle('primary',!!state._eventDirty);
+ button.classList.toggle('smallbtn',!state._eventDirty);
+}
 function save(){
+ // 配置、勾选与筛选变化仅缓存，不要求用户保存一个新文件。
  state._savedAt=Date.now();
  try{
   localStorage.setItem(STORE,JSON.stringify(state));
-  el('saveStatus').textContent='✓ 浏览器已暂存 · 未写入 HTML';
- }catch(err){
-  el('saveStatus').textContent='⚠ 暂存失败！请立即保存 HTML';
-  console.warn('本地存储失败',err);
- }
+ }catch(err){console.warn('浏览器缓存失败',err)}
+ renderSaveStatus();
+}
+function saveEventChanges(previousSignature){
+ if(eventRecordSignature()!==previousSignature)state._eventDirty=true;
+ save();
 }
 function addEvent(arr,y,id,name,date,category,priority,products,note,source,status,end,extra){
  arr.push({id:'builtin-'+y+'-'+id,name:name,date:date,end:end||'',category:category,priority:priority||'normal',products:products||'',note:note||'',source:source||'',status:status||'confirmed',supply:category==='supply',lead:null,...(extra||{})});
@@ -349,7 +363,7 @@ function openEditor(e,seed){
  var h='<div class="modalhead"><div><h2>'+(edit?'编辑事件':fromSeed?'确认平台活动日期':'新增自定义事件')+'</h2><p>保存后立即重算时间节点。原始内置数据不会被永久改写。</p></div><button class="close" aria-label="关闭">×</button></div><form id="eventForm"><label class="field"><span>事件名称</span><input name="name" maxlength="80" required value="'+esc(val.name)+'"></label><div class="twocol"><label class="field"><span>开始 / 目标日期</span><input type="date" name="date" required value="'+esc(val.date)+'"></label><label class="field"><span>结束日期（可空）</span><input type="date" name="end" value="'+esc(val.end||'')+'"></label></div><div class="twocol"><label class="field"><span>分类</span><select name="category">'+Object.keys(categoryNames).map(function(k){return '<option value="'+k+'" '+(k===val.category?'selected':'')+'>'+categoryNames[k]+'</option>'}).join('')+'</select></label><label class="field"><span>重要程度</span><select name="priority"><option value="high" '+(val.priority==='high'?'selected':'')+'>重点</option><option value="normal" '+(val.priority!=='high'?'selected':'')+'>一般</option></select></label></div><div class="twocol"><label class="field"><span>该事件提前可售（天，可留空继承全局）</span><input type="number" min="0" max="365" name="lead" placeholder="跟随全局" value="'+(val.lead===null||val.lead===undefined?'':esc(val.lead))+'"></label><label class="field"><span>日期标注</span><select name="status"><option value="confirmed" '+(val.status==='confirmed'?'selected':'')+'>已确定</option><option value="estimated" '+(val.status==='estimated'?'selected':'')+'>预计 / 自定规划</option><option value="user" '+(val.status==='user'?'selected':'')+'>自行安排</option></select></label></div><label class="field"><span>商品品类</span><input name="products" maxlength="240" value="'+esc(val.products||'')+'"></label><label class="field"><span>说明 / 备忘</span><textarea name="note" maxlength="800">'+esc(val.note||'')+'</textarea></label><div id="formError" class="error"></div><div class="modalactions">'+(edit?'<button type="button" class="smallbtn" id="removeThis" style="margin-right:auto;color:#b65360">删除 / 隐藏</button>':'')+'<button class="smallbtn" type="button" data-close>取消</button><button type="submit" class="primary">保存事件</button></div></form>';
  showModal(h);
  el('eventForm').addEventListener('submit',function(ev){
- ev.preventDefault();var f=ev.target,fd=new FormData(f),date=String(fd.get('date')||''),end=String(fd.get('end')||''),l=String(fd.get('lead')||'');
+ ev.preventDefault();var signatureBefore=eventRecordSignature();var f=ev.target,fd=new FormData(f),date=String(fd.get('date')||''),end=String(fd.get('end')||''),l=String(fd.get('lead')||'');
  if(end&&end<date){el('formError').textContent='结束日期不能早于开始日期';return}
  if(l!==''&&safeNumber(l)===null){el('formError').textContent='提前可售天数需是 0–365 的整数';return}
  var data={name:String(fd.get('name')||'').trim(),date:date,end:end,category:String(fd.get('category')),priority:String(fd.get('priority')),lead:l===''?null:Number(l),status:String(fd.get('status')),products:String(fd.get('products')||''),note:String(fd.get('note')||''),supply:String(fd.get('category'))==='supply'};
@@ -361,13 +375,14 @@ function openEditor(e,seed){
  data.id='user-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
  if(fromSeed){data.seed=seed.id;state.tba.push(data)}else state.custom.push(data);
  }
- save();closeModal();visibleYear=+date.slice(0,4);visibleMonth=+date.slice(5,7);view='month';render();
+ saveEventChanges(signatureBefore);closeModal();visibleYear=+date.slice(0,4);visibleMonth=+date.slice(5,7);view='month';render();
  });
  if(edit)el('removeThis').addEventListener('click',function(){
  if(!confirm('确定删除或隐藏这个事件？可通过导入之前的 JSON 备份恢复。'))return;
+ var signatureBefore=eventRecordSignature();
  if(e.id.startsWith('builtin-'))state.hidden.push(e.id);
  else {state.custom=state.custom.filter(function(z){return z.id!==e.id});state.tba=state.tba.filter(function(z){return z.id!==e.id})}
- save();closeModal();render();
+ saveEventChanges(signatureBefore);closeModal();render();
  });
 }
 function updateAndRender(){save();render()}
@@ -409,19 +424,20 @@ function bind(){
  }
  function getSnapshot(){
   var now=Date.now();
-  return Object.assign({},state,{_savedAt:now,_fileSavedAt:now});
+  return Object.assign({},state,{_savedAt:now,_fileSavedAt:now,_eventDirty:false});
  }
  el('exportHtmlBtn').addEventListener('click',function(){
   var snapshot=getSnapshot();
   downloadText(buildDataHtml(snapshot),'美国电商备货日历_含数据_'+todayKey+'.html','text/html;charset=utf-8');
-  el('saveStatus').textContent='↧ HTML 副本已发起下载 · 请确认已保存';
+  // 下载操作不能确认浏览器是否真的保存到磁盘，因此保留未保存提示，避免误报。
+  renderSaveStatus();
  });
  el('saveHtmlBtn').addEventListener('click',async function(){
   var button=this,old=button.textContent,snapshot=getSnapshot(),html=buildDataHtml(snapshot);
   // Chrome / Edge 支持授权写入用户选定的本地 HTML；其他浏览器回退为下载。
   if(typeof window.showSaveFilePicker!=='function'){
    downloadText(html,'美国电商备货日历_工作版.html','text/html;charset=utf-8');
-   el('saveStatus').textContent='↧ 已发起下载 HTML · 浏览器不支持直接覆盖文件';
+   renderSaveStatus();
    return;
   }
   try{
@@ -437,13 +453,13 @@ function bind(){
    await writable.write(html);
    await writable.close();
    // 文件成功写入后也保存本地临时副本。
-   state._savedAt=snapshot._savedAt;state._fileSavedAt=snapshot._fileSavedAt;
+   state._savedAt=snapshot._savedAt;state._fileSavedAt=snapshot._fileSavedAt;state._eventDirty=false;
    try{localStorage.setItem(STORE,JSON.stringify(state))}catch(err){console.warn('临时备份失败',err)}
-   el('saveStatus').textContent='✓ 已写入 '+savedFileHandle.name;
+   renderSaveStatus();
   }catch(err){
    if(err.name!=='AbortError'){
     console.warn('本地 HTML 写入失败',err);
-    el('saveStatus').textContent='⚠ 文件未写入，请下载 HTML 副本';
+    renderSaveStatus();
     alert('未能保存到指定 HTML 文件：'+err.message+'\n可尝试「下载 HTML 副本」，不会丢失当前网页中的编辑。');
     // 如果用户撤回了文件权限，下一次可以重新选择。
     if(err.name==='NotAllowedError')savedFileHandle=null;
@@ -451,7 +467,10 @@ function bind(){
   }finally{button.disabled=false;button.textContent=old}
  });
  el('importBtn').addEventListener('click',function(){el('importFile').click()});
- el('importFile').addEventListener('change',function(){var file=this.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(){try{var v=JSON.parse(reader.result);if(v.version!==1||!v.data||!Array.isArray(v.data.routes)||v.data.routes.length!==4)throw new Error('文件格式不符合本工具备份规范');if(!confirm('导入会覆盖当前设置及自定义事件。确定继续吗？'))return;state=normalizeState(v.data);initControls();updateAndRender();alert('已导入 '+file.name)}catch(e){alert('导入失败：'+e.message)}};reader.readAsText(file,'UTF-8');this.value=''});
+ el('importFile').addEventListener('change',function(){var file=this.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(){try{var v=JSON.parse(reader.result);if(v.version!==1||!v.data||!Array.isArray(v.data.routes)||v.data.routes.length!==4)throw new Error('文件格式不符合本工具备份规范');if(!confirm('导入会覆盖当前设置及自定义事件。确定继续吗？'))return;var signatureBefore=eventRecordSignature(),dirtyBefore=state._eventDirty;
+state=normalizeState(v.data);
+state._eventDirty=dirtyBefore||eventRecordSignature()!==signatureBefore;
+initControls();updateAndRender();alert('已导入 '+file.name)}catch(e){alert('导入失败：'+e.message)}};reader.readAsText(file,'UTF-8');this.value=''});
  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
 }
 function shift(n){
@@ -459,7 +478,7 @@ function shift(n){
  if(visibleYear<2026){visibleYear=2026;visibleMonth=1}if(visibleYear>2029){visibleYear=2029;visibleMonth=12}
  render();
 }
-initControls();bind();render();
+initControls();bind();render();renderSaveStatus();
 })();
 </script>
 </body></html>
