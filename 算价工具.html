@@ -450,9 +450,12 @@
     }
 
     .kit-row {
-      margin-bottom: 8px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed #cfebe0
+      padding: 4px 0 7px
+    }
+    .kit-row + .kit-row {
+      border-top: 2px solid #b9dacd;
+      margin-top: 10px;
+      padding-top: 12px
     }
     .kit-row-main {
       display: grid;
@@ -1518,8 +1521,16 @@
               <button class="tb" id="fill-kit-btn" onclick="setProductFillMode('kit')">组合装</button>
             </div>
           </div>
+          <div class="kit-panel" id="kit-panel" style="display:none">
+            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：按配件数量汇总成本、重量和体积。配件长宽高用于估算累计占用空间；下方商品长宽高必须填写<strong>组合完成后的实际包装外尺寸</strong>，不自动套用配件体积。订单销售数量通常填1。</div>
+            <div class="kit-head"><span>配件</span><span>成本 ￥</span><span>重量 kg</span><span>×</span><span></span></div>
+            <div id="kit-rows"></div>
+            <div id="kit-warning" role="alert" style="display:none;color:#b91c1c;font-size:11px;margin:3px 0 8px"></div>
+            <button type="button" class="kit-add" onclick="addKitPart()">＋ 添加配件</button>
+            <div id="kit-summary" class="kit-summary" aria-live="polite">配件累计体积：—（可选填配件长、宽、高）；成本、重量自动汇总到下方。</div>
+          </div>
           <div class="g3" style="margin-bottom:11px">
-            <div class="f"><label>商品成本 (￥)</label><input type="text" inputmode="decimal" id="cost" data-expr-input
+            <div class="f"><label id="cost-label">商品成本 (￥)</label><input type="text" inputmode="decimal" id="cost" data-expr-input
                 style="background:#f0fdf8;border-color:#b2f2e0"></div>
             <div class="f"><label id="weight-label" for="weight">重量 (kg)</label><input type="text" inputmode="decimal" id="weight" data-expr-input
                 style="background:#f0fdf8;border-color:#b2f2e0">
@@ -1529,14 +1540,6 @@
             <div class="f"><label title="此项代表同一订单购买多少个独立销售单位，不是组合装内部的件数。WFS按每个销售单位收取配送费；数量大于1时显示整单售价。单件SKU算价通常填1；组合装配件数量请到组合装模式填写。" style="cursor:help">订单销售数量</label><input type="number" id="qty" value="1" min="1" step="1"
                 style="background:#fffbf0;border-color:#ffd08a"></div>
             
-          </div>
-          <div class="kit-panel" id="kit-panel" style="display:none">
-            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：按配件数量汇总成本、重量和体积。配件长宽高用于估算累计占用空间；下方商品长宽高必须填写<strong>组合完成后的实际包装外尺寸</strong>，不自动套用配件体积。订单销售数量通常填1。</div>
-            <div class="kit-head"><span>配件</span><span>成本 ￥</span><span>重量 kg</span><span>×</span><span></span></div>
-            <div id="kit-rows"></div>
-            <div id="kit-warning" role="alert" style="display:none;color:#b91c1c;font-size:11px;margin:3px 0 8px"></div>
-            <button type="button" class="kit-add" onclick="addKitPart()">＋ 添加配件</button>
-            <div id="kit-summary" class="kit-summary" aria-live="polite">配件累计体积：—（可选填配件长、宽、高）</div>
           </div>
           <div class="g3" id="vdims">
             <div class="f"><label title="每个填写单位的完整包装尺寸；组合重新打包时请先确认包装尺寸和计费单位">长 (cm)</label><input type="text" inputmode="decimal" id="diml" data-expr-input style="background:#f0fdf8;border-color:#b2f2e0"></div>
@@ -1972,6 +1975,8 @@
       $('fill-single-btn')?.classList.toggle('on', productFillMode === 'single');
       $('fill-kit-btn')?.classList.toggle('on', productFillMode === 'kit');
       $('kit-panel').style.display = productFillMode === 'kit' ? '' : 'none';
+      $('cost-label').textContent = productFillMode === 'kit' ? '组合装成本合计 (￥)' : '商品成本 (￥)';
+      $('weight-label').textContent = productFillMode === 'kit' ? '组合装重量合计 (kg)' : '重量 (kg)';
       ['cost', 'weight', 'weight-lb'].forEach(id => { $(id).readOnly = productFillMode === 'kit'; });
       if (productFillMode === 'kit') {
         renderKitRows();
@@ -2118,17 +2123,13 @@
       });
       const summary = $('kit-summary');
       if (summary) {
-        const costText = totals.hasParts && !totals.errors.length ? '¥' + shownNumber(totals.cost) : '—';
-        const weightTextValue = totals.hasParts && totals.requiresWeight && !totals.errors.length
-          ? shownNumber(totals.weight) + ' kg' : '—';
         const volumeText = !totals.hasParts || totals.volumeCount === 0
           ? '—（填写配件的长宽高后计算）'
           : shownNumber(totals.volume) + ' cm³（约 ' + shownNumber(totals.volume / Math.pow(30.48,3)) + ' ft³）'
             + (totals.volumeMissing ? '；仅 ' + totals.volumeCount + '/' + (totals.volumeCount + totals.volumeMissing) + ' 行已填写完整尺寸，尚非整套累计值' : '');
-        summary.textContent = '配件合计：成本 ' + costText + ' · 重量 ' + weightTextValue
-          + ' · 累计体积 ' + volumeText
+        summary.textContent = '配件累计体积：' + volumeText
           + (totals.volumeErrors.length ? '；' + totals.volumeErrors.join('；') : '')
-          + '。物流计算仍以下方的组合装最终包装长宽高为准。';
+          + '。成本和重量自动合计到下方输入框；物流仍按组合完成后的实际包装尺寸计算。';
       }
       applyExprValue($('cost'), totals.errors.length || !totals.hasParts ? '' : totals.cost);
       if (!totals.errors.length && totals.requiresWeight) writeWeightPair(totals.weight, undefined, 'both');
