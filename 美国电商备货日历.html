@@ -75,14 +75,26 @@
    <div class="hint">默认大节45天、中节30天、小节15天。修改后自动重新倒排；无需保存新的 HTML。具体节日可更换等级，也可单独覆盖天数。</div>
    <button class="smallbtn" id="openTierView" style="width:100%;margin-top:10px" type="button">查看各级节日 · 调整归属</button>
   </section>
-  <section class="panel" id="routesPanel"><h3 class="sectiontitle">03 · 物流方案 <span class="subtle">前四条默认启用</span></h3><div class="hint" style="margin:0 0 10px">按物流表六条线路；到港提取、送仓、仓库完成签收上架独立计算；区间取最大天数。</div><div class="route" data-index="0"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#3773e8"></span><strong>合德正班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：前一周六提货，周三发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
+  <section class="panel" id="supplyPanel">
+   <h3 class="sectiontitle">03 · 节前最后一波出货 <span class="subtle">供应链单独倒排</span></h3>
+   <div class="twocol">
+    <label class="field"><span>节前选品采样 / 天</span><input id="supplyPickDays" type="number" min="0" max="365"></label>
+    <label class="field"><span>节前备货提货 / 天</span><input id="supplyPrepDays" type="number" min="0" max="365"></label>
+    <label class="field"><span>春节最迟起运提前 / 天</span><input id="supplyCnyLead" type="number" min="0" max="365"></label>
+    <label class="field"><span>国庆最迟起运提前 / 天</span><input id="supplyNationalLead" type="number" min="0" max="365"></label>
+    <label class="field"><span>其他供应链事件提前 / 天</span><input id="supplyOtherLead" type="number" min="0" max="365"></label>
+   </div>
+   <div class="warning warnrow">提前量是<strong>可修改的计划假设</strong>，不是官方工厂停工或船司截单日。实际确定截止日后，可在对应事件中单独填写。</div>
+   <div class="hint">从节前起运截止反推：各线路最后开船 → 货代提货 → 周四完成选品 → 开始选品。与 S/A/B 销售节日的入库流程相互独立。</div>
+  </section>
+  <section class="panel" id="routesPanel"><h3 class="sectiontitle">04 · 物流方案 <span class="subtle">前四条默认启用</span></h3><div class="hint" style="margin:0 0 10px">按物流表六条线路；到港提取、送仓、仓库完成签收上架独立计算；区间取最大天数。</div><div class="route" data-index="0"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#3773e8"></span><strong>合德正班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：前一周六提货，周三发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="1"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#169d85"></span><strong>美森正班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：前一周六提货，周三发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="2"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#9166d8"></span><strong>合德加班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：周二提货，周四发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="3"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#e99030"></span><strong>美森加班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：周二提货，周四发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="4"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#b47332"></span><strong>UPS红单</strong></label><span class="total">—</span></div><div class="route-schedule">船期：隔天</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">原表：红单快递</div></div>
 <div class="route" data-index="5"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#6883a6"></span><strong>慢船</strong></label><span class="total">—</span></div><div class="route-schedule">船期：不定期</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">运输 30～40 天，按 40 天</div></div></section>
   <section class="panel">
-   <h3 class="sectiontitle">04 · 日历显示</h3>
+   <h3 class="sectiontitle">05 · 日历显示</h3>
    <label class="checkline"><input class="toggle" id="showStart" type="checkbox">显示「开始选品」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showFinish" type="checkbox">显示「完成选品」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showDepart" type="checkbox">显示「最迟发货（提货）」</label>
@@ -94,7 +106,7 @@
    <div class="line"></div>
    <div class="legend"><span><i class="dot" style="background:#d95762"></i>活动日</span><span><i class="dot" style="background:#c9a05f"></i>供应链</span><span><i class="dot" style="background:#3773e8"></i>合德正班</span><span><i class="dot" style="background:#169d85"></i>美森正班</span><span><i class="dot" style="background:#9166d8"></i>合德加班</span><span><i class="dot" style="background:#e99030"></i>美森加班</span><span><i class="dot" style="background:#b47332"></i>UPS红单</span><span><i class="dot" style="background:#6883a6"></i>慢船</span></div>
   </section>
-  <section class="panel wide"><h3 class="sectiontitle">05 · 日期待公布 <span class="mutedtag">需人工确认</span></h3><div class="tbalist" id="tbaList"></div><div class="hint">点击“安排日期”后即可加入日历；系统不会凭空认定平台官方活动日。</div></section>
+  <section class="panel wide"><h3 class="sectiontitle">06 · 日期待公布 <span class="mutedtag">需人工确认</span></h3><div class="tbalist" id="tbaList"></div><div class="hint">点击“安排日期”后即可加入日历；系统不会凭空认定平台官方活动日。</div></section>
   <div class="sidebottom">时间基准：浏览器显示的日历日期，状态倒计时以美国东部日期为准。设置保存在当前浏览器缓存；新增节日可保存到 HTML 文件后分享。</div>
  </aside>
  <main class="mainpanel">
@@ -142,7 +154,7 @@ function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%
 function safeNumber(v){if(v===''||v===null||v===undefined)return null;var x=Number(v);return Number.isInteger(x)&&x>=0&&x<=365?x:null}
 function routeReady(r){return !!r&&['transit','pickup','delivery','shelving'].every(function(k){return safeNumber(r[k])!==null})}
 var defaultCategories={shopping:true,season:true,culture:true,sport:true,supply:true};
-var defaults={planVersion:2,pick:7,prep:7,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,sail:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
+var defaults={planVersion:2,pick:7,prep:7,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},supplyPlan:{pick:7,prep:7,cnyLead:14,nationalLead:7,otherLead:7},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,sail:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
 function normalizeState(raw){
  var s=Object.assign({},defaults,raw||{});
  // 将老版四线路升级为报价单六线路，旧的自定义节日、日期和分类原样保留。
@@ -166,6 +178,8 @@ function normalizeState(raw){
  s.tierDays={S:45,A:30,B:15,...(s.tierDays||{})};
  ['S','A','B'].forEach(function(t){if(safeNumber(s.tierDays[t])===null)s.tierDays[t]=defaults.tierDays[t]});
  s.tierAssignments=(s.tierAssignments&&typeof s.tierAssignments==='object'&&!Array.isArray(s.tierAssignments))?s.tierAssignments:{};
+ s.supplyPlan=Object.assign({},defaults.supplyPlan,s.supplyPlan||{});
+ Object.keys(defaults.supplyPlan).forEach(function(k){if(safeNumber(s.supplyPlan[k])===null)s.supplyPlan[k]=defaults.supplyPlan[k]});
  s.custom=Array.isArray(s.custom)?s.custom:[];
  s.edits=(s.edits&&typeof s.edits==='object')?s.edits:{};
  s.hidden=Array.isArray(s.hidden)?s.hidden:[];
@@ -382,6 +396,7 @@ function getMonthName(m){return ['一','二','三','四','五','六','七','八'
 function initControls(){
  el('pickDays').value=state.pick;el('prepDays').value=state.prep;
  ['S','A','B'].forEach(function(t){el('tierDays'+t).value=state.tierDays[t]});
+ [['supplyPickDays','pick'],['supplyPrepDays','prep'],['supplyCnyLead','cnyLead'],['supplyNationalLead','nationalLead'],['supplyOtherLead','otherLead']].forEach(function(pair){el(pair[0]).value=state.supplyPlan[pair[1]]});
  document.querySelectorAll('.route').forEach(function(w,i){
   var r=state.routes[i];w.querySelector('.routeEnabled').checked=!!r.enabled;
   ['transit','pickup','delivery','shelving'].forEach(function(k){w.querySelector('.'+k).value=r[k]});
@@ -594,6 +609,9 @@ function bind(){
   var n=safeNumber(node.value);
   if(n!==null){state.tierDays[t]=n;updateAndRender()}
  })});
+ [['supplyPickDays','pick'],['supplyPrepDays','prep'],['supplyCnyLead','cnyLead'],['supplyNationalLead','nationalLead'],['supplyOtherLead','otherLead']].forEach(function(pair){
+  var node=el(pair[0]);node.addEventListener('input',function(){var n=safeNumber(node.value);if(n!==null){state.supplyPlan[pair[1]]=n;updateAndRender()}});
+ });
  document.querySelectorAll('.route').forEach(function(w,i){
   var enabled=w.querySelector('.routeEnabled');
   enabled.addEventListener('change',function(){
