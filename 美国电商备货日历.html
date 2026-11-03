@@ -62,8 +62,8 @@
  <aside class="sidebar">
   <section class="panel">
    <h3 class="sectiontitle">01 · 通用流程 <span class="subtle">天 / 可修改</span></h3>
-   <div class="twocol"><label class="field"><span>选品 + 采样 + 验货</span><input type="number" min="0" max="365" id="pickDays"></label><label class="field"><span>备货 + 提货 + 等船</span><input type="number" min="0" max="365" id="prepDays"></label></div>
-   <div class="hint">选品完成固定周四，开始选品避开周末。<strong>正班周六提货、周三开船；加班周二提货、周四开船</strong>；UPS红单和慢船遇周末提货提前到周五。仅向前倒排，悬停可查看提前原因与天数。</div>
+   <div class="twocol"><label class="field"><span>选品 + 采样 + 验货</span><input type="number" min="0" max="365" id="pickDays"></label><label class="field"><span>备货（不含提货、等船）</span><input type="number" min="0" max="365" id="prepDays"></label><label class="field"><span>个人冗余时间</span><input type="number" min="0" max="365" id="bufferDays"></label></div>
+   <div class="hint">备货默认 <strong>4 天</strong>，不再计入提货与等船；这两项由各线路实际船期动态计算。个人冗余默认 <strong>0 天</strong>，只增加开始选品前的预留。选品完成固定周四，开始选品避开周末；日期调整说明可鼠标悬停查看。</div>
   </section>
   <section class="panel" id="tiersPanel">
    <h3 class="sectiontitle">02 · 节日分级 <span class="subtle">按等级提前可售</span></h3>
@@ -154,7 +154,7 @@ function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%
 function safeNumber(v){if(v===''||v===null||v===undefined)return null;var x=Number(v);return Number.isInteger(x)&&x>=0&&x<=365?x:null}
 function routeReady(r){return !!r&&['transit','pickup','delivery','shelving'].every(function(k){return safeNumber(r[k])!==null})}
 var defaultCategories={shopping:true,season:true,culture:true,sport:true,supply:true};
-var defaults={planVersion:2,pick:7,prep:7,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},supplyPlan:{pick:7,prep:7,cnyLead:14,nationalLead:7,otherLead:7},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,sail:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
+var defaults={planVersion:2,prepVersion:2,pick:7,prep:4,buffer:0,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},supplyPlan:{pick:7,prep:7,cnyLead:14,nationalLead:7,otherLead:7},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,sail:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
 function normalizeState(raw){
  var s=Object.assign({},defaults,raw||{});
  // 将老版四线路升级为报价单六线路，旧的自定义节日、日期和分类原样保留。
@@ -170,6 +170,13 @@ function normalizeState(raw){
  // 旧14天的默认值升级为45天；用户自填的其他值不覆盖。
  if(migrated&&(!raw||Number(raw.lead)===14))s.lead=45;
  s.planVersion=2;
+ // 只迁移旧版“备货+提货+等船”原始默认7天；升级后不再反复重置用户自填的参数。
+ if(!raw||Number(raw.prepVersion||0)<2){
+  if(!raw||Number(raw.prep)===7)s.prep=4;
+ }
+ if(safeNumber(s.prep)===null)s.prep=defaults.prep;
+ s.prepVersion=2;
+ s.buffer=safeNumber(s.buffer)===null?defaults.buffer:Number(s.buffer);
  s.show=Object.assign({},defaults.show,s.show||{});
  // 旧版本默认未勾选「完成选品」，升级时仅一次设为默认勾选；以后用户仍可手动关闭。
  if(!raw||Number(raw.showVersion||0)<2)s.show.finish=true;
@@ -262,12 +269,12 @@ function buildBuiltins(){
 var tbaSeeds=[{id:'walmart-2027',year:2027,name:'Walmart Deals / 2027',category:'shopping',priority:'high',products:'全品类',note:'2027 年具体活动日期尚未确认，请以 Walmart 官方公布为准。'},{id:'prime-2027',year:2027,name:'Amazon Prime Day / 2027',category:'shopping',priority:'high',products:'电子、日用、家居',note:'2027 年日期待官方公布。此处仅用于跨平台竞品参考。'},{id:'walmart-2028',year:2028,name:'Walmart Deals / 2028',category:'shopping',priority:'high',products:'全品类',note:'2028 年具体活动日期尚未确认。'},{id:'prime-2028',year:2028,name:'Amazon Prime Day / 2028',category:'shopping',priority:'high',products:'电子、日用、家居',note:'2028 年日期待官方公布。'}];
 function allRoutes(){
  return routesMeta.map(function(meta,i){
-  var r=state.routes[i]||{},p=safeNumber(state.pick),b=safeNumber(state.prep),
+  var r=state.routes[i]||{},p=safeNumber(state.pick),b=safeNumber(state.prep),buffer=safeNumber(state.buffer),
    t=safeNumber(r.transit),u=safeNumber(r.pickup),d=safeNumber(r.delivery),w=safeNumber(r.shelving);
-  var ready=p!==null&&b!==null&&t!==null&&u!==null&&d!==null&&w!==null;
+  var ready=p!==null&&b!==null&&buffer!==null&&t!==null&&u!==null&&d!==null&&w!==null;
   var shipping=ready?t+u+d+w:0;
-  return {...meta,index:i,enabled:!!r.enabled&&ready,checked:!!r.enabled,ready:ready,pick:p,prep:b,transit:t,
-    pickup:u,delivery:d,shelving:w,shippingTotal:shipping,total:shipping+(p||0)+(b||0)};
+  return {...meta,index:i,enabled:!!r.enabled&&ready,checked:!!r.enabled,ready:ready,pick:p,prep:b,buffer:buffer,transit:t,
+    pickup:u,delivery:d,shelving:w,shippingTotal:shipping,total:shipping+(p||0)+(b||0)+(buffer||0)};
  });
 }
 function activeRoutes(){return allRoutes().filter(function(x){return x.enabled})}
@@ -322,7 +329,7 @@ function milestone(e,r){
  // 备货与选品两个完整周期都从货代实际提货日向前倒推，不压缩操作时间。
  var rawFinish=addDays(rawSail,-r.prep),finishCandidate=addDays(depart,-r.prep);
  var finish=previousThursday(finishCandidate);
- var rawStart=addDays(rawFinish,-r.pick),startCandidate=addDays(finish,-r.pick);
+ var rawStart=addDays(rawFinish,-r.pick-r.buffer),startCandidate=addDays(finish,-r.pick-r.buffer);
  var start=previousWorkday(startCandidate);
  var dates={
   start:start,finish:finish,depart:depart,sail:sail,
@@ -354,7 +361,8 @@ function milestone(e,r){
  if(extraFinish>0)finishReasons.push('选品必须周四完成，从 '+dateWithWeekday(finishCandidate)+' 向前调整 '+extraFinish+' 天');
  if(finishShift>0)shiftInfo('finish',rawFinish,finish,finishReasons);
  var startShift=diff(rawStart,start),startReasons=[];
- if(finishShift>0)startReasons.push('完成选品整体提前 '+finishShift+' 天，需保留完整选品 '+r.pick+' 天');
+ if(finishShift>0)startReasons.push('完成选品整体提前 '+finishShift+' 天，仍需预留选品 '+r.pick+' 天');
+ if(r.buffer>0)startReasons.push('额外预留个人冗余 '+r.buffer+' 天');
  var extraStart=diff(startCandidate,start);
  if(extraStart>0)startReasons.push('开始选品遇周末，向前调整至周五，另外提前 '+extraStart+' 天');
  if(startShift>0)shiftInfo('start',rawStart,start,startReasons);
@@ -434,7 +442,7 @@ function buildEntries(){
 }
 function getMonthName(m){return ['一','二','三','四','五','六','七','八','九','十','十一','十二'][m-1]}
 function initControls(){
- el('pickDays').value=state.pick;el('prepDays').value=state.prep;
+ el('pickDays').value=state.pick;el('prepDays').value=state.prep;el('bufferDays').value=state.buffer;
  ['S','A','B'].forEach(function(t){el('tierDays'+t).value=state.tierDays[t]});
  [['supplyPickDays','pick'],['supplyPrepDays','prep'],['supplyCnyLead','cnyLead'],['supplyNationalLead','nationalLead'],['supplyOtherLead','otherLead']].forEach(function(pair){el(pair[0]).value=state.supplyPlan[pair[1]]});
  document.querySelectorAll('.route').forEach(function(w,i){
@@ -675,7 +683,7 @@ function openEditor(e,seed){
 }
 function updateAndRender(){save();render()}
 function bind(){
- ['pick','prep'].forEach(function(k){var node=el(k+'Days');node.addEventListener('input',function(){var v=safeNumber(node.value);if(v!==null){state[k]=v;updateAndRender()}})});
+ ['pick','prep','buffer'].forEach(function(k){var node=el(k+'Days');node.addEventListener('input',function(){var v=safeNumber(node.value);if(v!==null){state[k]=v;updateAndRender()}})});
  ['S','A','B'].forEach(function(t){var node=el('tierDays'+t);node.addEventListener('input',function(){
   var n=safeNumber(node.value);
   if(n!==null){state.tierDays[t]=n;updateAndRender()}
