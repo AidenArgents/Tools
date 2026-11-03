@@ -26,6 +26,28 @@
 @media(max-width:1120px){.layout{grid-template-columns:270px minmax(0,1fr)}.yeargrid{grid-template-columns:repeat(2,minmax(0,1fr))}.day{height:132px}.route .twocol{gap:6px}}
 @media(max-width:850px){.top{padding:20px 16px;align-items:flex-start;flex-direction:column}.top h1{font-size:23px}.topright{justify-content:flex-start}.wrap{padding:14px 10px 36px}.layout{display:flex;flex-direction:column;gap:8px}.sidebar{position:static;overflow:visible;max-height:none;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}.panel{margin:0;padding:14px}.sidebar .wide{grid-column:1/-1}.summary{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.metric{padding:12px}.metric .m-value{font-size:22px}.mainpanel{width:100%;min-height:0}.toolbar{padding:16px 12px 12px}.filters{padding:0 12px 12px}.yeargrid{padding:12px;gap:8px}.day{height:116px}.entry{font-size:9px;padding:3px 3px}.daynum{font-size:11px}.sidebottom{display:none}}
 @media(max-width:550px){.top h1{font-size:21px}.topright{gap:6px}.top .smallbtn{padding:7px}.sidebar{display:block}.sidebar .panel{margin-bottom:9px}.panel{padding:14px}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.metric .m-value{font-size:21px}.toolbar h2{font-size:19px}.toolbar .right{width:100%;justify-content:space-between}.filters select{max-width:calc(50% - 5px);flex:1}.filters input{max-width:none;flex:1 1 100%}.filters .counter{margin:0}.categorybar{padding:9px 11px;gap:6px}.cat-pill{padding:5px 7px;font-size:10px}.day{padding:3px 2px;height:112px}.daytop{height:19px}.daynum{height:19px;min-width:19px;font-size:10px}.daycount{display:none}.entry{font-size:9px;margin:3px 0;padding:3px 1px 3px 3px;border-left-width:2px}.entry.holiday{height:38px;min-height:38px;padding:4px 4px;font-size:10px;line-height:1.35}.weekheader div{padding:7px 0}.yeargrid{grid-template-columns:1fr 1fr;gap:8px}.minimonth{padding:8px}.minicell{min-height:20px;line-height:20px;font-size:9px}.modal{padding:17px 13px}.tlrows{grid-template-columns:repeat(3,minmax(0,1fr))}.tlphase{padding:9px 3px}.tba-actions{flex-wrap:wrap}}
+.tier-settings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.tier-settings .field input{padding:8px 6px;text-align:center}
+.tier-settings .field span{white-space:nowrap}
+.tierdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.tierdot.s{background:#d95762}.tierdot.a{background:#d69a31}.tierdot.b{background:#5c8ab8}
+.tier-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:16px 20px 24px}
+.tier-intro{padding:18px 20px 0;color:#6c7990;font-size:12px}
+.tier-card{border:1px solid #e6eaf1;border-radius:14px;overflow:hidden;background:#fff;min-width:0}
+.tier-card-title{padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f8fafd;font-size:13px;font-weight:850}
+.tier-card[data-grade="S"] .tier-card-title{border-left:4px solid #d95762}
+.tier-card[data-grade="A"] .tier-card-title{border-left:4px solid #d69a31}
+.tier-card[data-grade="B"] .tier-card-title{border-left:4px solid #5c8ab8}
+.tier-card[data-grade="none"] .tier-card-title{border-left:4px solid #8b94a3}
+.tier-card-count{font-size:11px;font-weight:650;color:#8c98aa}
+.tier-row{display:grid;grid-template-columns:minmax(0,1fr) 115px;gap:8px;align-items:center;padding:9px 12px;border-top:1px solid #f0f2f6}
+.tier-row-name{font-size:12px;font-weight:750;color:#2b3b56;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tier-row-meta{font-size:10px;color:#8a98ac;margin-top:2px}
+.tier-select{width:100%;background:#fff;color:#4c5e79;border:1px solid #dfe5ef;border-radius:8px;padding:7px 4px;font-size:11px}
+.tier-select:disabled{opacity:.55}
+.tier-row-days{font-variant-numeric:tabular-nums}
+@media(max-width:850px){.tier-board{gap:10px;padding:12px}}
+@media(max-width:620px){.tier-board{grid-template-columns:1fr}.tier-intro{padding:12px}.tier-row{grid-template-columns:minmax(0,1fr) 110px}}
 </style>
 </head>
 <body>
@@ -40,17 +62,26 @@
   <section class="panel">
    <h3 class="sectiontitle">01 · 通用流程 <span class="subtle">天 / 可修改</span></h3>
    <div class="twocol"><label class="field"><span>选品 + 采样 + 验货</span><input type="number" min="0" max="365" id="pickDays"></label><label class="field"><span>备货 + 发货 + 等船</span><input type="number" min="0" max="365" id="prepDays"></label></div>
-   <div class="line"></div><label class="field"><span>活动前提前入库 / 可售天数（全局默认）</span><input type="number" min="0" max="365" id="leadDays"></label>
-   <div class="hint">日期按日历自然日计算，不排除周末及节假日；如需预留报关、船期或促销预热，请调整上面的天数。</div>
+   <div class="hint">选品、备货是所有线路共用的时间。节日前提前多少天完成入库，改由下面的 S/A/B 节日级别决定；日期按自然日计算。</div>
   </section>
-  <section class="panel" id="routesPanel"><h3 class="sectiontitle">02 · 物流方案 <span class="subtle">前四条默认启用</span></h3><div class="hint" style="margin:0 0 10px">按物流表六条线路；到港提取、送仓、仓库完成签收上架独立计算；区间取最大天数。</div><div class="route" data-index="0"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#3773e8"></span><strong>合德正班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：前一周六提货，周三发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
+  <section class="panel" id="tiersPanel">
+   <h3 class="sectiontitle">02 · 节日分级 <span class="subtle">按等级提前可售</span></h3>
+   <div class="tier-settings">
+    <label class="field"><span><i class="tierdot s"></i>S · 大节</span><input id="tierDaysS" type="number" min="0" max="365" aria-label="S大节提前入库天数"></label>
+    <label class="field"><span><i class="tierdot a"></i>A · 中节</span><input id="tierDaysA" type="number" min="0" max="365" aria-label="A中节提前入库天数"></label>
+    <label class="field"><span><i class="tierdot b"></i>B · 小节</span><input id="tierDaysB" type="number" min="0" max="365" aria-label="B小节提前入库天数"></label>
+   </div>
+   <div class="hint">默认大节45天、中节30天、小节15天。修改后自动重新倒排；无需保存新的 HTML。具体节日可更换等级，也可单独覆盖天数。</div>
+   <button class="smallbtn" id="openTierView" style="width:100%;margin-top:10px" type="button">查看各级节日 · 调整归属</button>
+  </section>
+  <section class="panel" id="routesPanel"><h3 class="sectiontitle">03 · 物流方案 <span class="subtle">前四条默认启用</span></h3><div class="hint" style="margin:0 0 10px">按物流表六条线路；到港提取、送仓、仓库完成签收上架独立计算；区间取最大天数。</div><div class="route" data-index="0"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#3773e8"></span><strong>合德正班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：前一周六提货，周三发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="1"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#169d85"></span><strong>美森正班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：前一周六提货，周三发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="2"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#9166d8"></span><strong>合德加班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：周二提货，周四发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="3"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#e99030"></span><strong>美森加班</strong></label><span class="total">—</span></div><div class="route-schedule">船期：周二提货，周四发出</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">到港提取 1～2 天，按 2 天</div></div>
 <div class="route" data-index="4"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#b47332"></span><strong>UPS红单</strong></label><span class="total">—</span></div><div class="route-schedule">船期：隔天</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">原表：红单快递</div></div>
 <div class="route" data-index="5"><div class="routehead"><label class="checkline"><input class="toggle routeEnabled" type="checkbox"><span class="dot" style="background:#6883a6"></span><strong>慢船</strong></label><span class="total">—</span></div><div class="route-schedule">船期：不定期</div><div class="twocol"><label class="field"><span>运输时间 / 天</span><input class="transit" type="number" min="0" max="365"></label><label class="field"><span>到港提取 / 天</span><input class="pickup" type="number" min="0" max="365"></label><label class="field"><span>送仓 / 天</span><input class="delivery" type="number" min="0" max="365"></label><label class="field"><span>仓库完成签收上架 / 天</span><input class="shelving" type="number" min="0" max="365"></label></div><div class="route-summary"><span>运输至上架：<strong class="shippingTotal">—</strong></span><span>含选品备货：<strong class="fullTotal">—</strong></span></div><div class="route-reference">运输 30～40 天，按 40 天</div></div></section>
   <section class="panel">
-   <h3 class="sectiontitle">03 · 日历显示</h3>
+   <h3 class="sectiontitle">04 · 日历显示</h3>
    <label class="checkline"><input class="toggle" id="showStart" type="checkbox">显示「开始选品」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showFinish" type="checkbox">显示「完成选品」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showDepart" type="checkbox">显示「最迟发货」</label>
@@ -61,13 +92,13 @@
    <div class="line"></div>
    <div class="legend"><span><i class="dot" style="background:#d95762"></i>活动日</span><span><i class="dot" style="background:#c9a05f"></i>供应链</span><span><i class="dot" style="background:#3773e8"></i>合德正班</span><span><i class="dot" style="background:#169d85"></i>美森正班</span><span><i class="dot" style="background:#9166d8"></i>合德加班</span><span><i class="dot" style="background:#e99030"></i>美森加班</span><span><i class="dot" style="background:#b47332"></i>UPS红单</span><span><i class="dot" style="background:#6883a6"></i>慢船</span></div>
   </section>
-  <section class="panel wide"><h3 class="sectiontitle">04 · 日期待公布 <span class="mutedtag">需人工确认</span></h3><div class="tbalist" id="tbaList"></div><div class="hint">点击“安排日期”后即可加入日历；系统不会凭空认定平台官方活动日。</div></section>
+  <section class="panel wide"><h3 class="sectiontitle">05 · 日期待公布 <span class="mutedtag">需人工确认</span></h3><div class="tbalist" id="tbaList"></div><div class="hint">点击“安排日期”后即可加入日历；系统不会凭空认定平台官方活动日。</div></section>
   <div class="sidebottom">时间基准：浏览器显示的日历日期，状态倒计时以美国东部日期为准。设置保存在当前浏览器缓存；新增节日可保存到 HTML 文件后分享。</div>
  </aside>
  <main class="mainpanel">
   <div class="toolbar">
    <div class="left"><button class="navbutton" id="prevBtn" title="上一月/年">‹</button><button class="navbutton" id="nextBtn" title="下一月/年">›</button><h2 id="viewTitle">—</h2></div>
-   <div class="right"><select id="yearSelect" class="smallbtn" aria-label="年份"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option></select><div class="seg"><button id="viewMonth" class="active">月历</button><button id="viewYear">全年</button><button id="viewList">事件列表</button></div></div>
+   <div class="right"><select id="yearSelect" class="smallbtn" aria-label="年份"><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option></select><div class="seg"><button id="viewMonth" class="active">月历</button><button id="viewYear">全年</button><button id="viewList">事件列表</button><button id="viewTiers">节日分级</button></div></div>
   </div>
   <div class="filters"><input id="search" placeholder="搜索节日 / 事件 / 品类..." aria-label="搜索"><select id="importance"><option value="all">全部重要程度</option><option value="high">仅重点事件</option></select><span class="counter" id="visibleCount"></span></div>
   <div class="categorybar"><span class="categorybar-title">事件分类 · 多选</span><button class="cat-action" id="catAll" type="button">全选</button><button class="cat-action" id="catNone" type="button">清空</button><label class="cat-pill"><input type="checkbox" class="catToggle" value="shopping">购物节日 <small data-category-count="shopping"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="season">消费旺季 <small data-category-count="season"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="culture">人群文化 <small data-category-count="culture"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="sport">体育事件 <small data-category-count="sport"></small></label><label class="cat-pill"><input type="checkbox" class="catToggle" value="supply">供应链提醒 <small data-category-count="supply"></small></label></div>
@@ -109,7 +140,7 @@ function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%
 function safeNumber(v){if(v===''||v===null||v===undefined)return null;var x=Number(v);return Number.isInteger(x)&&x>=0&&x<=365?x:null}
 function routeReady(r){return !!r&&['transit','pickup','delivery','shelving'].every(function(k){return safeNumber(r[k])!==null})}
 var defaultCategories={shopping:true,season:true,culture:true,sport:true,supply:true};
-var defaults={planVersion:2,pick:7,prep:7,lead:45,routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:false,depart:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
+var defaults={planVersion:2,pick:7,prep:7,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:false,depart:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
 function normalizeState(raw){
  var s=Object.assign({},defaults,raw||{});
  // 将老版四线路升级为报价单六线路，旧的自定义节日、日期和分类原样保留。
@@ -127,6 +158,9 @@ function normalizeState(raw){
  s.planVersion=2;
  s.show=Object.assign({},defaults.show,s.show||{});
  s.categories=Object.assign({},defaultCategories,s.categories||{});
+ s.tierDays={S:45,A:30,B:15,...(s.tierDays||{})};
+ ['S','A','B'].forEach(function(t){if(safeNumber(s.tierDays[t])===null)s.tierDays[t]=defaults.tierDays[t]});
+ s.tierAssignments=(s.tierAssignments&&typeof s.tierAssignments==='object'&&!Array.isArray(s.tierAssignments))?s.tierAssignments:{};
  s.custom=Array.isArray(s.custom)?s.custom:[];
  s.edits=(s.edits&&typeof s.edits==='object')?s.edits:{};
  s.hidden=Array.isArray(s.hidden)?s.hidden:[];
@@ -143,7 +177,7 @@ var savedFileHandle=null;
 state._eventDirty=!!state._eventDirty;
 function eventRecordSignature(){
  // 只有事件记录的增删改（含平台日期）才属于需要写入 HTML 的业务改动。
- return JSON.stringify([state.custom,state.edits,state.hidden,state.tba]);
+ return JSON.stringify([state.custom,state.edits,state.hidden,state.tba,state.tierAssignments]);
 }
 function renderSaveStatus(){
  var status=el('saveStatus'),button=el('saveHtmlBtn');
@@ -218,7 +252,31 @@ function allRoutes(){
  });
 }
 function activeRoutes(){return allRoutes().filter(function(x){return x.enabled})}
-function eventLead(e){return safeNumber(e.lead)!==null?safeNumber(e.lead):safeNumber(state.lead)||0}
+var gradeNames={S:'S · 大节',A:'A · 中节',B:'B · 小节',none:'特殊 / 不倒排'};
+var gradeOrder=['S','A','B','none'];
+var predefinedGrades={
+ S:['blackfriday','cybermonday','christmas','holidayseason','halloween','bts'],
+ A:['valentine','easter','mothers','fathers','independence','memorial','labor','thanksgiving','womenworldcup','laolympics'],
+ B:['newyear','kings','mlk','presidents','ramadan','eid','juneteenth','hispanic','fall','diwali','daydead','veterans','smallbiz','laparalympics']
+};
+function tierKey(e){return String(e.id||'').replace(/^builtin-\d{4}-/,'')}
+function eventTier(e){
+ if(e.supply||e.category==='supply')return 'none';
+ var selected=state.tierAssignments[tierKey(e)];
+ if(gradeOrder.includes(selected))return selected;
+ if(gradeOrder.includes(e.tier))return e.tier;
+ if(e.seed&&/walmart|prime/i.test(e.seed))return 'S';
+ var id=tierKey(e);
+ if(predefinedGrades.S.includes(id))return 'S';
+ if(predefinedGrades.A.includes(id))return 'A';
+ return 'B';
+}
+function eventLead(e){
+ var own=safeNumber(e.lead);
+ if(own!==null)return own;
+ var tier=eventTier(e);
+ return tier==='none'?null:(safeNumber(state.tierDays[tier])===null?defaults.tierDays[tier]:Number(state.tierDays[tier]));
+}
 function milestone(e,r){
  var target=addDays(e.date,-eventLead(e)),w=r.shelving,d=r.delivery,u=r.pickup,t=r.transit;
  return {
@@ -252,14 +310,15 @@ function buildEntries(){
  var selected=filteredEvents(),rs=activeRoutes();
  selected.forEach(function(e){
   pushItem(entriesMap,e.date,{date:e.date,event:e,type:'event',label:e.name,sort:0});
-  if(e.supply)return;
+  if(e.supply||eventTier(e)==='none')return;
   rs.forEach(function(r){var ms=milestone(e,r);Object.keys(stageNames).forEach(function(stage){if(!state.show[stage])return;pushItem(entriesMap,ms[stage],{date:ms[stage],event:e,route:r,stage:stage,type:'stage',label:r.abbr+' · '+stageNames[stage]+'｜'+e.name,sort:stage==='listed'?1:2})})});
  });
  Object.keys(entriesMap).forEach(function(k){entriesMap[k].sort(function(a,b){return a.sort-b.sort||a.event.name.localeCompare(b.event.name)});entriesMap[k].forEach(function(x){allItems.push(x)})});
 }
 function getMonthName(m){return ['一','二','三','四','五','六','七','八','九','十','十一','十二'][m-1]}
 function initControls(){
- el('pickDays').value=state.pick;el('prepDays').value=state.prep;el('leadDays').value=state.lead;
+ el('pickDays').value=state.pick;el('prepDays').value=state.prep;
+ ['S','A','B'].forEach(function(t){el('tierDays'+t).value=state.tierDays[t]});
  document.querySelectorAll('.route').forEach(function(w,i){
   var r=state.routes[i];w.querySelector('.routeEnabled').checked=!!r.enabled;
   ['transit','pickup','delivery','shelving'].forEach(function(k){w.querySelector('.'+k).value=r[k]});
