@@ -39,7 +39,7 @@
 .tier-card[data-grade="S"] .tier-card-title{border-left:4px solid #d95762}
 .tier-card[data-grade="A"] .tier-card-title{border-left:4px solid #d69a31}
 .tier-card[data-grade="B"] .tier-card-title{border-left:4px solid #5c8ab8}
-.tier-card[data-grade="none"] .tier-card-title{border-left:4px solid #8b94a3}.tier-card[data-grade="supply"] .tier-card-title{border-left:4px solid #c9a05f}
+.tier-card[data-grade="none"] .tier-card-title{border-left:4px solid #8b94a3}.tier-card[data-grade="supply"] .tier-card-title{border-left:4px solid #c9a05f}.box-supply-editor{padding:12px 13px;margin:10px 0;border:1px solid #ebdcba;border-radius:10px;background:#fffcf4}.box-supply-editor[hidden],#retailOnlyFields[hidden]{display:none}
 .tier-card-count{font-size:11px;font-weight:650;color:#8c98aa}
 .tier-row{display:grid;grid-template-columns:minmax(0,1fr) 115px;gap:8px;align-items:center;padding:9px 12px;border-top:1px solid #f0f2f6}
 .tier-row-name{font-size:12px;font-weight:750;color:#2b3b56;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -587,11 +587,25 @@ function openDay(date){
 }
 function openEvent(id){
  var e=events.find(function(a){return a.id===id});if(!e)return;
- var lead=eventLead(e),tier=eventTier(e),rs=activeRoutes(),h='<div class="modalhead"><div><div class="eyebrow" style="color:#5172ac">'+esc(categoryNames[e.category]||'事件')+' · '+(e.status==='estimated'?'预计 / 规划':e.status==='user'?'用户添加':'日期已确定')+'</div><h2>'+esc(e.name)+'</h2><p>'+dateLong(e.date)+(e.end?' — '+dateLong(e.end):'')+' · '+esc(gradeNames[tier])+(lead===null?' · 不自动倒排':' · 提前 '+lead+' 天完成入库')+'</p></div><button class="close" aria-label="关闭">×</button></div>';
+ var lead=eventLead(e),tier=eventTier(e),isSupply=!!(e.supply||e.category==='supply'),rs=activeRoutes(),h='<div class="modalhead"><div><div class="eyebrow" style="color:#5172ac">'+esc(categoryNames[e.category]||'事件')+' · '+(e.status==='estimated'?'预计 / 规划':e.status==='user'?'用户添加':'日期已确定')+'</div><h2>'+esc(e.name)+'</h2><p>'+dateLong(e.date)+(e.end?' — '+dateLong(e.end):'')+' · '+esc(isSupply?'供应链节前排期':gradeNames[tier])+(isSupply?' · 最迟起运参考截止 '+dateLong(supplyPlanningParameters(e).cutoff):(lead===null?' · 不自动倒排':' · 提前 '+lead+' 天完成入库'))+'</p></div><button class="close" aria-label="关闭">×</button></div>';
  if(e.status==='estimated')h+='<div class="warning">此日期是预计日期或运营规划锚点，并非已确认的官方促销日期。</div>';
  h+='<div class="eventnotes"><strong>参考商品：</strong>'+esc(e.products||'按活动需求决定')+'<br><strong>运营提醒：</strong>'+esc(e.note||'无')+'</div>';
  if(e.source&&/^https:\/\//.test(e.source))h+='<div class="eventlinks">日期来源：<a href="'+esc(e.source)+'" target="_blank" rel="noopener noreferrer">打开参考链接 ↗</a></div>';
- if(!e.supply&&tier!=='none'){
+ if(isSupply){
+  h+='<div class="timeline"><div style="font-size:13px;font-weight:850">节前最后一波出货 · 按物流线路倒排</div>';
+  rs.forEach(function(r){
+   var times=supplyMilestone(e,r),cfg=times._supply,days=diff(times.start,todayKey);
+   h+='<div class="tlcard"><header><span><span class="dot" style="background:'+r.color+'"></span>'+r.name+' · '+(oceanSchedule(r)?'按固定船期':'按工作日')+'，节前最后起运 '+fmt(times.sail)+'</span><span class="'+(days<0?'alert':'subtle')+'">'+(days<0?'开始选品节点已过':days===0?'今天须开始选品':'距开始选品 '+days+' 天')+'</span></header><div class="tlrows">';
+   ['start','finish','depart','sail'].forEach(function(k){
+    if(k==='sail'&&!oceanSchedule(r))return;
+    var note=times._adjustments[k];
+    h+='<div class="tlphase'+(note?' adjusted':'')+'" title="'+esc(note?note.tooltip:('节前'+stageNames[k]+'：'+dateWithWeekday(times[k])))+'"><span>节前'+stageNames[k]+'</span><strong>'+fmt(times[k])+'</strong><span>'+times[k].slice(0,4)+' 年 · '+weekdayLabels[dayOfWeek(times[k])]+'</span>'+(note?'<span class="shift-note">↶ 提前 '+note.days+' 天</span>':'')+'</div>';
+   });
+   h+='</div><div class="tlnote">节日 '+dateLong(e.date)+'；'+(cfg.custom?'采用你填写的实际起运截止日期':'节前预留 '+cfg.lead+' 天（计划假设）')+'；起运参考截止 '+dateLong(cfg.cutoff)+'；'+esc(r.schedule)+'。节前选品 '+cfg.pick+' 天 + 备货提货 '+cfg.prep+' 天。按时将最后一批货交给货代，并不代表假期前货物已经抵达海外仓。</div></div>';
+  });
+  if(!rs.length)h+='<div class="warning">请至少启用一条物流线路。</div>';
+  h+='</div>';
+ }else if(tier!=='none'){
  h+='<div class="timeline"><div style="font-size:13px;font-weight:850">已启用物流线路 · 倒排日期</div>';
  rs.forEach(function(r){var times=milestone(e,r),days=diff(times.start,todayKey);
  h+='<div class="tlcard"><header><span><span class="dot" style="background:'+r.color+'"></span>'+r.name+' · 运输至上架 '+r.shippingTotal+' 天（基础全流程 '+r.total+' 天，含船期等待的实际跨度 '+diff(times.listed,times.start)+' 天）</span><span class="'+(days<0?'alert':'subtle')+'">'+(days<0?'开始选品节点已过':days===0?'今天须开始选品':'距开始选品 '+days+' 天')+'</span></header><div class="tlrows">';
@@ -605,7 +619,7 @@ function openEvent(id){
  if(!rs.length)h+='<div class="warning">请至少启用一条填写完整的物流路线。</div>';
  h+='</div>';
  }
- if(tier==='none'&&!e.supply)h+='<div class="warning">该事件设置为特殊类型，当前不自动生成物流倒排节点。可以点击「修改此事件」调整等级。</div>';
+ if(tier==='none'&&!isSupply)h+='<div class="warning">该事件设置为特殊类型，当前不自动生成物流倒排节点。可以点击「修改此事件」调整等级。</div>';
  h+='<div class="modalactions"><button class="smallbtn" id="editThis">修改此事件</button><button class="primary" data-close>完成</button></div>';
  showModal(h);
  el('editThis').addEventListener('click',function(){openEditor(e)});
@@ -615,12 +629,29 @@ function openEditor(e,seed){
  var selectedTier=edit?eventTier(e):fromSeed?'S':'B';
  var val=e||{id:'',name:seed?seed.name:'',date:'',end:'',category:seed?seed.category:'shopping',priority:seed?seed.priority:'normal',products:seed?seed.products:'',note:seed?seed.note:'',status:'user',lead:null,source:'',seed:seed?seed.id:''};
  var h='<div class="modalhead"><div><h2>'+(edit?'编辑事件':fromSeed?'确认平台活动日期':'新增自定义事件')+'</h2><p>保存后立即重算时间节点。原始内置数据不会被永久改写。</p></div><button class="close" aria-label="关闭">×</button></div><form id="eventForm"><label class="field"><span>事件名称</span><input name="name" maxlength="80" required value="'+esc(val.name)+'"></label><div class="twocol"><label class="field"><span>开始 / 目标日期</span><input type="date" name="date" required value="'+esc(val.date)+'"></label><label class="field"><span>结束日期（可空）</span><input type="date" name="end" value="'+esc(val.end||'')+'"></label></div><div class="twocol"><label class="field"><span>分类</span><select name="category">'+Object.keys(categoryNames).map(function(k){return '<option value="'+k+'" '+(k===val.category?'selected':'')+'>'+categoryNames[k]+'</option>'}).join('')+'</select></label><label class="field"><span>重要程度</span><select name="priority"><option value="high" '+(val.priority==='high'?'selected':'')+'>重点</option><option value="normal" '+(val.priority!=='high'?'selected':'')+'>一般</option></select></label></div><div class="twocol"><label class="field"><span>节日等级（影响提前入库时间）</span><select name="tier">'+gradeOrder.map(function(g){return '<option value="'+g+'" '+(selectedTier===g?'selected':'')+'>'+gradeNames[g]+'</option>'}).join('')+'</select></label><label class="field"><span>该事件提前可售（天；留空按等级）</span><input type="number" min="0" max="365" name="lead" placeholder="跟随等级" value="'+(val.lead===null||val.lead===undefined?'':esc(val.lead))+'"></label><label class="field"><span>日期标注</span><select name="status"><option value="confirmed" '+(val.status==='confirmed'?'selected':'')+'>已确定</option><option value="estimated" '+(val.status==='estimated'?'selected':'')+'>预计 / 自定规划</option><option value="user" '+(val.status==='user'?'selected':'')+'>自行安排</option></select></label></div><label class="field"><span>商品品类</span><input name="products" maxlength="240" value="'+esc(val.products||'')+'"></label><label class="field"><span>说明 / 备忘</span><textarea name="note" maxlength="800">'+esc(val.note||'')+'</textarea></label><div id="formError" class="error"></div><div class="modalactions">'+(edit?'<button type="button" class="smallbtn" id="removeThis" style="margin-right:auto;color:#b65360">删除 / 隐藏</button>':'')+'<button class="smallbtn" type="button" data-close>取消</button><button type="submit" class="primary">保存事件</button></div></form>';
+ h=h.replace('<div class="twocol"><label class="field"><span>节日等级（影响提前入库时间）</span>', '<div class="twocol" id="retailOnlyFields"><label class="field"><span>节日等级（影响提前入库时间）</span>');
+ var supplyFields='<div id="supplyEventFields" class="box-supply-editor" hidden><div style="font-size:12px;font-weight:800;margin-bottom:8px">供应链事件 · 单独的节前最后出货计划</div><div class="twocol">'+
+  '<label class="field"><span>最后起运提前天数（留空跟随左侧供应链参数）</span><input type="number" name="supplyLead" min="0" max="365" placeholder="跟随春节/国庆参数" value="'+(val.supplyLead===null||val.supplyLead===undefined?'':esc(val.supplyLead))+'"></label>'+
+  '<label class="field"><span>明确的最迟起运参考日（可空；优先于天数）</span><input type="date" name="supplyCutoffDate" value="'+esc(val.supplyCutoffDate||'')+'"></label></div>'+
+  '<div class="hint">有货代实际公告时优先填截止日；程序自动匹配不晚于该日的固定船期。它是计划起运截止，并非假期当天，也不是货代提货日。</div></div>';
+ h=h.replace('<div id="formError" class="error"></div>',supplyFields+'<div id="formError" class="error"></div>');
  showModal(h);
+ var categorySelect=el('eventForm').querySelector('select[name="category"]');
+ function refreshEventFields(){
+  var supply=categorySelect.value==='supply';
+  el('supplyEventFields').hidden=!supply;
+  el('retailOnlyFields').hidden=supply;
+ }
+ categorySelect.addEventListener('change',refreshEventFields);
+ refreshEventFields();
  el('eventForm').addEventListener('submit',function(ev){
  ev.preventDefault();var signatureBefore=eventRecordSignature();var f=ev.target,fd=new FormData(f),date=String(fd.get('date')||''),end=String(fd.get('end')||''),l=String(fd.get('lead')||'');
  if(end&&end<date){el('formError').textContent='结束日期不能早于开始日期';return}
  if(l!==''&&safeNumber(l)===null){el('formError').textContent='提前可售天数需是 0–365 的整数';return}
- var data={name:String(fd.get('name')||'').trim(),date:date,end:end,category:String(fd.get('category')),priority:String(fd.get('priority')),lead:l===''?null:Number(l),status:String(fd.get('status')),products:String(fd.get('products')||''),note:String(fd.get('note')||''),supply:String(fd.get('category'))==='supply'};
+ var supplyL=String(fd.get('supplyLead')||''),supplyDate=String(fd.get('supplyCutoffDate')||'');
+ if(supplyL!==''&&safeNumber(supplyL)===null){el('formError').textContent='节前起运提前天数需是 0–365 的整数';return}
+ if(supplyDate&&supplyDate>date){el('formError').textContent='最迟起运日期不能晚于该供应链假期日期';return}
+ var data={name:String(fd.get('name')||'').trim(),date:date,end:end,category:String(fd.get('category')),priority:String(fd.get('priority')),lead:l===''?null:Number(l),status:String(fd.get('status')),products:String(fd.get('products')||''),note:String(fd.get('note')||''),supply:String(fd.get('category'))==='supply',supplyLead:supplyL===''?null:Number(supplyL),supplyCutoffDate:supplyDate};
  if(!data.name||!date){el('formError').textContent='请填写事件名称和日期';return}
  var chosenTier=String(fd.get('tier')||'B');if(!gradeOrder.includes(chosenTier))chosenTier='B';
  if(edit){
