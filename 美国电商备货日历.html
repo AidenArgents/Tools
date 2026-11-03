@@ -520,12 +520,12 @@ function openEvent(id){
  if(!e.supply&&tier!=='none'){
  h+='<div class="timeline"><div style="font-size:13px;font-weight:850">已启用物流线路 · 倒排日期</div>';
  rs.forEach(function(r){var times=milestone(e,r),days=diff(times.start,todayKey);
- h+='<div class="tlcard"><header><span><span class="dot" style="background:'+r.color+'"></span>'+r.name+' · 运输至上架 '+r.shippingTotal+' 天（全流程 '+r.total+' 天）</span><span class="'+(days<0?'alert':'subtle')+'">'+(days<0?'开始选品节点已过':days===0?'今天须开始选品':'距开始选品 '+days+' 天')+'</span></header><div class="tlrows">';
+ h+='<div class="tlcard"><header><span><span class="dot" style="background:'+r.color+'"></span>'+r.name+' · 运输至上架 '+r.shippingTotal+' 天（基础全流程 '+r.total+' 天，实际 '+diff(times.listed,times.start)+' 天）</span><span class="'+(days<0?'alert':'subtle')+'">'+(days<0?'开始选品节点已过':days===0?'今天须开始选品':'距开始选品 '+days+' 天')+'</span></header><div class="tlrows">';
  Object.keys(stageNames).forEach(function(k){
   var note=times._adjustments[k];
   h+='<div class="tlphase'+(note?' adjusted':'')+'" title="'+esc(note?note.tooltip:stageNames[k]+'：'+dateWithWeekday(times[k]))+'"><span>'+stageNames[k]+'</span><strong>'+fmt(times[k])+'</strong><span>'+times[k].slice(0,4)+' 年 · '+weekdayLabels[dayOfWeek(times[k])]+'</span>'+(note?'<span class="shift-note">↶ 提前 '+note.days+' 天</span>':'')+'</div>';
  });
- h+='</div><div class="tlnote">船期：'+esc(r.schedule)+'；选品 '+r.pick+'天 + 备货 '+r.prep+'天 + 运输 '+r.transit+'天 + 到港提取 '+r.pickup+'天 + 送仓 '+r.delivery+'天 + 仓库完成签收上架 '+r.shelving+'天；目标可售 '+dateLong(times.listed)+'</div></div>';
+ h+='</div><div class="tlnote">船期：'+esc(r.schedule)+'；选品 '+r.pick+'天 + 备货 '+r.prep+'天 + 运输 '+r.transit+'天 + 到港提取 '+r.pickup+'天 + 送仓 '+r.delivery+'天 + 仓库完成签收上架 '+r.shelving+'天；目标可售 '+dateLong(times.listed)+(times._adjustments.start?'。因工作日/周四规则，全流程合计比基础估算额外提前 '+times._adjustments.start.days+' 天（悬停蓝色节点查看原因）':'')+'</div></div>';
  });
  if(!rs.length)h+='<div class="warning">请至少启用一条填写完整的物流路线。</div>';
  h+='</div>';
