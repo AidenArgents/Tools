@@ -273,10 +273,11 @@ function eventTier(e){
  return 'B';
 }
 function eventLead(e){
+ var tier=eventTier(e);
+ if(tier==='none')return null;
  var own=safeNumber(e.lead);
  if(own!==null)return own;
- var tier=eventTier(e);
- return tier==='none'?null:(safeNumber(state.tierDays[tier])===null?defaults.tierDays[tier]:Number(state.tierDays[tier]));
+ return safeNumber(state.tierDays[tier])===null?defaults.tierDays[tier]:Number(state.tierDays[tier]);
 }
 function milestone(e,r){
  var target=addDays(e.date,-eventLead(e)),w=r.shelving,d=r.delivery,u=r.pickup,t=r.transit;
