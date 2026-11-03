@@ -62,8 +62,8 @@
  <aside class="sidebar">
   <section class="panel">
    <h3 class="sectiontitle">01 · 通用流程 <span class="subtle">天 / 可修改</span></h3>
-   <div class="twocol"><label class="field"><span>选品 + 采样 + 验货</span><input type="number" min="0" max="365" id="pickDays"></label><label class="field"><span>备货 + 发货 + 等船</span><input type="number" min="0" max="365" id="prepDays"></label></div>
-   <div class="hint">选品、备货按自然日预留；<strong>开始选品与最迟发货不得落在周末，选品完成固定周四</strong>。如发生冲突，只会向前提前，日历悬停会说明原因及天数。</div>
+   <div class="twocol"><label class="field"><span>选品 + 采样 + 验货</span><input type="number" min="0" max="365" id="pickDays"></label><label class="field"><span>备货 + 提货 + 等船</span><input type="number" min="0" max="365" id="prepDays"></label></div>
+   <div class="hint">选品完成固定周四，开始选品避开周末。<strong>正班周六提货、周三开船；加班周二提货、周四开船</strong>；UPS红单和慢船遇周末提货提前到周五。仅向前倒排，悬停可查看提前原因与天数。</div>
   </section>
   <section class="panel" id="tiersPanel">
    <h3 class="sectiontitle">02 · 节日分级 <span class="subtle">按等级提前可售</span></h3>
@@ -85,7 +85,8 @@
    <h3 class="sectiontitle">04 · 日历显示</h3>
    <label class="checkline"><input class="toggle" id="showStart" type="checkbox">显示「开始选品」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showFinish" type="checkbox">显示「完成选品」</label>
-   <label class="checkline" style="margin-top:9px"><input class="toggle" id="showDepart" type="checkbox">显示「最迟发货」</label>
+   <label class="checkline" style="margin-top:9px"><input class="toggle" id="showDepart" type="checkbox">显示「最迟发货（提货）」</label>
+   <label class="checkline" style="margin-top:9px"><input class="toggle" id="showSail" type="checkbox">显示「开船 / 物流起运」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showPort" type="checkbox">显示「运输到港」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showPickup" type="checkbox">显示「到港提取完成」</label>
    <label class="checkline" style="margin-top:9px"><input class="toggle" id="showArrival" type="checkbox">显示「送仓完成」</label>
@@ -141,7 +142,7 @@ function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%
 function safeNumber(v){if(v===''||v===null||v===undefined)return null;var x=Number(v);return Number.isInteger(x)&&x>=0&&x<=365?x:null}
 function routeReady(r){return !!r&&['transit','pickup','delivery','shelving'].every(function(k){return safeNumber(r[k])!==null})}
 var defaultCategories={shopping:true,season:true,culture:true,sport:true,supply:true};
-var defaults={planVersion:2,pick:7,prep:7,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
+var defaults={planVersion:2,pick:7,prep:7,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,sail:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
 function normalizeState(raw){
  var s=Object.assign({},defaults,raw||{});
  // 将老版四线路升级为报价单六线路，旧的自定义节日、日期和分类原样保留。
@@ -290,45 +291,63 @@ function previousWorkday(s){
  return w===6?addDays(s,-1):w===0?addDays(s,-2):s;
 }
 function previousThursday(s){return addDays(s,-((dayOfWeek(s)-4+7)%7))}
+function previousWeekday(s,weekday){return addDays(s,-((dayOfWeek(s)-weekday+7)%7))}
+function oceanSchedule(r){
+ // 正班：前周六提货/周三发出；加班：周二提货/周四发出。
+ if(r.index===0||r.index===1)return {sailWeekday:3,pickupOffset:4,pickupLabel:'前一周六提货，周三发出'};
+ if(r.index===2||r.index===3)return {sailWeekday:4,pickupOffset:2,pickupLabel:'周二提货，周四发出'};
+ return null;
+}
 function milestone(e,r){
  var target=addDays(e.date,-eventLead(e)),w=r.shelving,d=r.delivery,u=r.pickup,t=r.transit;
- // 运输/仓库节点仍按自然日倒排，只有公司需办理的三个人工节点限制工作日。
- var baseDepart=addDays(target,-(t+u+d+w));
- var depart=previousWorkday(baseDepart);
- // 从已调整的发货日期继续倒推，确保备货7天不会因周末规则被压缩。
- var rawFinish=addDays(baseDepart,-r.prep),finishCandidate=addDays(depart,-r.prep);
+ // 按运输时间反推“最迟开船/物流起运”自然日，然后按该线路固定船期向前归档。
+ var rawSail=addDays(target,-(t+u+d+w)),schedule=oceanSchedule(r);
+ var sail=schedule?previousWeekday(rawSail,schedule.sailWeekday):previousWorkday(rawSail);
+ // depart 即货代最迟提货/发货。正班周六允许提货（货代特殊作业），不得套用办公室周末规则。
+ var depart=schedule?addDays(sail,-schedule.pickupOffset):sail;
+ // 备货与选品两个完整周期都从货代实际提货日向前倒推，不压缩操作时间。
+ var rawFinish=addDays(rawSail,-r.prep),finishCandidate=addDays(depart,-r.prep);
  var finish=previousThursday(finishCandidate);
- // 必须从最终选品完成日继续倒推开始选品，不允许周末调整导致选品期变短。
  var rawStart=addDays(rawFinish,-r.pick),startCandidate=addDays(finish,-r.pick);
  var start=previousWorkday(startCandidate);
  var dates={
-  start:start,finish:finish,depart:depart,
+  start:start,finish:finish,depart:depart,sail:sail,
   port:addDays(target,-(u+d+w)),
   pickup:addDays(target,-(d+w)),
   arrival:addDays(target,-w),listed:target
  };
- var meta={},depShift=diff(baseDepart,depart),finishShift=diff(rawFinish,finish),startShift=diff(rawStart,start);
+ var meta={};
  function shiftInfo(stage,raw,actual,reasons){
   var moved=diff(raw,actual);
   if(moved>0)meta[stage]={original:raw,actual:actual,days:moved,
    reason:reasons.join('；'),
    tooltip:stageNames[stage]+'：原倒排 '+dateWithWeekday(raw)+'，实际安排 '+dateWithWeekday(actual)+'，共提前 '+moved+' 天。\n原因：'+reasons.join('；')};
  }
- if(depShift>0)shiftInfo('depart',baseDepart,depart,['原计划日期落在周末，公司不办公，必须提前到周五','发货提前形成额外物流缓冲，后续到港及入库目标日期不顺延']);
- var finishReasons=[];
- if(depShift>0)finishReasons.push('最迟发货提前 '+depShift+' 天，备货阶段需保持 '+r.prep+' 天');
- var finishOwn=diff(finishCandidate,finish);
- if(finishOwn>0)finishReasons.push('选品完成固定周四，从 '+dateWithWeekday(finishCandidate)+' 向前调整 '+finishOwn+' 天');
+ var sailShift=diff(rawSail,sail),departShift=diff(rawSail,depart);
+ if(schedule){
+  if(sailShift>0)shiftInfo('sail',rawSail,sail,['该线路固定每周'+(schedule.sailWeekday===3?'三':'四')+'发出，向前匹配最近船期，不得顺延']);
+  shiftInfo('depart',rawSail,depart,[
+    sailShift>0?'原起运截止日先提前 '+sailShift+' 天匹配固定船期':'原起运截止日恰好符合固定船期',
+    '按船期「'+schedule.pickupLabel+'」：货代须在开船前 '+schedule.pickupOffset+' 天提货',
+    '货代指定周六提货不适用公司周末禁工作规则'
+  ]);
+ }else if(departShift>0){
+  shiftInfo('depart',rawSail,depart,['UPS红单/慢船未设置固定提货星期，周末无法办公，提前至周五']);
+ }
+ var finishShift=diff(rawFinish,finish),finishReasons=[];
+ if(departShift>0)finishReasons.push('货代最迟提货日期共提前 '+departShift+' 天，需保留完整备货 '+r.prep+' 天');
+ var extraFinish=diff(finishCandidate,finish);
+ if(extraFinish>0)finishReasons.push('选品必须周四完成，从 '+dateWithWeekday(finishCandidate)+' 向前调整 '+extraFinish+' 天');
  if(finishShift>0)shiftInfo('finish',rawFinish,finish,finishReasons);
- var startReasons=[];
- if(finishShift>0)startReasons.push('选品完成节点共提前 '+finishShift+' 天，选品阶段需保持 '+r.pick+' 天');
- var startOwn=diff(startCandidate,start);
- if(startOwn>0)startReasons.push('开始选品遇周末，提前到上一个工作日（周五），另外提前 '+startOwn+' 天');
+ var startShift=diff(rawStart,start),startReasons=[];
+ if(finishShift>0)startReasons.push('完成选品整体提前 '+finishShift+' 天，需保留完整选品 '+r.pick+' 天');
+ var extraStart=diff(startCandidate,start);
+ if(extraStart>0)startReasons.push('开始选品遇周末，向前调整至周五，另外提前 '+extraStart+' 天');
  if(startShift>0)shiftInfo('start',rawStart,start,startReasons);
  dates._adjustments=meta;
  return dates;
 }
-var stageNames={start:'开始选品',finish:'完成选品',depart:'最迟发货',port:'运输到港',pickup:'到港提取完成',arrival:'送仓完成',listed:'仓库完成签收上架'};
+var stageNames={start:'开始选品',finish:'完成选品',depart:'最迟发货（提货）',sail:'开船 / 物流起运',port:'运输到港',pickup:'到港提取完成',arrival:'送仓完成',listed:'仓库完成签收上架'};
 function generateEvents(){
  var raw=buildBuiltins().map(function(e){return Object.assign({},e,state.edits[e.id]||{})}).filter(function(e){return !state.hidden.includes(e.id)});
  state.custom.forEach(function(e){if(e&&e.id)raw.push(Object.assign({},e))});
@@ -351,7 +370,7 @@ function buildEntries(){
   pushItem(entriesMap,e.date,{date:e.date,event:e,type:'event',label:e.name,sort:0});
   if(e.supply||eventTier(e)==='none')return;
   rs.forEach(function(r){var ms=milestone(e,r);Object.keys(stageNames).forEach(function(stage){
-   if(!state.show[stage])return;
+   if(!state.show[stage]||(stage==='sail'&&!oceanSchedule(r)))return;
    var adjustment=ms._adjustments[stage];
    pushItem(entriesMap,ms[stage],{date:ms[stage],event:e,route:r,stage:stage,type:'stage',
     adjustment:adjustment||null,label:r.abbr+' · '+stageNames[stage]+'｜'+e.name,sort:stage==='listed'?1:2});
@@ -520,12 +539,13 @@ function openEvent(id){
  if(!e.supply&&tier!=='none'){
  h+='<div class="timeline"><div style="font-size:13px;font-weight:850">已启用物流线路 · 倒排日期</div>';
  rs.forEach(function(r){var times=milestone(e,r),days=diff(times.start,todayKey);
- h+='<div class="tlcard"><header><span><span class="dot" style="background:'+r.color+'"></span>'+r.name+' · 运输至上架 '+r.shippingTotal+' 天（基础全流程 '+r.total+' 天，实际 '+diff(times.listed,times.start)+' 天）</span><span class="'+(days<0?'alert':'subtle')+'">'+(days<0?'开始选品节点已过':days===0?'今天须开始选品':'距开始选品 '+days+' 天')+'</span></header><div class="tlrows">';
+ h+='<div class="tlcard"><header><span><span class="dot" style="background:'+r.color+'"></span>'+r.name+' · 运输至上架 '+r.shippingTotal+' 天（基础全流程 '+r.total+' 天，含船期等待的实际跨度 '+diff(times.listed,times.start)+' 天）</span><span class="'+(days<0?'alert':'subtle')+'">'+(days<0?'开始选品节点已过':days===0?'今天须开始选品':'距开始选品 '+days+' 天')+'</span></header><div class="tlrows">';
  Object.keys(stageNames).forEach(function(k){
+  if(k==='sail'&&!oceanSchedule(r))return;
   var note=times._adjustments[k];
   h+='<div class="tlphase'+(note?' adjusted':'')+'" title="'+esc(note?note.tooltip:stageNames[k]+'：'+dateWithWeekday(times[k]))+'"><span>'+stageNames[k]+'</span><strong>'+fmt(times[k])+'</strong><span>'+times[k].slice(0,4)+' 年 · '+weekdayLabels[dayOfWeek(times[k])]+'</span>'+(note?'<span class="shift-note">↶ 提前 '+note.days+' 天</span>':'')+'</div>';
  });
- h+='</div><div class="tlnote">船期：'+esc(r.schedule)+'；选品 '+r.pick+'天 + 备货 '+r.prep+'天 + 运输 '+r.transit+'天 + 到港提取 '+r.pickup+'天 + 送仓 '+r.delivery+'天 + 仓库完成签收上架 '+r.shelving+'天；目标可售 '+dateLong(times.listed)+(times._adjustments.start?'。因工作日/周四规则，全流程合计比基础估算额外提前 '+times._adjustments.start.days+' 天（悬停蓝色节点查看原因）':'')+'</div></div>';
+ h+='</div><div class="tlnote">船期：'+esc(r.schedule)+'；选品 '+r.pick+'天 + 备货 '+r.prep+'天 + 运输 '+r.transit+'天 + 到港提取 '+r.pickup+'天 + 送仓 '+r.delivery+'天 + 仓库完成签收上架 '+r.shelving+'天；目标可售 '+dateLong(times.listed)+(times._adjustments.start?'。因固定提货/开船日及工作日规则，全流程比基础估算额外提前 '+times._adjustments.start.days+' 天（悬停对应节点查看原因）':'')+'</div></div>';
  });
  if(!rs.length)h+='<div class="warning">请至少启用一条填写完整的物流路线。</div>';
  h+='</div>';
