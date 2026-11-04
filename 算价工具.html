@@ -1765,7 +1765,7 @@
             <div class="g2" style="margin-bottom:8px">
               <div class="f"><label for="sff-service">直邮物流渠道</label><select id="sff-service" onchange="captureFulfillment();renderSffTariffTable();invalidateResults()">
                 <option value="sfGeneral">顺丰普货</option><option value="sfSensitive">顺丰敏货</option>
-                <option value="battery">带电</option><option value="clothing">服装</option>
+                <option value="battery">顺丰带电</option><option value="clothing">顺丰服装</option>
                 <option value="fourPxBattery">4PX 带电</option><option value="fourPxGeneral">4PX 普货</option>
               </select></div>
               <div class="f"><label for="sff-domestic-fee">国内快递费 (￥/单)</label><input type="number" id="sff-domestic-fee" value="1.72" min="0" step="any"></div>
@@ -2635,7 +2635,7 @@
 
     // User-supplied updated quotation table (November 2026): [minKg, maxKg, freightCNYPerKg, registrationCNYPerOrder].
     // Exact order weight selects the quoted interval. No direct-mail step rounding is applied.
-    const SFF_TARIFF_DEFAULTS = {"sfGeneral":{"name":"顺丰普货","tiers":[[0,0.099,110.6,20],[0.1,0.199,107.2,18],[0.2,0.449,103.2,16],[0.45,0.699,101.8,16],[0.7,0.999,100.5,9],[1,1.499,100.5,9],[1.5,30,95.1,9]]},"sfSensitive":{"name":"顺丰敏货","tiers":[[0,0.099,132,20],[0.1,0.199,132,20],[0.2,0.449,132,18],[0.45,0.999,132,16],[1,1.499,132,9],[1.5,30,132,9]]},"battery":{"name":"带电","tiers":[[0,0.1,130.4,20],[0.101,0.2,127.2,18],[0.201,0.7,122.4,16],[0.701,1.999,120.8,9],[2,30,120.8,9]]},"clothing":{"name":"服装","tiers":[[0,0.099,109.9,20],[0.1,0.199,106.4,18],[0.2,0.449,102.2,16],[0.45,0.699,100.8,16],[0.7,0.999,98.7,9],[1,1.499,98.7,9],[1.5,30,95.2,9]]},"fourPxBattery":{"name":"4PX带电","tiers":[[0,0.1,118,20],[0.1,0.2,108,18],[0.2,0.45,134,16]]},"fourPxGeneral":{"name":"4PX普货","tiers":[[0,0.1,117,20],[0.1,0.2,107,18],[0.2,0.45,128,16]]}};
+    const SFF_TARIFF_DEFAULTS = {"sfGeneral":{"name":"顺丰普货","tiers":[[0,0.099,110.6,20],[0.1,0.199,107.2,18],[0.2,0.449,103.2,16],[0.45,0.699,101.8,16],[0.7,0.999,100.5,9],[1,1.499,100.5,9],[1.5,30,95.1,9]]},"sfSensitive":{"name":"顺丰敏货","tiers":[[0,0.099,132,20],[0.1,0.199,132,20],[0.2,0.449,132,18],[0.45,0.999,132,16],[1,1.499,132,9],[1.5,30,132,9]]},"battery":{"name":"顺丰带电","tiers":[[0,0.1,130.4,20],[0.101,0.2,127.2,18],[0.201,0.7,122.4,16],[0.701,1.999,120.8,9],[2,30,120.8,9]]},"clothing":{"name":"顺丰服装","tiers":[[0,0.099,109.9,20],[0.1,0.199,106.4,18],[0.2,0.449,102.2,16],[0.45,0.699,100.8,16],[0.7,0.999,98.7,9],[1,1.499,98.7,9],[1.5,30,95.2,9]]},"fourPxBattery":{"name":"4PX带电","tiers":[[0,0.1,118,20],[0.1,0.2,108,18],[0.2,0.45,134,16]]},"fourPxGeneral":{"name":"4PX普货","tiers":[[0,0.1,117,20],[0.1,0.2,107,18],[0.2,0.45,128,16]]}};
     let SFF_TARIFFS = clone(DEFAULT_CONFIG.sffTariffs || SFF_TARIFF_DEFAULTS);
     function validateSffTariffs(tariffs) {
       if (!tariffs || typeof tariffs !== 'object') throw new Error('直邮报价表缺失');
@@ -3765,6 +3765,9 @@
           const containsSixChannels = savedSffRates && Object.keys(SFF_TARIFF_DEFAULTS).every(key => savedSffRates[key])
             && Object.keys(savedSffRates).length === Object.keys(SFF_TARIFF_DEFAULTS).length;
           config.sffTariffs = clone(hasCurrentSffRates && containsSixChannels ? savedSffRates : SFF_TARIFF_DEFAULTS);
+          const renamedSffLabels = config.sffTariffs.battery?.name === '带电' || config.sffTariffs.clothing?.name === '服装';
+          if (config.sffTariffs.battery) config.sffTariffs.battery.name = '顺丰带电';
+          if (config.sffTariffs.clothing) config.sffTariffs.clothing.name = '顺丰服装';
           // Preserve existing custom storage rates and opt standard rates into seasonal estimation.
           for (const key of ['storageRateUSD','storageDays']) {
             const value = saved.fulfillment?.wfsSea?.[key] ?? saved.fulfillment?.wfsAir?.[key];
@@ -3784,7 +3787,7 @@
           config.platforms[cur].commissionCategory = REFERRAL_RULES.some(rule => rule.id === category) ? category : null;
           if (CHANNELS[saved.defaultChannel]) config.defaultChannel = saved.defaultChannel;
           validateConfig(config); C = config.platforms; F = config.fulfillment; SFF_TARIFFS = clone(config.sffTariffs); defaultChannel = config.defaultChannel;
-          if (profitMigrated || !hasCurrentSffRates || !containsSixChannels)
+          if (profitMigrated || !hasCurrentSffRates || !containsSixChannels || renamedSffLabels)
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentConfig()));
           if (!hasCurrentSffRates || !containsSixChannels)
             localStorage.setItem(SFF_TARIFF_VERSION_KEY, 'done');
