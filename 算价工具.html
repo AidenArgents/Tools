@@ -756,6 +756,57 @@
       border-color: var(--purd);
       background: linear-gradient(135deg, var(--purb) 0%, #fff 55%)
     }
+    /* Right-side workflow modules are separate: settings, ads, reverse and pricing. */
+    .right-module {
+      margin-bottom: 22px;
+      border: 1.5px solid var(--bd);
+      border-left-width: 4px;
+      border-radius: 12px;
+      padding: 18px 20px 20px;
+      box-shadow: var(--sh2);
+      background: var(--w);
+      min-width: 0
+    }
+    .module-common {
+      border-color: #cbd5e1;
+      border-left-color: var(--green);
+      background: linear-gradient(135deg,#f8fafc 0%,#fff 100%)
+    }
+    .module-ad {
+      border-color: #f9c35c;
+      border-left-color: #f59e0b;
+      background: #fffdf5
+    }
+    .module-reverse {
+      border-color: var(--purd);
+      border-left-color: var(--pur)
+    }
+    .module-price {
+      border-color: var(--blb);
+      border-left-color: var(--blue)
+    }
+    .module-actions {
+      border-top: 1px solid var(--bd);
+      padding-top: 14px;
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end
+    }
+    .module-actions .btn {
+      width: auto;
+      min-width: 166px;
+      padding: 0 22px;
+      margin: 0
+    }
+    .module-results {
+      border-top: 1px solid var(--bd);
+      padding-top: 16px;
+      margin-top: 16px
+    }
+    @media(max-width:600px) {
+      .right-module { padding: 14px 12px 16px; margin-bottom: 16px }
+      .module-actions .btn { width: 100% }
+    }
 
     .rev-input-groups {
       display: grid;
@@ -1648,23 +1699,15 @@
         <div class="pgt" id="pgt-r"></div>
         
         <!-- 共同费用卡片 -->
-        <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,#f8fafc 0%,#fff 100%);border:1.5px solid #cbd5e1">
+        <div class="card right-module module-common" id="common-card">
           <div class="ch">
             <div class="dot" style="background:var(--green)"></div>共同费用 <span
               style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">所有物流方式共享</span>
           </div>
           <div id="common-fee-grid"></div>
-          <div class="hr"></div>
-          <div style="display:flex;justify-content:flex-end">
-            <button class="btn" style="width:auto;padding:0 24px" onclick="calc()"><svg width="15"
-                  height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>计算定价</button>
-          </div>
-          <div class="err" id="errbox"></div>
         </div>
         
-<div class="card" id="ad-card" style="border:1.5px solid #f9a825;background:#fffdf5;margin:18px 0">
+<div class="card right-module module-ad" id="ad-card">
           <div class="ch"><div class="dot" style="background:#f97316"></div>广告费 <span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">填 ACoS 或 ROAS 任一，自动换算 · 不进定价，只从毛利里扣 · 广告按每单计，与「个数/件」无关</span></div>
           <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
             <div class="f" style="flex:1 1 120px"><label>广告占比 ACoS (%)</label><input type="number" id="ad-rate" step="0.1" min="0" placeholder="如 5 或 80" oninput="onAdInput('rate')"></div>
@@ -1674,7 +1717,7 @@
           </div>
         </div>
         <!-- 反推利润 -->
-        <div class="card" id="rev-card">
+        <div class="card right-module module-reverse" id="rev-card">
           <div class="ch">
             <div class="dot" style="background:var(--pur)"></div>反推利润 <span
               style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">填入实际售价 → 计算真实盈利</span>
@@ -1707,16 +1750,33 @@
               </div>
             </div>
           </div>
-          <button class="btn" onclick="calcReverse()" style="background:var(--pur);margin-top:0">
+          <div class="module-actions">
+          <button class="btn" onclick="calcReverse()" style="background:var(--pur)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="20 6 9 17 4 12" />
             </svg>
             反推计算
           </button>
-          <div id="rev-result" class="rg r3 hidden" style="margin-top:12px"></div>
-        </div><div id="reswrap" class="hidden">
-          <div class="ch" style="margin:16px 0 10px"><div class="dot" style="background:var(--blue)"></div>计算定价结果</div>
-          <div class="rg r3" id="resgrid"></div>
+          </div>
+          <div id="rev-result" class="rg r3 hidden module-results"></div>
+        </div>
+        <!-- 计算定价：按钮和结果放在同一个独立模块 -->
+        <div class="card right-module module-price" id="price-card">
+          <div class="ch">
+            <div class="dot" style="background:var(--blue)"></div>计算定价
+            <span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">根据成本和目标利润率计算三种物流的建议售价</span>
+          </div>
+          <div class="module-actions" style="margin-top:4px">
+            <button class="btn" onclick="calc()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>计算定价
+            </button>
+          </div>
+          <div class="err" id="errbox"></div>
+          <div id="reswrap" class="hidden module-results">
+            <div class="rg r3" id="resgrid"></div>
+          </div>
         </div>
         
       </div>
