@@ -1712,7 +1712,7 @@
               <div class="f"><label for="wfs-storage-mode">仓储计算方式</label><select id="wfs-storage-mode"><option value="auto">自动计算（淡旺季 / 库龄）</option><option value="manual">自定义仓储单价</option></select></div>
               <div class="f"><label for="wfs-storage-start">预计入库日期</label><input type="date" id="wfs-storage-start" onchange="captureFulfillment();invalidateResults()"></div>
               <div class="f"><label for="wfs-storage-days" title="每件商品的平均预计在仓天数，非整批售完时长。">预估平均在仓天数 ⓘ</label><input type="number" id="wfs-storage-days" value="30" min="0" step="any"></div>
-              <div class="f" id="wfs-storage-auto-field"><label for="wfs-storage-effective-rate">本次适用最高费率 (USD/ft³/月)</label><input type="number" id="wfs-storage-effective-rate" value="0.75" readonly tabindex="-1"><span id="wfs-storage-effective-hint">自动按淡旺季与库龄分段计费</span></div>
+              <div class="f" id="wfs-storage-auto-field"><button type="button" class="commission-trigger" data-storage-title="wfsSea" aria-haspopup="dialog" aria-controls="storage-overlay" onclick="openStorageRatePicker('wfsSea','main')">本次适用最高费率 (USD/ft³/月) · 点击选费率</button><input type="number" id="wfs-storage-effective-rate" value="0.75" readonly tabindex="-1"><span id="wfs-storage-effective-hint">自动按淡旺季与库龄分段计费</span></div>
               <div class="f" id="wfs-storage-manual-field" style="display:none"><button type="button" class="commission-trigger" data-storage-title="wfsSea" aria-haspopup="dialog" onclick="openStorageRatePicker('wfsSea','main')">手动单价（USD/ft³/月）· 选择费率</button><input type="number" id="wfs-storage-rate" value="0.75" min="0" step="any"></div>
             </div>
             <div id="wfs-storage-note" class="fee-note" aria-live="polite"></div>
@@ -2805,6 +2805,17 @@
           invalidateResults();
         }
         storagePickerChosen = id;
+      } else if (id === 'custom') {
+        // Custom rate must also be accessible when the picker is opened in automatic mode.
+        if (storagePickerOrigin === 'settings') {
+          for (const channel of ['wfsSea','wfsAir']) settingsDraft.fulfillment[channel].storageMode = 'manual';
+          renderSBody();
+        } else {
+          for (const channel of ['wfsSea','wfsAir']) F[channel].storageMode = 'manual';
+          $('wfs-storage-mode').value = 'manual';
+          updateStorageControls();
+          invalidateResults();
+        }
       }
       closeStorageRatePicker();
       if (id === 'custom') storagePickerRateInput()?.focus();
