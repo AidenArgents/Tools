@@ -362,16 +362,29 @@
     .fee-note { font-size:11px;line-height:1.7;color:#64748b;overflow-wrap:anywhere }
     .fee-note a { color:var(--blue) }
     .fee-preview { font-size:12px;line-height:1.7;padding:8px 10px;margin:8px 0;background:var(--bg);border-radius:6px;color:var(--t2) }
-    .sea-rate-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px }
-    .sea-rate-tier { padding:9px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);display:flex;align-items:baseline;justify-content:space-between;gap:4px;flex-wrap:wrap;cursor:pointer;text-align:left;font-family:inherit;min-height:42px }
-    .sea-rate-tier:hover { border-color:var(--blue) }
+    /* WFS carrier rate options use the same calm typography and card treatment as the rest of the calculator. */
+    .sea-rate-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px }
+    .sea-rate-tier {
+      display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+      min-width:0;min-height:64px;gap:6px;padding:10px 12px;
+      border:1px solid var(--bd);border-radius:9px;background:var(--bg);
+      color:var(--t);font:inherit;text-align:left;cursor:pointer;
+      transition:background .15s,border-color .15s,box-shadow .15s;
+    }
+    .sea-rate-tier small { color:var(--t3);font-size:11px;font-weight:600;line-height:1.25 }
+    .sea-rate-tier b { color:var(--t2);font-size:14px;font-weight:800;line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums }
+    .sea-rate-tier:hover,.sea-rate-tier.current { background:var(--blu);border-color:var(--blue) }
     .sea-rate-tier:focus-visible { outline:2px solid var(--blue);outline-offset:2px }
-    .sea-rate-tier small { color:var(--t3);font-size:10px }
-    .sea-rate-tier b { font-size:12px;color:var(--t2) }
-    .sea-rate-tier.current { border-color:var(--blue);background:var(--blu) }
-    .sea-rate-tier.current b { color:var(--blue) }
+    .sea-rate-tier.current { box-shadow:inset 0 0 0 .5px var(--blue) }
+    .sea-rate-tier.current small,.sea-rate-tier.current b { color:var(--blue) }
+    .sea-rate-tier.static { cursor:default;box-shadow:none }
     .sea-rate-grid.season { grid-template-columns:repeat(2,minmax(0,1fr)) }
-    .sea-rate-grid.single { grid-template-columns:1fr }
+    .sea-rate-grid.single { grid-template-columns:repeat(3,minmax(0,1fr)) }
+    @media(max-width:430px) {
+      .sea-rate-grid { gap:5px }
+      .sea-rate-tier { min-height:60px;padding:9px 7px }
+      .sea-rate-tier b { font-size:12px }
+    }
 
     .g2 {
       display: grid;
@@ -1750,13 +1763,7 @@
               </select>
             </div>
             <div id="wfs-air-tiers" aria-live="polite"></div>
-            <details style="margin-top:8px">
-              <summary style="font-size:11px;color:var(--t2);cursor:pointer">空运计费重量参数（原参数）</summary>
-              <div class="g2" style="margin-top:8px">
-                <div class="f"><label for="wfs-air-divisor">材积系数 (cm³/kg)</label><input type="number" id="wfs-air-divisor" value="6000" min="1" step="any"></div>
-                <div class="f"><label for="wfs-air-step">头程进位 (kg，0不进位)</label><input type="text" inputmode="decimal" data-freight-step id="wfs-air-step" value="0" autocomplete="off" spellcheck="false"></div>
-              </div>
-            </details>
+            <div class="fee-note" style="margin-top:7px">头程按商品实际重量 × UPS 红单 ¥67/kg 计算。</div>
             <div id="wfs-air-preview" class="fee-preview">填写商品重量和尺寸后计算WFS费用</div>
           </div>
           <!-- SFF国内直邮：按整单重量直接查报价表 -->
@@ -2023,10 +2030,7 @@
       "storageStartDate": ""
     },
     "wfsAir": {
-      "headRateCNY": 67,
       "airService": "upsRed",
-      "dimDivisor": 6000,
-      "headStepKg": 0,
       "storageRateUSD": 0.75,
       "storageDays": 60,
       "storageMode": "auto",
@@ -2065,11 +2069,6 @@
     const fmt = value => roundDecimal(Number(value), 'up').toFixed(2);
     const fmtProfit = value => roundDecimal(Number(value), 'down').toFixed(2);
     const shownNumber = value => String(roundDecimal(Number(value), 'up'));
-    function billableWeightKg(raw, step) {
-      if (!Number.isFinite(raw) || raw < 0 || !Number.isFinite(step) || step < 0)
-        throw new Error('计费重量或计费步长无效');
-      return step === 0 ? raw : Math.ceil(cleanFloatNoise(raw / step)) * step;
-    }
     function _evalExpr(raw) {
       const s = String(raw).trim();
       if (s === '') return NaN;
@@ -2743,8 +2742,7 @@
       if(!el)return;
       try{
         const quote=airQuote(F.wfsAir);
-        el.innerHTML='<div class="sea-rate-grid single"><div class="sea-rate-tier current" style="cursor:default"><small>'+quote.name+'</small><b>¥'+quote.rate.toFixed(2)+'/kg</b></div></div>'
-          +'<div class="fee-note" style="margin-top:7px">当前渠道 '+quote.name+' · ¥'+quote.rate.toFixed(2)+'/kg。计费重量仍按下方原空运参数计算。</div>';
+        el.innerHTML='<div class="sea-rate-grid single"><div class="sea-rate-tier current static"><small>'+quote.name+'</small><b>¥'+quote.rate.toFixed(2)+'/kg</b></div></div>';
       }catch(e){el.textContent=e.message;}
     }
     function saveSeaWestChoice() {
@@ -2786,12 +2784,12 @@
 
     const MODE_FIELDS = {
       wfsSea: [],
-      wfsAir: [['材积系数(cm³/kg)', 'dimDivisor'], ['头程进位步长(kg，0不进位)', 'headStepKg']],
+      wfsAir: [],
       sff: [['国内快递费(￥/单)', 'domesticCNY']]
     };
     const FIELD_IDS = {
       wfsSea: {},
-      wfsAir: { dimDivisor: 'wfs-air-divisor', headStepKg: 'wfs-air-step' },
+      wfsAir: {},
       sff: { domesticCNY: 'sff-domestic-fee' }
     };
     const paramId = (key, prefix = 'p-') => prefix + (key === 'packingCNY' ? 'packing-fee' : key);
@@ -2978,7 +2976,6 @@
       MODE_FIELDS[channel].forEach(([, key]) => {
         if (!Number.isFinite(fees[key]) || fees[key] < 0) throw new Error('物流费用须为非负数');
       });
-      if (channel === 'wfsAir' && fees.dimDivisor <= 0) throw new Error('空运头程材积系数须大于 0');
       if (channel === 'wfsSea') seaWestQuote(fees);
       if (channel === 'wfsAir') airQuote(fees);
       if (channel === 'sff' && !SFF_TARIFFS[fees.serviceId]) throw new Error('请选择有效直邮渠道');
@@ -2991,15 +2988,9 @@
       if (!Number.isFinite(volume)) throw new Error('包装尺寸超出有效范围');
       return volume;
     }
-    function headWeightKg(product, fees) {
-      const volume = packageVolumeCm3(product);
-      if (!Number.isFinite(fees.dimDivisor) || fees.dimDivisor <= 0) throw new Error('头程材积系数须大于 0');
-      return Math.max(product.weightKg, volume / fees.dimDivisor);
-    }
-    function headBillableKg(product, fees) {
-      // Sea quote has no dimensional-weight divisor and no extra rounding.
-      if (fees.seaService) return product.weightKg;
-      return billableWeightKg(headWeightKg(product, fees), fees.headStepKg || 0);
+    function headBillableKg(product) {
+      // User-defined WFS sea and UPS Red air both use actual item weight; no volumetric conversion or rounding.
+      return product.weightKg;
     }
     function headUnitRateCNY(fees) {
       return fees.seaService ? seaWestQuote(fees).rate : airQuote(fees).rate;
@@ -3039,7 +3030,7 @@
       if (CHANNELS[channel].kind === 'warehouse') {
         const metrics = wfsMetrics(product);
         rows.push(
-          { key: 'head', label: '头程费', amount: headBillableKg(product, fees) * headUnitRateCNY(fees) * qty / p.rate },
+          { key: 'head', label: '头程费', amount: headBillableKg(product) * headUnitRateCNY(fees) * qty / p.rate },
           { key: 'delivery', label: 'WFS 配送费', amount: (metrics.baseUSD + metrics.oversizeUSD + metrics.attributeUSD) * qty },
           { key: 'storage', label: 'WFS 仓储费', amount: metrics.volumeFt3 * storageForecast(fees).perFt3 * qty });
         if (revenue !== null && revenue / qty < 10) rows.push({ key: 'lowPrice', label: 'WFS 低价附加费', amount: qty });
@@ -3183,7 +3174,7 @@
         const out = $('wfs-' + slug + '-preview'); if (!out) continue;
         try {
           const m = wfsMetrics(product), fees = F[channel], p = getParams();
-          const head = headBillableKg(product, fees) * headUnitRateCNY(fees) / p.rate;
+          const head = headBillableKg(product) * headUnitRateCNY(fees) / p.rate;
           const base = m.baseUSD + m.oversizeUSD + m.attributeUSD;
           const price = $('cost').value === '' ? null : sellableOrderQuote(product, fees, p, channel).total;
           const lowFee = price !== null && price / product.qty < 10 ? 1 : 0;
@@ -3209,7 +3200,7 @@
     function feeBasisView(product, fees, channel) {
       if (CHANNELS[channel].kind !== 'warehouse') return escapeHTML(sffTariffDisplay(product, fees)) + '<br>国际运费已包含挂号费（每单一次）；国内快递费按订单一次';
       const m = wfsMetrics(product);
-      return `${channel === 'wfsSea' ? '美西 '+seaWestQuote(fees).service.name+' · '+seaWestQuote(fees).bandLabel+'档 ¥'+seaWestQuote(fees).rate+'/kg · 单件实重 ' : airQuote(fees).name+' ¥'+airQuote(fees).rate+'/kg · 头程计费 '}${formatWeight(headBillableKg(product, fees))} kg/单位 · WFS 计费 ${m.shippingLb} lb/单位<br>仓储体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³ · 在仓 ${fees.storageDays} 天 · ${fees.storageMode === 'manual' ? '手动单价 $' + fees.storageRateUSD + '/ft³/月' : '自动分段 · ' + storageStart(fees) + '起 · 每ft³总计 $' + fmtProfit(storageForecast(fees).perFt3)}`;
+      return `${channel === 'wfsSea' ? '美西 '+seaWestQuote(fees).service.name+' · '+seaWestQuote(fees).bandLabel+'档 ¥'+seaWestQuote(fees).rate+'/kg · 单件实重 ' : airQuote(fees).name+' ¥'+airQuote(fees).rate+'/kg · 单件实重 '}${formatWeight(headBillableKg(product))} kg/单位 · WFS 计费 ${m.shippingLb} lb/单位<br>仓储体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³ · 在仓 ${fees.storageDays} 天 · ${fees.storageMode === 'manual' ? '手动单价 $' + fees.storageRateUSD + '/ft³/月' : '自动分段 · ' + storageStart(fees) + '起 · 每ft³总计 $' + fmtProfit(storageForecast(fees).perFt3)}`;
     }
 
     function singleFees() { captureFulfillment(); return clone(F); }
