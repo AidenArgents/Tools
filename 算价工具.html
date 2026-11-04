@@ -757,6 +757,60 @@
       background: linear-gradient(135deg, var(--purb) 0%, #fff 55%)
     }
 
+    .rev-input-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 10px
+    }
+    .rev-price-group {
+      border: 1px solid var(--bd);
+      background: #f9fafc;
+      border-radius: 8px;
+      padding: 10px 12px;
+      min-width: 0
+    }
+    .rev-group-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--t2);
+      margin-bottom: 8px
+    }
+    .rev-group-title span {
+      font-size: 10px;
+      color: var(--t3);
+      font-weight: 400;
+      margin-left: 4px
+    }
+    .rev-price-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px
+    }
+    .rev-price-pair input { min-width: 0 }
+    .rev-compare {
+      grid-template-columns: minmax(0, 1fr);
+      overflow-x: visible
+    }
+    .rev-channel-block { min-width: 0 }
+    .rev-channel-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--t2);
+      margin: 10px 0 8px
+    }
+    .rev-channel-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch
+    }
+    .rev-channel-pair > .rc { min-width: 0 }
+    @media(max-width:720px) {
+      .rev-input-groups, .rev-channel-pair { grid-template-columns: minmax(0, 1fr) }
+    }
+
+
     .rl {
       font-size: 11px;
       font-weight: 700;
@@ -1411,7 +1465,7 @@
         <div class="referral-controls"><input id="referral-search" type="search" placeholder="搜索类目或费率" aria-label="搜索佣金类目" oninput="renderCommissionPicker()"><button id="referral-manual" type="button" class="s-btn-ghost" onclick="selectCommissionCategory(null)">使用固定佣金</button></div>
       </div>
       <div id="referral-list"></div>
-      <div class="referral-footer">总售价含向买家收取的运费、处理费和礼品包装费等；反推中的额外收入计入佣金基数。<br>内置费表：2026-03-09 · <a href="https://marketplacelearn.walmart.com/guides/Getting%20started/Onboarding/Referral-fee-schedule-for-contract-categories?locale=en-US" target="_blank" rel="noopener">查看官方来源 ↗</a></div>
+      <div class="referral-footer">总售价含向买家收取的运费、处理费和礼品包装费等；反推利润按实际填写的订单销售金额计算。<br>内置费表：2026-03-09 · <a href="https://marketplacelearn.walmart.com/guides/Getting%20started/Onboarding/Referral-fee-schedule-for-contract-categories?locale=en-US" target="_blank" rel="noopener">查看官方来源 ↗</a></div>
     </section>
   </div>
 
@@ -1610,10 +1664,7 @@
           <div class="err" id="errbox"></div>
         </div>
         
-<div id="reswrap" class="hidden">
-          <div class="rg r3" id="resgrid"></div>
-        </div>
-        <div class="card" id="ad-card" style="border:1.5px solid #f9a825;background:#fffdf5;margin:18px 0">
+<div class="card" id="ad-card" style="border:1.5px solid #f9a825;background:#fffdf5;margin:18px 0">
           <div class="ch"><div class="dot" style="background:#f97316"></div>广告费 <span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">填 ACoS 或 ROAS 任一，自动换算 · 不进定价，只从毛利里扣 · 广告按每单计，与「个数/件」无关</span></div>
           <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
             <div class="f" style="flex:1 1 120px"><label>广告占比 ACoS (%)</label><input type="number" id="ad-rate" step="0.1" min="0" placeholder="如 5 或 80" oninput="onAdInput('rate')"></div>
@@ -1628,18 +1679,32 @@
             <div class="dot" style="background:var(--pur)"></div>反推利润 <span
               style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">填入实际售价 → 计算真实盈利</span>
           </div>
-          <div class="g3" style="margin-bottom:10px">
-            <div class="f">
-              <label>单价 (<span id="rev-cu">USD</span>)</label>
-              <input type="number" id="rev-price" step="0.01" min="0" placeholder="单个售价" oninput="syncRevTotal()">
+          <div class="rev-input-groups">
+            <div class="rev-price-group">
+              <div class="rev-group-title">价格 1 <span>默认计算</span></div>
+              <div class="rev-price-pair">
+                <div class="f">
+                  <label for="rev-price">单价 (<span id="rev-cu">USD</span>)</label>
+                  <input type="number" id="rev-price" step="0.01" min="0" placeholder="单个售价" oninput="syncRevTotal(1)">
+                </div>
+                <div class="f">
+                  <label for="rev-total">总价 (<span id="rev-cu3">USD</span>)</label>
+                  <input type="number" id="rev-total" step="0.01" min="0" placeholder="订单总价" oninput="syncRevUnit(1)">
+                </div>
+              </div>
             </div>
-            <div class="f">
-              <label>总价 (<span id="rev-cu3">USD</span>)</label>
-              <input type="number" id="rev-total" step="0.01" min="0" placeholder="订单总价" oninput="syncRevUnit()">
-            </div>
-            <div class="f">
-              <label>额外收入如尾程 (<span id="rev-cu2">USD</span>)</label>
-              <input type="number" id="rev-extra" step="0.01" value="0">
+            <div class="rev-price-group">
+              <div class="rev-group-title">价格 2 <span>选填 · 填写后并排比较</span></div>
+              <div class="rev-price-pair">
+                <div class="f">
+                  <label for="rev-price-2">单价 (<span id="rev-cu4">USD</span>)</label>
+                  <input type="number" id="rev-price-2" step="0.01" min="0" placeholder="第二个单价（选填）" oninput="syncRevTotal(2)">
+                </div>
+                <div class="f">
+                  <label for="rev-total-2">总价 (<span id="rev-cu5">USD</span>)</label>
+                  <input type="number" id="rev-total-2" step="0.01" min="0" placeholder="第二个订单总价（选填）" oninput="syncRevUnit(2)">
+                </div>
+              </div>
             </div>
           </div>
           <button class="btn" onclick="calcReverse()" style="background:var(--pur);margin-top:0">
@@ -1649,7 +1714,11 @@
             反推计算
           </button>
           <div id="rev-result" class="rg r3 hidden" style="margin-top:12px"></div>
+        </div><div id="reswrap" class="hidden">
+          <div class="ch" style="margin:16px 0 10px"><div class="dot" style="background:var(--blue)"></div>计算定价结果</div>
+          <div class="rg r3" id="resgrid"></div>
         </div>
+        
       </div>
     </div>
 
@@ -2768,7 +2837,7 @@
       captureParams(); cur = key;
       document.querySelectorAll('.pb').forEach(button => button.classList.toggle('on', button.id === 'btn-' + key));
       $('pgt').textContent = C[key].title; $('pgs').textContent = C[key].subtitle;
-      ['rev-cu', 'rev-cu2', 'rev-cu3'].forEach(id => { $(id).textContent = C[key].currency; });
+      ['rev-cu', 'rev-cu3', 'rev-cu4', 'rev-cu5'].forEach(id => { $(id).textContent = C[key].currency; });
       renderP(); renderBatchParams(); invalidateResults();
       if (!sidePanelPinned) closeSidePanel();
     }
@@ -2881,47 +2950,89 @@
       if (precise === null) { delete target.dataset.preciseValue; delete target.dataset.displayedValue; }
       else { target.dataset.preciseValue = String(precise); target.dataset.displayedValue = target.value; }
       if (!$('reswrap').classList.contains('hidden')) calc();
-      if ($('rev-price').value || $('rev-total').value) calcReverse();
+      if (hasReversePrice(1) || hasReversePrice(2)) calcReverse();
     }
-    let reverseMode = 'unit';
-    function syncRevTotal() {
-      reverseMode = 'unit';
-      const rawUnit = $('rev-price').value;
-      $('rev-total').value = rawUnit === '' ? '' : fmt(Number(rawUnit) * integer(gv('qty')));
+    // Price 1 is the default; Price 2 is optional. Each group has independent
+    // unit-vs-order-total input precision and never affects the other group's figures.
+    const reverseModes = { 1: 'unit', 2: 'unit' };
+    const reverseIds = (group = 1) => group === 2
+      ? { unit: 'rev-price-2', total: 'rev-total-2' }
+      : { unit: 'rev-price', total: 'rev-total' };
+    function syncRevTotal(group = 1) {
+      reverseModes[group] = 'unit';
+      const ids = reverseIds(group), rawUnit = $(ids.unit).value;
+      $(ids.total).value = rawUnit === '' ? '' : fmt(Number(rawUnit) * integer(gv('qty')));
     }
-    function syncRevUnit() {
-      reverseMode = 'total';
-      const rawTotal = $('rev-total').value;
-      $('rev-price').value = rawTotal === '' ? '' : fmt(Number(rawTotal) / integer(gv('qty')));
+    function syncRevUnit(group = 1) {
+      reverseModes[group] = 'total';
+      const ids = reverseIds(group), rawTotal = $(ids.total).value;
+      $(ids.unit).value = rawTotal === '' ? '' : fmt(Number(rawTotal) / integer(gv('qty')));
     }
     function syncRevQty() {
-      if (reverseMode === 'total') syncRevUnit(); else syncRevTotal();
+      for (const group of [1,2]) {
+        if (reverseModes[group] === 'total') syncRevUnit(group); else syncRevTotal(group);
+      }
     }
-    function exactReverseRevenue(qty) {
-      return reverseMode === 'total' ? Number($('rev-total').value) : Number($('rev-price').value) * qty;
+    function hasReversePrice(group) {
+      const ids = reverseIds(group);
+      return $(ids.unit).value.trim() !== '' || $(ids.total).value.trim() !== '';
+    }
+    function exactReverseRevenue(qty, group = 1) {
+      const ids = reverseIds(group);
+      return reverseModes[group] === 'total' ? Number($(ids.total).value) : Number($(ids.unit).value) * qty;
     }
     function calcReverse() {
       const target = $('rev-result');
-      if (reverseMode === 'total' ? Number($('rev-total').value) <= 0 : Number($('rev-price').value) <= 0) { target.classList.add('hidden'); return; }
+      if (!hasReversePrice(1) && !hasReversePrice(2)) {
+        target.classList.add('hidden');
+        return;
+      }
       try {
+        if (!hasReversePrice(1)) throw new Error('请先填写价格1，再填写可选的价格2');
         captureParams(); const p = getParams(); validateParams(p, false);
-        const product = readProduct(), fees = singleFees(), revenue = exactReverseRevenue(product.qty);
-        const extra = gv('rev-extra') * product.qty;
-        if (!Number.isFinite(extra) || extra < 0) throw new Error('额外收入须为非负数');
-        target.innerHTML = Object.entries(CHANNELS).map(([channel, info]) => {
+        const product = readProduct(), fees = singleFees();
+        const prices = [1,2].filter(hasReversePrice).map(group => {
+          const revenue = exactReverseRevenue(product.qty, group);
+          if (!Number.isFinite(revenue) || revenue <= 0) throw new Error('价格' + group + '必须填写有效的正数');
+          return { group, revenue };
+        });
+        const renderCard = (channel, info, {group, revenue}) => {
           try {
-            const result = orderBreakdown(revenue, product, fees[channel], p, channel, getAd(), true, extra);
-            const net = result.afterAd + extra;
-            return `<div class="rc rcp" data-channel="${channel}"><div class="rl">${channel === 'sff' ? 'SFF ' + escapeHTML(SFF_TARIFFS[fees.sff.serviceId].name) : info.name} · 反推利润</div>
+            // Preserve deliberately different forward/reverse FX-loss bases.
+            // Extra revenue was retired from the reverse UI; do not add it to fees.
+            const result = orderBreakdown(revenue, product, fees[channel], p, channel, getAd(), true, 0);
+            const net = result.afterAd;
+            const modeName = channel === 'sff'
+              ? 'SFF ' + escapeHTML(SFF_TARIFFS[fees.sff.serviceId].name) : info.name;
+            return `<div class="rc rcp" data-channel="${channel}" data-rev-group="${group}">
+              <div class="rl">${modeName} · ${prices.length === 2 ? '价格' + group : '反推利润'}</div>
               <div class="rs2" style="color:${net < 0 ? 'var(--red)' : 'var(--green)'}">${net < 0 ? '亏损' : '盈利'} · USD ${fmtProfit(net)}</div>
-              <div class="rbg">实际总重 ${product.weightKg > 0 ? weightText(product.weightKg * product.qty) : '未填写'}<br>${feeBasisView(product, fees[channel], channel)}${commissionCaption(revenue, product, p, extra)}</div>
+              <div class="rbg">实际总重 ${product.weightKg > 0 ? weightText(product.weightKg * product.qty) : '未填写'}<br>${feeBasisView(product, fees[channel], channel)}${commissionCaption(revenue, product, p)}</div>
               <div class="rr bld"><span>订单收入</span><span>USD ${fmt(revenue)}</span></div>
-              <div class="rbk">${breakdownView(result, revenue, p.rate)}
-              ${extra ? `<div class="rr"><span>额外收入</span><span>USD ${fmt(extra)}</span></div><div class="rr bld"><span>含额外收入利润${result.ad > 0 ? '（广告后）' : ''}</span><span>USD ${fmtProfit(net)}</span></div><div class="rr"><span>含额外收入毛利率</span><span>${fmtProfit(net / (revenue + extra) * 100)}%</span></div>` : ''}</div></div>`;
+              <div class="rbk">${breakdownView(result, revenue, p.rate)}</div>
+            </div>`;
           } catch (error) { return channelError(channel, error); }
-        }).join('');
+        };
+        if (prices.length === 1) {
+          target.classList.remove('rev-compare');
+          target.classList.add('r3');
+          target.innerHTML = Object.entries(CHANNELS)
+            .map(([channel, info]) => renderCard(channel, info, prices[0])).join('');
+        } else {
+          target.classList.remove('r3');
+          target.classList.add('rev-compare');
+          target.innerHTML = Object.entries(CHANNELS).map(([channel,info]) =>
+            `<div class="rev-channel-block" data-rev-channel="${channel}">
+              <div class="rev-channel-title">${channel === 'sff' ? 'SFF ' + escapeHTML(SFF_TARIFFS[fees.sff.serviceId].name) : info.name} · 两组售价对比</div>
+              <div class="rev-channel-pair">${prices.map(price => renderCard(channel,info,price)).join('')}</div>
+            </div>`).join('');
+        }
         target.classList.remove('hidden');
-      } catch (error) { target.textContent = error.message; target.classList.remove('hidden'); }
+      } catch (error) {
+        target.classList.remove('r3', 'rev-compare');
+        target.textContent = error.message;
+        target.classList.remove('hidden');
+      }
     }
 
     let settingsDraft = null;
@@ -3071,7 +3182,7 @@
       ['side-panel', 'side-overlay'].forEach(id => { copy.querySelector('#' + id).classList.remove('show', 'pinned'); });
       const main = copy.querySelector('.main-content'); main.classList.remove('sidebar-pinned'); main.style.display = '';
       copy.querySelector('#batch-wrap').style.display = 'none';
-      ['cost', 'weight', 'weight-lb', 'diml', 'dimw', 'dimh', 'skuQueryInput', 'rev-price', 'rev-total', 'referral-search'].forEach(id => copy.querySelector('#' + id).setAttribute('value', ''));
+      ['cost', 'weight', 'weight-lb', 'diml', 'dimw', 'dimh', 'skuQueryInput', 'rev-price', 'rev-total', 'rev-price-2', 'rev-total-2', 'referral-search'].forEach(id => copy.querySelector('#' + id).setAttribute('value', ''));
       ['qty'].forEach(id => copy.querySelector('#' + id).setAttribute('value', '1'));
       copy.querySelectorAll('#wfs-type option').forEach(option => { option.removeAttribute('selected'); });
       copy.querySelector('#wfs-type option[value="0"]').setAttribute('selected', '');
