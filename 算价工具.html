@@ -394,6 +394,7 @@
     }
 
     input[type=number],
+    input[type=date],
     input[data-expr-input],
     input[data-freight-step],
     select {
@@ -418,6 +419,7 @@
     }
 
     input[type=number]:focus,
+    input[type=date]:focus,
     input[data-expr-input]:focus,
     input[data-freight-step]:focus,
     select:focus {
@@ -425,6 +427,17 @@
       box-shadow: 0 0 0 3px rgba(56, 96, 232, .1)
     }
 
+    .f input[type=date] {
+      display:block;
+      min-width:0;
+      box-sizing:border-box;
+      line-height:normal;
+      color-scheme:light;
+      font-variant-numeric:tabular-nums;
+    }
+    .f input[type=date]::-webkit-calendar-picker-indicator { cursor:pointer; }
+    #wfs-storage-effective-rate[readonly] { color:var(--green);font-weight:800;background:var(--grb);cursor:default; }
+    #wfs-storage-effective-hint { font-size:10px;color:var(--t3);line-height:1.45; }
     input[data-expr-input][readonly] {
       cursor: default;
       color: var(--t)
@@ -1697,9 +1710,10 @@
             <div style="font-size:12px;font-weight:700;color:#0aab7c;margin-bottom:8px">WFS 共用仓储（海运 / 空运）</div>
             <div class="g2" style="margin-bottom:8px">
               <div class="f"><label for="wfs-storage-mode">仓储计算方式</label><select id="wfs-storage-mode"><option value="auto">自动计算（淡旺季 / 库龄）</option><option value="manual">自定义仓储单价</option></select></div>
-              <div class="f"><label for="wfs-storage-start">预计入库日期</label><input type="date" id="wfs-storage-start"></div>
+              <div class="f"><label for="wfs-storage-start">预计入库日期</label><input type="date" id="wfs-storage-start" onchange="captureFulfillment();invalidateResults()"></div>
               <div class="f"><label for="wfs-storage-days" title="每件商品的平均预计在仓天数，非整批售完时长。">预估平均在仓天数 ⓘ</label><input type="number" id="wfs-storage-days" value="30" min="0" step="any"></div>
-              <div class="f"><button type="button" class="commission-trigger" data-storage-title="wfsSea" aria-haspopup="dialog" onclick="openStorageRatePicker('wfsSea','main')">手动单价（USD/ft³/月）· 选择费率</button><input type="number" id="wfs-storage-rate" value="0.75" min="0" step="any"></div>
+              <div class="f" id="wfs-storage-auto-field"><label for="wfs-storage-effective-rate">本次适用最高费率 (USD/ft³/月)</label><input type="number" id="wfs-storage-effective-rate" value="0.75" readonly tabindex="-1"><span id="wfs-storage-effective-hint">自动按淡旺季与库龄分段计费</span></div>
+              <div class="f" id="wfs-storage-manual-field" style="display:none"><button type="button" class="commission-trigger" data-storage-title="wfsSea" aria-haspopup="dialog" onclick="openStorageRatePicker('wfsSea','main')">手动单价（USD/ft³/月）· 选择费率</button><input type="number" id="wfs-storage-rate" value="0.75" min="0" step="any"></div>
             </div>
             <div id="wfs-storage-note" class="fee-note" aria-live="polite"></div>
             <div class="fee-note" style="margin-top:5px">WFS 海空运共用仓储。自动模式按照入库日期、淡旺季与库存库龄逐日估算；仓储费用以官方实际账单为准。</div>
