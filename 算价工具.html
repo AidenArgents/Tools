@@ -821,6 +821,22 @@
       border-color: var(--blb);
       border-left-color: var(--blue)
     }
+    /* One shared filter governs both reverse-profit and suggested-price cards. */
+    .result-channel-filter {
+      display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+      margin:0 0 16px;padding:11px 14px;
+      border:1px solid var(--bd);border-radius:9px;
+      background:var(--w);color:var(--t2);font-size:12px;
+    }
+    .result-channel-filter .result-filter-title { font-weight:700;color:var(--t) }
+    .result-channel-filter .result-filter-help { font-size:10px;color:var(--t3) }
+    .result-channel-filter label {
+      display:inline-flex;align-items:center;gap:5px;
+      cursor:pointer;user-select:none;font-size:12px;font-weight:600;color:var(--t2)
+    }
+    .result-channel-filter input[type="checkbox"] {
+      width:15px;height:15px;accent-color:var(--blue);cursor:pointer;margin:0
+    }
     .module-actions {
       border-top: 1px solid var(--bd);
       padding-top: 14px;
@@ -1803,6 +1819,14 @@
             <div class="f" style="flex:1 1 120px"><label>投入产出比 ROAS</label><input type="number" id="roas-input" step="0.01" min="0" placeholder="如 20 或 1.25" oninput="onAdInput('roi')"></div>
             <div style="flex:1.4 1 180px;align-self:stretch;display:flex;align-items:center"><div style="font-size:11px;color:var(--t3);line-height:1.6;border-left:2.5px solid #f9a825;padding-left:10px">单均广告费 <b style="color:#e07b00">CPA</b> = 售价 × ACoS<br>价格随卡片不同，<b style="color:var(--t2)">见上下各卡明细</b></div></div>
           </div>
+        </div>
+        <!-- One shared display-only filter for BOTH result sections; default is all channels selected. -->
+        <div class="result-channel-filter" id="result-channel-filter" role="group" aria-label="物流结果显示筛选">
+          <span class="result-filter-title">结果显示</span>
+          <label for="result-filter-wfsSea"><input type="checkbox" id="result-filter-wfsSea" checked onchange="applyResultChannelVisibility()">海运</label>
+          <label for="result-filter-wfsAir"><input type="checkbox" id="result-filter-wfsAir" checked onchange="applyResultChannelVisibility()">空运</label>
+          <label for="result-filter-sff"><input type="checkbox" id="result-filter-sff" checked onchange="applyResultChannelVisibility()">直邮</label>
+          <span class="result-filter-help">同时控制反推与定价结果</span>
         </div>
         <!-- 反推利润 -->
         <div class="card right-module module-reverse" id="rev-card">
@@ -3223,6 +3247,22 @@
         </div><div>${makePie(slices, 165, revenue).svg}</div></div>`;
     }
 
+    function applyResultChannelVisibility() {
+      const selected = Object.keys(CHANNELS).filter(channel => $('result-filter-' + channel).checked);
+      const visible = new Set(selected);
+      // Toggle existing cards rather than changing any pricing or reverse-profit math.
+      for (const id of ['resgrid', 'rev-result']) {
+        $(id).querySelectorAll('[data-channel], [data-rev-channel]').forEach(node => {
+          const channel = node.getAttribute('data-rev-channel') || node.getAttribute('data-channel');
+          if (CHANNELS[channel]) node.style.display = visible.has(channel) ? '' : 'none';
+        });
+      }
+      // Keep the 1/2/3-column result layout proportional to the checked channels.
+      const columns = Math.max(1, selected.length);
+      $('resgrid').style.gridTemplateColumns = 'repeat(' + columns + ', minmax(250px, 1fr))';
+      $('rev-result').style.gridTemplateColumns = $('rev-result').classList.contains('rev-compare')
+        ? '' : 'repeat(' + columns + ', minmax(250px, 1fr))';
+    }
     function channelError(channel, error) {
       return `<div class="rc ${CHANNELS[channel].cls}" data-channel="${channel}"><div class="rl">${escapeHTML(CHANNELS[channel].name)}</div><div style="color:var(--red);font-size:12px;margin-top:8px">${escapeHTML(error.message)}</div></div>`;
     }
@@ -3247,6 +3287,7 @@
           } catch (error) { return channelError(channel, error); }
         }).join('');
         $('reswrap').classList.remove('hidden');
+        applyResultChannelVisibility();
       } catch (error) { $('errbox').textContent = error.message; $('errbox').style.display = 'block'; $('reswrap').classList.add('hidden'); }
     }
 
@@ -3342,6 +3383,7 @@
             </div>`).join('');
         }
         target.classList.remove('hidden');
+        applyResultChannelVisibility();
       } catch (error) {
         target.classList.remove('r3', 'rev-compare');
         target.textContent = error.message;
