@@ -2717,17 +2717,26 @@
       return {perFt3,segments};
     }
     function updateStorageControls() {
-      const fees=F.wfsSea,auto=fees.storageMode!=='manual';
-      $('wfs-storage-mode').value=auto?'auto':'manual';
-      $('wfs-storage-rate').disabled=auto;
-      const date=$('wfs-storage-start');
-      if (!date.value) date.value=storageStart(fees);
+      const fees = F.wfsSea, auto = fees.storageMode !== 'manual';
+      $('wfs-storage-mode').value = auto ? 'auto' : 'manual';
+      $('wfs-storage-auto-field').style.display = auto ? '' : 'none';
+      $('wfs-storage-manual-field').style.display = auto ? 'none' : '';
+      const date = $('wfs-storage-start');
+      if (!date.value) date.value = storageStart(fees);
       try {
-        const forecast=storageForecast(fees);
-        $('wfs-storage-note').textContent=(auto?'自动分段｜从 '+storageStart(fees)+' 起':'手动费率｜')+
-          '每 ft³ 合计 $'+fmtProfit(forecast.perFt3)+'（在仓 '+fees.storageDays+' 天）｜'+
-          forecast.segments.map(s=>s.label+' '+formatWeight(s.days)+'天 × $'+s.rate.toFixed(2)+'/ft³/月').join('；');
-      } catch(error) { $('wfs-storage-note').textContent=error.message; }
+        const forecast = storageForecast(fees);
+        const maxRate = Math.max(0, ...forecast.segments.map(part => part.rate));
+        const average = fees.storageDays > 0 ? forecast.perFt3 * 30 / fees.storageDays : 0;
+        $('wfs-storage-effective-rate').value = maxRate.toFixed(2);
+        $('wfs-storage-effective-hint').textContent = '最高档 $' + maxRate.toFixed(2) + '/ft³/月；并非全程按此价收费';
+        $('wfs-storage-note').textContent = (auto ? '自动分段｜入库日期 ' + storageStart(fees) : '手动费率') +
+          '｜平均在仓 ' + fees.storageDays + ' 天' +
+          (auto ? '｜最高阶段费率 $' + maxRate.toFixed(2) + '/ft³/月' : '') +
+          '｜折合平均月费率 $' + average.toFixed(2) + '/ft³' +
+          '｜累计 $' + forecast.perFt3.toFixed(2) + '/ft³' +
+          '｜' + forecast.segments.map(part => part.label + ' ' + formatWeight(part.days) +
+          '天 × $' + part.rate.toFixed(2) + '/ft³/月').join('；');
+      } catch (error) { $('wfs-storage-note').textContent = error.message; }
     }
 
     // Manual storage presets remain available for overrides.
