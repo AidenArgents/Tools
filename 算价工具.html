@@ -1559,7 +1559,7 @@
     <section class="referral-dialog" role="dialog" aria-modal="true" aria-labelledby="storage-picker-title">
       <div class="referral-head"><h2 id="storage-picker-title">WFS 仓储单价</h2><button type="button" class="s-close" aria-label="关闭仓储费率选择" onclick="closeStorageRatePicker()">×</button></div>
       <div class="referral-tools">
-        <p>选择一个适用场景，将单价填入当前 WFS 物流参数；仍可手动填写。这里按所选单价 × 每件平均存放天数估算，跨费率阶段不自动分段。</p>
+        <p>此处选择费率会启用手动模式；如需自动识别淡旺季及跨月库龄，请在左侧「WFS 共用仓储」中切换为自动计算。</p>
         <div id="storage-picker-current" aria-live="polite"></div>
       </div>
       <div id="storage-picker-list"></div>
@@ -1692,14 +1692,17 @@
           <div class="hr"></div>
           <div class="ch"><div class="dot" style="background:var(--green)"></div>物流方式参数</div>
           <div class="f" style="margin-bottom:10px"><label for="wfs-type">WFS 商品属性</label><select id="wfs-type"><option value="0">普通商品</option><option value="1">服装（+$0.50/单位）</option><option value="2">危险品（+$0.50/单位）</option><option value="3">服装及危险品（+$1.00/单位）</option></select></div>
-          <div class="fee-note" style="margin-bottom:12px">两种入仓方式共用 <a href="https://marketplacelearn.walmart.com/guides/Walmart%20Fulfillment%20Services%20(WFS)/WFS%20basics/WFS-fees" target="_blank" rel="noopener">WFS 官方配送费表 ↗</a>（2026-05-27 更新）：按每个填写单位的包装重量、尺寸计算；订单多件按每个独立销售单位计费。售价低于 $10/单位另加 $1。<br>仓储按体积 × 单价 × 天数/30 估算：常规 $0.75；旺季仓龄超30天、或仓龄366–450天 $2.25；仓龄超450天 $7.50/ft³/月，请按预计仓龄修改。<br>头程按实重与材积重较大值摊估；系数默认6000，可按货代调整。物流计费步长默认0（未指定额外进位），可按货代实际规则调整。报价档位针对整票货物，外箱最低计费、外箱重量及偏远等附加费需另摊，不能把单个小件当作独立整票。</div>
+          <div class="fee-note" style="margin-bottom:12px">两种入仓方式共用 <a href="https://marketplacelearn.walmart.com/guides/Walmart%20Fulfillment%20Services%20(WFS)/WFS%20basics/WFS-fees" target="_blank" rel="noopener">WFS 官方配送费表 ↗</a>（2026-05-27 更新）：按每个填写单位的包装重量、尺寸计算；订单多件按每个独立销售单位计费。售价低于 $10/单位另加 $1。<br>WFS仓储自动分段：1–9月 $0.75，10–12月库存前30天 $0.75、31天起 $2.25；库龄366–450天 $2.25，451天起 $7.50/ft³/月；前30天并非免费。<br>头程按实重与材积重较大值摊估；系数默认6000，可按货代调整。物流计费步长默认0（未指定额外进位），可按货代实际规则调整。报价档位针对整票货物，外箱最低计费、外箱重量及偏远等附加费需另摊，不能把单个小件当作独立整票。</div>
           <div class="card" style="padding:12px 14px;margin-bottom:10px;border-left:3px solid #0aab7c">
             <div style="font-size:12px;font-weight:700;color:#0aab7c;margin-bottom:8px">WFS 共用仓储（海运 / 空运）</div>
             <div class="g2" style="margin-bottom:8px">
-              <div class="f"><button type="button" class="commission-trigger" data-storage-title="wfsSea" aria-haspopup="dialog" onclick="openStorageRatePicker('wfsSea','main')">仓储单价 (USD/ft³/月)</button><input type="number" id="wfs-storage-rate" value="0.75" min="0" step="any"></div>
-              <div class="f"><label for="wfs-storage-days" title="平均每件在WFS仓库的天数。100件60天匀速卖完，平均约30天。不是整批售罄时间。">预估仓储天数 ⓘ</label><input type="number" id="wfs-storage-days" value="30" min="0" step="any"></div>
+              <div class="f"><label for="wfs-storage-mode">仓储计算方式</label><select id="wfs-storage-mode"><option value="auto">自动计算（淡旺季 / 库龄）</option><option value="manual">自定义仓储单价</option></select></div>
+              <div class="f"><label for="wfs-storage-start">预计入库日期</label><input type="date" id="wfs-storage-start"></div>
+              <div class="f"><label for="wfs-storage-days" title="每件商品的平均预计在仓天数，非整批售完时长。">预估平均在仓天数 ⓘ</label><input type="number" id="wfs-storage-days" value="30" min="0" step="any"></div>
+              <div class="f"><button type="button" class="commission-trigger" data-storage-title="wfsSea" aria-haspopup="dialog" onclick="openStorageRatePicker('wfsSea','main')">手动单价（USD/ft³/月）· 选择费率</button><input type="number" id="wfs-storage-rate" value="0.75" min="0" step="any"></div>
             </div>
-            <div class="fee-note">长宽高自动换算 ft³；仓储按单件体积 × 单价 × 天数/30估算。海空运共享仓储，只分别设置头程。</div>
+            <div id="wfs-storage-note" class="fee-note" aria-live="polite"></div>
+            <div class="fee-note" style="margin-top:5px">WFS 海空运共用仓储。自动模式按照入库日期、淡旺季与库存库龄逐日估算；仓储费用以官方实际账单为准。</div>
           </div>
           <div class="card" style="padding:12px 14px;margin-bottom:10px;border-left:3px solid #3860e8">
             <div style="font-size:12px;font-weight:700;color:#3860e8;margin-bottom:8px">WFS 海运</div>
@@ -1971,14 +1974,18 @@
       "dimDivisor": 6000,
       "headStepKg": 0,
       "storageRateUSD": 0.75,
-      "storageDays": 30
+      "storageDays": 30,
+      "storageMode": "auto",
+      "storageStartDate": ""
     },
     "wfsAir": {
       "headRateCNY": 54,
       "dimDivisor": 6000,
       "headStepKg": 0,
       "storageRateUSD": 0.75,
-      "storageDays": 30
+      "storageDays": 30,
+      "storageMode": "auto",
+      "storageStartDate": ""
     },
     "sff": {
       "serviceId": "sfGeneral",
@@ -2668,7 +2675,48 @@
     }
 
 
-    // WFS storage picker: a selectable rate scenario; not an automatic date-tier calculator.
+
+    // Only WFS storage is estimated differently; referral, freight and profit formulas are untouched.
+    function storageToday() {
+      const now=new Date();
+      return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    }
+    function storageStart(fees) { return fees.storageStartDate || storageToday(); }
+    function storageForecast(fees) {
+      const days=fees.storageDays;
+      if (!Number.isFinite(days) || days<0 || days>36500) throw new Error('预估仓储天数须在0到36500天之间');
+      if (fees.storageMode === 'manual') return {perFt3:fees.storageRateUSD*days/30,segments:[{label:'手动费率',rate:fees.storageRateUSD,days}]};
+      const start=storageStart(fees);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) throw new Error('预计入库日期不正确');
+      const t=Date.parse(start+'T00:00:00Z');
+      if (!Number.isFinite(t) || new Date(t).toISOString().slice(0,10)!==start) throw new Error('预计入库日期无效');
+      let perFt3=0;const segments=[];
+      for (let i=0;i<Math.ceil(days);i++) {
+        const day=new Date(t+i*86400000),age=i+1,peak=day.getUTCMonth()>=9,portion=Math.min(1,days-i);
+        const rate=age>450?7.50:age>365?2.25:peak&&age>30?2.25:0.75;
+        const label=age>450?'库龄451天以上':age>365?'库龄366–450天':peak?(age>30?'旺季31–365天':'旺季前30天'):'淡季';
+        perFt3+=rate*portion/30;
+        const last=segments[segments.length-1];
+        if(last&&last.rate===rate&&last.label===label)last.days+=portion;
+        else segments.push({label,rate,days:portion});
+      }
+      return {perFt3,segments};
+    }
+    function updateStorageControls() {
+      const fees=F.wfsSea,auto=fees.storageMode!=='manual';
+      $('wfs-storage-mode').value=auto?'auto':'manual';
+      $('wfs-storage-rate').disabled=auto;
+      const date=$('wfs-storage-start');
+      if (!date.value) date.value=storageStart(fees);
+      try {
+        const forecast=storageForecast(fees);
+        $('wfs-storage-note').textContent=(auto?'自动分段｜从 '+storageStart(fees)+' 起':'手动费率｜')+
+          '每 ft³ 合计 $'+fmtProfit(forecast.perFt3)+'（在仓 '+fees.storageDays+' 天）｜'+
+          forecast.segments.map(s=>s.label+' '+formatWeight(s.days)+'天 × $'+s.rate.toFixed(2)+'/ft³/月').join('；');
+      } catch(error) { $('wfs-storage-note').textContent=error.message; }
+    }
+
+    // Manual storage presets remain available for overrides.
     const WFS_STORAGE_PRESETS = [
       { id: 'regular', name: '1–9月 · 普通仓储', rate: 0.75, note: '库存不超过365天；$0.75/ft³/月' },
       { id: 'peak-short', name: '10–12月 · 仓龄不超过30天', rate: 0.75, note: '旺季30天内按普通费率；$0.75/ft³/月' },
@@ -2724,11 +2772,13 @@
       if (!option && id !== 'custom') return;
       if (option) {
         if (storagePickerOrigin === 'settings') {
-          for (const channel of ['wfsSea','wfsAir']) settingsDraft.fulfillment[channel].storageRateUSD = option.rate;
+          for (const channel of ['wfsSea','wfsAir']) { settingsDraft.fulfillment[channel].storageRateUSD = option.rate; settingsDraft.fulfillment[channel].storageMode = 'manual'; }
           renderSBody();
         } else {
-          for (const channel of ['wfsSea','wfsAir']) F[channel].storageRateUSD = option.rate;
+          for (const channel of ['wfsSea','wfsAir']) { F[channel].storageRateUSD = option.rate; F[channel].storageMode = 'manual'; }
           storagePickerRateInput().value = String(option.rate);
+          $('wfs-storage-mode').value = 'manual';
+          updateStorageControls();
           invalidateResults();
         }
         storagePickerChosen = id;
@@ -2819,7 +2869,7 @@
         rows.push(
           { key: 'head', label: '头程费', amount: headBillableKg(product, fees) * fees.headRateCNY * qty / p.rate },
           { key: 'delivery', label: 'WFS 配送费', amount: (metrics.baseUSD + metrics.oversizeUSD + metrics.attributeUSD) * qty },
-          { key: 'storage', label: 'WFS 仓储费', amount: metrics.volumeFt3 * fees.storageRateUSD * fees.storageDays / 30 * qty });
+          { key: 'storage', label: 'WFS 仓储费', amount: metrics.volumeFt3 * storageForecast(fees).perFt3 * qty });
         if (revenue !== null && revenue / qty < 10) rows.push({ key: 'lowPrice', label: 'WFS 低价附加费', amount: qty });
       } else {
         const tariff = findSffTariff(product.weightKg * qty, fees.serviceId);
@@ -2903,8 +2953,11 @@
     function captureFulfillment() {
       Object.entries(FIELD_IDS).forEach(([channel, fields]) => Object.entries(fields).forEach(([key, id]) => { F[channel][key] = gv(id); }));
       F.sff.serviceId = $('sff-service').value;
-      const rate = gv('wfs-storage-rate'), days = gv('wfs-storage-days');
-      for (const channel of ['wfsSea','wfsAir']) { F[channel].storageRateUSD = rate; F[channel].storageDays = days; }
+      const rate=gv('wfs-storage-rate'),days=gv('wfs-storage-days'),mode=$('wfs-storage-mode').value,startDate=$('wfs-storage-start').value;
+      for (const channel of ['wfsSea','wfsAir']) {
+        F[channel].storageRateUSD=rate;F[channel].storageDays=days;F[channel].storageMode=mode;F[channel].storageStartDate=startDate;
+      }
+      updateStorageControls();
     }
     function syncParam(key, value, source) {
       C[cur].p.find(param => param[1] === key)[2] = Number(value);
@@ -2921,7 +2974,7 @@
       return `<div class="pc">${key === 'comm' ? `<button type="button" class="commission-trigger" data-commission-title="${source}" aria-haspopup="dialog" onclick="openCommissionPicker('${source}')">${escapeHTML(label)}</button>` : `<label for="${paramId(key, prefix)}">${escapeHTML(label)}</label>`}<input type="number" id="${paramId(key, prefix)}" aria-label="${escapeHTML(label)}" value="${value}" min="0" ${key === 'disc' ? 'max="99.99" step="1"' : 'step="0.01"'} ${key === 'packingCNY' ? 'placeholder="留空或0则不计入"' : ''} oninput="syncParam('${key}',this.value,'${source}')"></div>`;
     }
     function renderP() { $('common-fee-grid').innerHTML = orderedParams().map(([label, key, value]) => paramInput(label, key, value, 'p-', 'single')).join(''); }
-    function renderFulfillment() { Object.entries(FIELD_IDS).forEach(([channel, fields]) => Object.entries(fields).forEach(([key, id]) => { $(id).value = F[channel][key]; })); $('sff-service').value = F.sff.serviceId; renderSffTariffTable(); $('wfs-storage-rate').value = F.wfsSea.storageRateUSD; $('wfs-storage-days').value = F.wfsSea.storageDays; }
+    function renderFulfillment() { Object.entries(FIELD_IDS).forEach(([channel, fields]) => Object.entries(fields).forEach(([key, id]) => { $(id).value = F[channel][key]; })); $('sff-service').value = F.sff.serviceId; renderSffTariffTable(); $('wfs-storage-rate').value = F.wfsSea.storageRateUSD; $('wfs-storage-days').value = F.wfsSea.storageDays; $('wfs-storage-mode').value = F.wfsSea.storageMode || 'auto'; $('wfs-storage-start').value = storageStart(F.wfsSea); updateStorageControls(); }
     function renderBatchParams() {
       $('batch-params-container').innerHTML = orderedParams().map(([label, key, value]) => paramInput(label, key, value, 'bp-', 'batch')).join('');
       $('batch-fee-summary').textContent = `WFS 海运头程 ¥${F.wfsSea.headRateCNY}/kg（步长${F.wfsSea.headStepKg || '未设置'}kg），空运头程 ¥${F.wfsAir.headRateCNY}/kg（步长${F.wfsAir.headStepKg || '未设置'}kg）；配送按 WFS 官方重量/尺寸/售价档计算，仓储按物流参数另算。SFF 国内直邮：${SFF_TARIFFS[F.sff.serviceId].name}，按整单实重查25条报价档位（国际运费¥/kg及对应挂号¥/单），国内快递 ¥${F.sff.domesticCNY}/单。行内头程单价留空跟随物流参数；填0则不计头程。WFS海空运共用仓储参数；每行可选择独立佣金类目或固定比例。多件行显示可上架单价和实际整单价。WFS头程进位沿用现有物流参数；SFF不使用进位，直接匹配报价表。`;
@@ -2958,7 +3011,7 @@
           const base = m.baseUSD + m.oversizeUSD + m.attributeUSD;
           const price = $('cost').value === '' ? null : sellableOrderQuote(product, fees, p, channel).total;
           const lowFee = price !== null && price / product.qty < 10 ? 1 : 0;
-          const storage = m.volumeFt3 * fees.storageRateUSD * fees.storageDays / 30;
+          const storage = m.volumeFt3 * storageForecast(fees).perFt3;
           out.textContent = `包装体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³；每单位头程 $${fmt(head)} · WFS 配送 $${fmt(base + lowFee)}${lowFee ? '（含低价附加 $1）' : price === null ? '（未含低价附加）' : ''} · 仓储 $${fmt(storage)}；WFS 计费 ${m.shippingLb} lb`;
         } catch (error) { out.textContent = error.message; }
       }
@@ -2980,7 +3033,7 @@
     function feeBasisView(product, fees, channel) {
       if (CHANNELS[channel].kind !== 'warehouse') return escapeHTML(sffTariffDisplay(product, fees)) + '<br>国际运费已包含挂号费（每单一次）；国内快递费按订单一次';
       const m = wfsMetrics(product);
-      return `头程计费 ${formatWeight(headBillableKg(product, fees))} kg/单位 · WFS 计费 ${m.shippingLb} lb/单位<br>仓储体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³ · 在仓 ${fees.storageDays} 天 · 单价 $${fees.storageRateUSD}/ft³/月`;
+      return `头程计费 ${formatWeight(headBillableKg(product, fees))} kg/单位 · WFS 计费 ${m.shippingLb} lb/单位<br>仓储体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³ · 在仓 ${fees.storageDays} 天 · ${fees.storageMode === 'manual' ? '手动单价 $' + fees.storageRateUSD + '/ft³/月' : '自动分段 · ' + storageStart(fees) + '起 · 每ft³总计 $' + fmtProfit(storageForecast(fees).perFt3)}`;
     }
 
     function singleFees() { captureFulfillment(); return clone(F); }
@@ -3144,10 +3197,11 @@
           settingsDraft.fulfillment[channel][key] = Number($('sf-' + channel + '-' + key).value);
         }));
         settingsDraft.fulfillment.sff.serviceId = $('sf-sff-serviceId').value;
-        const rate = Number($('sf-wfsSea-storageRateUSD').value), days = Number($('sf-wfsSea-storageDays').value);
+        const rate=Number($('sf-wfsSea-storageRateUSD').value),days=Number($('sf-wfsSea-storageDays').value),
+          mode=$('sf-wfsSea-storageMode').value,startDate=$('sf-wfsSea-storageStartDate').value;
         for (const channel of ['wfsSea','wfsAir']) {
-          settingsDraft.fulfillment[channel].storageRateUSD = rate;
-          settingsDraft.fulfillment[channel].storageDays = days;
+          settingsDraft.fulfillment[channel].storageRateUSD=rate;settingsDraft.fulfillment[channel].storageDays=days;
+          settingsDraft.fulfillment[channel].storageMode=mode;settingsDraft.fulfillment[channel].storageStartDate=startDate;
         }
       }
     }
@@ -3223,11 +3277,14 @@
       if (sCurTab === 'platform') $('s-body').innerHTML = '<div class="ssec">Walmart 共同费用 · 费用填 0 或留空时不计算该项</div><div class="srow">'
         + orderedParams(settingsDraft.platforms[cur]).map(([label, key, value]) => `<div class="spc2">${key === 'comm' ? `<button type="button" class="commission-trigger" data-commission-title="settings" aria-haspopup="dialog" onclick="openCommissionPicker('settings')">${escapeHTML(label)}</button>` : `<label>${escapeHTML(label)}</label>`}<input type="number" id="sp-${key}" ${key === 'comm' ? 'oninput="onSettingsCommissionInput()"' : ''} value="${value}" min="0" step="0.01"${key === 'disc' ? ' max="99.99"' : ''}></div>`).join('') + '</div>';
       else {
-        const rate = settingsDraft.fulfillment.wfsSea.storageRateUSD, days = settingsDraft.fulfillment.wfsSea.storageDays;
+        const rate=settingsDraft.fulfillment.wfsSea.storageRateUSD,days=settingsDraft.fulfillment.wfsSea.storageDays,
+          mode=settingsDraft.fulfillment.wfsSea.storageMode||'auto',start=storageStart(settingsDraft.fulfillment.wfsSea);
         $('s-body').innerHTML = '<div class="ssec">WFS 共用仓储（海运 / 空运）</div><div class="srow">'
-          + '<div class="spc2">' + settingsFeeLabel('wfsSea','仓储单价(USD/ft³/月)','storageRateUSD')
-          + '<input type="number" id="sf-wfsSea-storageRateUSD" min="0" step="any" value="' + rate + '"></div>'
-          + '<div class="spc2">' + settingsFeeLabel('wfsSea','预估仓储天数','storageDays')
+          + '<div class="spc2"><label>计算方式</label><select id="sf-wfsSea-storageMode" onchange="this.parentNode.parentNode.querySelector(\'#sf-wfsSea-storageRateUSD\').disabled=this.value===\'auto\'"><option value="auto"' + (mode==='auto'?' selected':'') + '>自动淡旺季/库龄</option><option value="manual"' + (mode==='manual'?' selected':'') + '>手动单价</option></select></div>'
+          + '<div class="spc2"><label>预计入库日期</label><input type="date" id="sf-wfsSea-storageStartDate" value="' + escapeHTML(start) + '"></div>'
+          + '<div class="spc2">' + settingsFeeLabel('wfsSea','手动仓储单价(USD/ft³/月)','storageRateUSD')
+          + '<input type="number" id="sf-wfsSea-storageRateUSD" min="0" step="any" value="' + rate + '"' + (mode==='auto'?' disabled':'') + '></div>'
+          + '<div class="spc2">' + settingsFeeLabel('wfsSea','预估平均在仓天数','storageDays')
           + '<input type="number" id="sf-wfsSea-storageDays" min="0" step="any" value="' + days + '"></div></div>'
           + Object.entries(CHANNELS).map(([channel, info]) => `<div class="ssec">${info.name}</div><div class="srow">`
             + (channel === 'sff'
@@ -3251,6 +3308,8 @@
         if (!Number.isFinite(config.fulfillment.wfsSea[key]) || config.fulfillment.wfsSea[key] < 0)
           throw new Error('WFS 共用仓储参数须为非负数');
       }
+      if (!['auto','manual'].includes(config.fulfillment.wfsSea.storageMode)) throw new Error('仓储计算方式无效');
+      storageForecast(config.fulfillment.wfsSea);
     }
     function saveSettings() {
       try {
@@ -3490,13 +3549,20 @@
           const savedServiceId = saved.fulfillment?.sff?.serviceId;
           if (SFF_TARIFF_DEFAULTS[savedServiceId]) config.fulfillment.sff.serviceId = savedServiceId;
           config.sffTariffs = clone(saved.sffTariffs || DEFAULT_CONFIG.sffTariffs || SFF_TARIFF_DEFAULTS);
-          // Backward compatibility: use previously saved sea storage as the canonical WFS rate/days.
+          // Preserve existing custom storage rates and opt standard rates into seasonal estimation.
           for (const key of ['storageRateUSD','storageDays']) {
             const value = saved.fulfillment?.wfsSea?.[key] ?? saved.fulfillment?.wfsAir?.[key];
             if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
               config.fulfillment.wfsSea[key] = value;
               config.fulfillment.wfsAir[key] = value;
             }
+          }
+          const prevMode=saved.fulfillment?.wfsSea?.storageMode ?? saved.fulfillment?.wfsAir?.storageMode;
+          const prevDate=saved.fulfillment?.wfsSea?.storageStartDate ?? saved.fulfillment?.wfsAir?.storageStartDate;
+          for (const channel of ['wfsSea','wfsAir']) {
+            config.fulfillment[channel].storageMode=['auto','manual'].includes(prevMode)?prevMode:
+              (config.fulfillment.wfsSea.storageRateUSD===0.75?'auto':'manual');
+            config.fulfillment[channel].storageStartDate=typeof prevDate==='string'?prevDate:'';
           }
           const category = saved.platforms?.[cur]?.commissionCategory;
           config.platforms[cur].commissionCategory = REFERRAL_RULES.some(rule => rule.id === category) ? category : null;
@@ -3549,7 +3615,7 @@
         });
         el.addEventListener('input', () => el.setCustomValidity(''));
       });
-      ['cost', 'qty', 'diml', 'dimw', 'dimh', 'wfs-type', 'wfs-storage-rate', 'wfs-storage-days', ...Object.values(FIELD_IDS).flatMap(Object.values)].forEach(id => $(id).addEventListener('input', () => {
+      ['cost', 'qty', 'diml', 'dimw', 'dimh', 'wfs-type', 'wfs-storage-rate', 'wfs-storage-days', 'wfs-storage-mode', 'wfs-storage-start', ...Object.values(FIELD_IDS).flatMap(Object.values)].forEach(id => $(id).addEventListener('input', () => {
         if (document.activeElement?.hasAttribute('data-freight-step')) {
           const raw = document.activeElement.value.trim().replace(/[,，]/g, '.');
           if (raw !== '' && !/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)) return;
