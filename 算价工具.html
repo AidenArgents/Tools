@@ -362,6 +362,12 @@
     .fee-note { font-size:11px;line-height:1.7;color:#64748b;overflow-wrap:anywhere }
     .fee-note a { color:var(--blue) }
     .fee-preview { font-size:12px;line-height:1.7;padding:8px 10px;margin:8px 0;background:var(--bg);border-radius:6px;color:var(--t2) }
+    .sea-rate-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px }
+    .sea-rate-tier { padding:7px 9px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);display:flex;align-items:baseline;justify-content:space-between;gap:4px;flex-wrap:wrap }
+    .sea-rate-tier small { color:var(--t3);font-size:10px }
+    .sea-rate-tier b { font-size:12px;color:var(--t2) }
+    .sea-rate-tier.current { border-color:var(--blue);background:var(--blu) }
+    .sea-rate-tier.current b { color:var(--blue) }
 
     .g2 {
       display: grid;
@@ -1719,10 +1725,16 @@
             <div class="fee-note" style="margin-top:5px">WFS 海空运共用仓储。自动模式按照入库日期、淡旺季与库存库龄逐日估算；仓储费用以官方实际账单为准。</div>
           </div>
           <div class="card" style="padding:12px 14px;margin-bottom:10px;border-left:3px solid #3860e8">
-            <div style="font-size:12px;font-weight:700;color:#3860e8;margin-bottom:8px">WFS 海运</div>
-            <div class="g2" style="margin-bottom:8px"><div class="f"><label for="wfs-sea-rate">头程单价 (￥/kg)</label><input type="number" id="wfs-sea-rate" value="15.5" min="0" step="any"></div><div class="f"><label for="wfs-sea-divisor">材积系数 (cm³/kg)</label><input type="number" id="wfs-sea-divisor" value="6000" min="1" step="any"></div><div class="f"><label for="wfs-sea-step" title="每件头程按此进位，0为未设置，按原始计费重量×公斤单价估算">头程进位(kg，0不进位)</label><input type="text" inputmode="decimal" data-freight-step id="wfs-sea-step" value="0" autocomplete="off" spellcheck="false"></div></div>
-            <div id="wfs-sea-preview" class="fee-preview">填写重量和长宽高后计算 WFS 配送费</div>
-            <div class="fee-note">参考：美森 CLX 正班 · 美西 · 整票 100 kg+，2026-10-09，<a href="https://vipjiage.com/en/quotes/美森正班.加班、以星、普船、快递派" target="_blank" rel="noopener">美航物流公开报价 ↗</a>。头程单价可按实际报价修改。</div>
+            <div style="font-size:12px;font-weight:700;color:#3860e8;margin-bottom:8px">WFS 海运 · 美西（邮编8–9）</div>
+            <div class="g2" style="margin-bottom:8px">
+              <div class="f"><label for="wfs-sea-service">海运渠道</label><select id="wfs-sea-service">
+                <option value="clx">美森正班-海派（CLX）</option>
+                <option value="max">美森加班-海派（MAX）</option>
+              </select></div>
+              <div class="f"><label for="wfs-sea-shipment">整票计费重量（kg）</label><input type="number" id="wfs-sea-shipment" value="12" min="12" step="any"></div>
+            </div>
+            <div id="wfs-sea-tiers" aria-live="polite"></div>
+            <div id="wfs-sea-preview" class="fee-preview">填写商品重量和尺寸后计算WFS费用</div>
           </div>
           <div class="card" style="padding:12px 14px;margin-bottom:10px;border-left:3px solid #e07b00">
             <div style="font-size:12px;font-weight:700;color:#e07b00;margin-bottom:8px">WFS 空运</div>
@@ -1984,9 +1996,8 @@
   },
   "fulfillment": {
     "wfsSea": {
-      "headRateCNY": 15.5,
-      "dimDivisor": 6000,
-      "headStepKg": 0,
+      "seaService": "clx",
+      "seaShipmentKg": 12,
       "storageRateUSD": 0.75,
       "storageDays": 60,
       "storageMode": "auto",
@@ -2656,13 +2667,44 @@
       wfsAir: { name: 'WFS 空运', kind: 'warehouse', cls: 'rca' },
       sff: { name: 'SFF 国内直邮', kind: 'direct', cls: 'rcg' }
     };
+
+    // Mainland China -> US West sea freight quote supplied by the user.
+    // A price tier is selected by the TOTAL shipment weight, not this item's weight.
+    const SEA_WEST_TARIFFS = {
+      clx: { name:'美森正班-海派（CLX）', transit:'开船次日起第16天预计提取', tiers:[[12,17.3],[51,15.3],[100,14.8]] },
+      max: { name:'美森加班-海派（MAX）', transit:'开船次日起第17天预计提取', tiers:[[12,16.8],[51,14.8],[100,14.3]] }
+    };
+    function seaWestQuote(fees) {
+      const service=SEA_WEST_TARIFFS[fees.seaService];
+      if (!service) throw new Error('请选择有效的美西海运渠道');
+      const weight=Number(fees.seaShipmentKg);
+      if (!Number.isFinite(weight) || weight < 12)
+        throw new Error('整票海运重量须至少12kg；低于12kg不在当前报价表内');
+      let tier=service.tiers[0];
+      for (const row of service.tiers) if (weight >= row[0]) tier=row;
+      return { service, rate:tier[1], minKg:tier[0], shipmentKg:weight };
+    }
+    function renderSeaWestRates() {
+      const el=$('wfs-sea-tiers');
+      if (!el) return;
+      try {
+        const quote=seaWestQuote(F.wfsSea);
+        el.innerHTML='<div class="fee-note" style="margin-bottom:5px">美西（邮编8–9） · 整票 '+quote.shipmentKg+' kg · 命中 '+quote.minKg+'kg+ 档 · <b style="color:var(--blue)">¥'+quote.rate.toFixed(2)+'/kg</b></div>'
+          +'<div class="sea-rate-grid">'+quote.service.tiers.map(([from,rate])=>
+          '<div class="sea-rate-tier'+(from===quote.minKg?' current':'')+'"><small>'+from+'kg+</small><b>¥'+rate.toFixed(2)+'/kg</b></div>').join('')+'</div>'
+          +'<div class="fee-note" style="margin-top:5px">按整票重量选档；单品头程按实际重量 × 档位单价分摊。沃尔玛/商业地址无附加费；报价含关税和查验费。</div>';
+      } catch(error) {
+        el.innerHTML='<div class="fee-note" style="color:var(--red)">'+escapeHTML(error.message)+'</div>';
+      }
+    }
+
     const MODE_FIELDS = {
-      wfsSea: [['头程单价(￥/kg)', 'headRateCNY'], ['材积系数(cm³/kg)', 'dimDivisor'], ['头程进位步长(kg，0不进位)', 'headStepKg']],
+      wfsSea: [],
       wfsAir: [['头程单价(￥/kg)', 'headRateCNY'], ['材积系数(cm³/kg)', 'dimDivisor'], ['头程进位步长(kg，0不进位)', 'headStepKg']],
       sff: [['国内快递费(￥/单)', 'domesticCNY']]
     };
     const FIELD_IDS = {
-      wfsSea: { headRateCNY: 'wfs-sea-rate', dimDivisor: 'wfs-sea-divisor', headStepKg: 'wfs-sea-step' },
+      wfsSea: {},
       wfsAir: { headRateCNY: 'wfs-air-rate', dimDivisor: 'wfs-air-divisor', headStepKg: 'wfs-air-step' },
       sff: { domesticCNY: 'sff-domestic-fee' }
     };
@@ -2850,7 +2892,8 @@
       MODE_FIELDS[channel].forEach(([, key]) => {
         if (!Number.isFinite(fees[key]) || fees[key] < 0) throw new Error('物流费用须为非负数');
       });
-      if (CHANNELS[channel].kind === 'warehouse' && fees.dimDivisor <= 0) throw new Error('头程材积系数须大于 0');
+      if (channel === 'wfsAir' && fees.dimDivisor <= 0) throw new Error('空运头程材积系数须大于 0');
+      if (channel === 'wfsSea') seaWestQuote(fees);
       if (channel === 'sff' && !SFF_TARIFFS[fees.serviceId]) throw new Error('请选择有效直邮渠道');
     }
     function packageVolumeCm3(product) {
@@ -2867,7 +2910,12 @@
       return Math.max(product.weightKg, volume / fees.dimDivisor);
     }
     function headBillableKg(product, fees) {
+      // Sea quote has no dimensional-weight divisor and no extra rounding.
+      if (fees.seaService) return product.weightKg;
       return billableWeightKg(headWeightKg(product, fees), fees.headStepKg || 0);
+    }
+    function headUnitRateCNY(fees) {
+      return fees.seaService ? seaWestQuote(fees).rate : fees.headRateCNY;
     }
     function wfsMetrics(product) {
       const volume = packageVolumeCm3(product), unitLb = kgToLb(product.weightKg);
@@ -2904,7 +2952,7 @@
       if (CHANNELS[channel].kind === 'warehouse') {
         const metrics = wfsMetrics(product);
         rows.push(
-          { key: 'head', label: '头程费', amount: headBillableKg(product, fees) * fees.headRateCNY * qty / p.rate },
+          { key: 'head', label: '头程费', amount: headBillableKg(product, fees) * headUnitRateCNY(fees) * qty / p.rate },
           { key: 'delivery', label: 'WFS 配送费', amount: (metrics.baseUSD + metrics.oversizeUSD + metrics.attributeUSD) * qty },
           { key: 'storage', label: 'WFS 仓储费', amount: metrics.volumeFt3 * storageForecast(fees).perFt3 * qty });
         if (revenue !== null && revenue / qty < 10) rows.push({ key: 'lowPrice', label: 'WFS 低价附加费', amount: qty });
@@ -2989,6 +3037,9 @@
     }
     function captureFulfillment() {
       Object.entries(FIELD_IDS).forEach(([channel, fields]) => Object.entries(fields).forEach(([key, id]) => { F[channel][key] = gv(id); }));
+      F.wfsSea.seaService = $('wfs-sea-service').value;
+      F.wfsSea.seaShipmentKg = gv('wfs-sea-shipment');
+      renderSeaWestRates();
       F.sff.serviceId = $('sff-service').value;
       const rate=gv('wfs-storage-rate'),days=gv('wfs-storage-days'),mode=$('wfs-storage-mode').value,startDate=$('wfs-storage-start').value;
       for (const channel of ['wfsSea','wfsAir']) {
@@ -3011,10 +3062,11 @@
       return `<div class="pc">${key === 'comm' ? `<button type="button" class="commission-trigger" data-commission-title="${source}" aria-haspopup="dialog" onclick="openCommissionPicker('${source}')">${escapeHTML(label)}</button>` : `<label for="${paramId(key, prefix)}">${escapeHTML(label)}</label>`}<input type="number" id="${paramId(key, prefix)}" aria-label="${escapeHTML(label)}" value="${value}" min="0" ${key === 'disc' ? 'max="99.99" step="1"' : 'step="0.01"'} ${key === 'packingCNY' ? 'placeholder="留空或0则不计入"' : ''} oninput="syncParam('${key}',this.value,'${source}')"></div>`;
     }
     function renderP() { $('common-fee-grid').innerHTML = orderedParams().map(([label, key, value]) => paramInput(label, key, value, 'p-', 'single')).join(''); }
-    function renderFulfillment() { Object.entries(FIELD_IDS).forEach(([channel, fields]) => Object.entries(fields).forEach(([key, id]) => { $(id).value = F[channel][key]; })); $('sff-service').value = F.sff.serviceId; renderSffTariffTable(); $('wfs-storage-rate').value = F.wfsSea.storageRateUSD; $('wfs-storage-days').value = F.wfsSea.storageDays; $('wfs-storage-mode').value = F.wfsSea.storageMode || 'auto'; $('wfs-storage-start').value = storageStart(F.wfsSea); updateStorageControls(); }
+    function renderFulfillment() { Object.entries(FIELD_IDS).forEach(([channel, fields]) => Object.entries(fields).forEach(([key, id]) => { $(id).value = F[channel][key]; })); $('sff-service').value = F.sff.serviceId; renderSffTariffTable(); $('wfs-sea-service').value = F.wfsSea.seaService; $('wfs-sea-shipment').value = F.wfsSea.seaShipmentKg; renderSeaWestRates(); $('wfs-storage-rate').value = F.wfsSea.storageRateUSD; $('wfs-storage-days').value = F.wfsSea.storageDays; $('wfs-storage-mode').value = F.wfsSea.storageMode || 'auto'; $('wfs-storage-start').value = storageStart(F.wfsSea); updateStorageControls(); }
     function renderBatchParams() {
       $('batch-params-container').innerHTML = orderedParams().map(([label, key, value]) => paramInput(label, key, value, 'bp-', 'batch')).join('');
-      $('batch-fee-summary').textContent = `WFS 海运头程 ¥${F.wfsSea.headRateCNY}/kg（步长${F.wfsSea.headStepKg || '未设置'}kg），空运头程 ¥${F.wfsAir.headRateCNY}/kg（步长${F.wfsAir.headStepKg || '未设置'}kg）；配送按 WFS 官方重量/尺寸/售价档计算，仓储按物流参数另算。SFF 国内直邮：${SFF_TARIFFS[F.sff.serviceId].name}，按整单实重查25条报价档位（国际运费¥/kg及对应挂号¥/单），国内快递 ¥${F.sff.domesticCNY}/单。行内头程单价留空跟随物流参数；填0则不计头程。WFS海空运共用仓储参数；每行可选择独立佣金类目或固定比例。多件行显示可上架单价和实际整单价。WFS头程进位沿用现有物流参数；SFF不使用进位，直接匹配报价表。`;
+      const sea=seaWestQuote(F.wfsSea);
+      $('batch-fee-summary').textContent = `WFS 海运美西：${sea.service.name} · 整票${sea.shipmentKg}kg · ${sea.minKg}kg+档 ¥${sea.rate.toFixed(2)}/kg，单品按实重分摊，不使用材积系数和头程进位；空运头程 ¥${F.wfsAir.headRateCNY}/kg（空运进位按原参数）。WFS仓储共用。SFF国内直邮：${SFF_TARIFFS[F.sff.serviceId].name}，按实际整单重量匹配报价；WFS海运按左侧所选整票重量统一选档，批量行不能独立改写海运费率。`;
     }
     function go(key) {
       if (!C[key]) return;
@@ -3044,7 +3096,7 @@
         const out = $('wfs-' + slug + '-preview'); if (!out) continue;
         try {
           const m = wfsMetrics(product), fees = F[channel], p = getParams();
-          const head = headBillableKg(product, fees) * fees.headRateCNY / p.rate;
+          const head = headBillableKg(product, fees) * headUnitRateCNY(fees) / p.rate;
           const base = m.baseUSD + m.oversizeUSD + m.attributeUSD;
           const price = $('cost').value === '' ? null : sellableOrderQuote(product, fees, p, channel).total;
           const lowFee = price !== null && price / product.qty < 10 ? 1 : 0;
@@ -3070,7 +3122,7 @@
     function feeBasisView(product, fees, channel) {
       if (CHANNELS[channel].kind !== 'warehouse') return escapeHTML(sffTariffDisplay(product, fees)) + '<br>国际运费已包含挂号费（每单一次）；国内快递费按订单一次';
       const m = wfsMetrics(product);
-      return `头程计费 ${formatWeight(headBillableKg(product, fees))} kg/单位 · WFS 计费 ${m.shippingLb} lb/单位<br>仓储体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³ · 在仓 ${fees.storageDays} 天 · ${fees.storageMode === 'manual' ? '手动单价 $' + fees.storageRateUSD + '/ft³/月' : '自动分段 · ' + storageStart(fees) + '起 · 每ft³总计 $' + fmtProfit(storageForecast(fees).perFt3)}`;
+      return `${channel === 'wfsSea' ? '美西 '+seaWestQuote(fees).service.name+' · 整票 '+seaWestQuote(fees).shipmentKg+' kg · '+seaWestQuote(fees).minKg+'kg+档 ¥'+seaWestQuote(fees).rate+'/kg · 单件实重 ' : '头程计费 '}${formatWeight(headBillableKg(product, fees))} kg/单位 · WFS 计费 ${m.shippingLb} lb/单位<br>仓储体积 ${formatWeight(packageVolumeCm3(product))} cm³ ≈ ${formatWeight(m.volumeFt3)} ft³ · 在仓 ${fees.storageDays} 天 · ${fees.storageMode === 'manual' ? '手动单价 $' + fees.storageRateUSD + '/ft³/月' : '自动分段 · ' + storageStart(fees) + '起 · 每ft³总计 $' + fmtProfit(storageForecast(fees).perFt3)}`;
     }
 
     function singleFees() { captureFulfillment(); return clone(F); }
@@ -3233,6 +3285,8 @@
         Object.keys(CHANNELS).forEach(channel => MODE_FIELDS[channel].forEach(([, key]) => {
           settingsDraft.fulfillment[channel][key] = Number($('sf-' + channel + '-' + key).value);
         }));
+        settingsDraft.fulfillment.wfsSea.seaService = $('sf-wfsSea-seaService').value;
+        settingsDraft.fulfillment.wfsSea.seaShipmentKg = Number($('sf-wfsSea-seaShipmentKg').value);
         settingsDraft.fulfillment.sff.serviceId = $('sf-sff-serviceId').value;
         const rate=Number($('sf-wfsSea-storageRateUSD').value),days=Number($('sf-wfsSea-storageDays').value),
           mode=$('sf-wfsSea-storageMode').value,startDate=$('sf-wfsSea-storageStartDate').value;
@@ -3329,6 +3383,11 @@
                 + Object.entries(SFF_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === settingsDraft.fulfillment.sff.serviceId ? ' selected' : '') + '>' + escapeHTML(svc.name) + '</option>').join('')
                 + '</select></div>'
               : '')
+            + (channel === 'wfsSea'
+              ? '<div class="spc2"><label>美西海运渠道</label><select id="sf-wfsSea-seaService">'
+                + Object.entries(SEA_WEST_TARIFFS).map(([id,svc])=>'<option value="'+id+'"'+(id===settingsDraft.fulfillment.wfsSea.seaService?' selected':'')+'>'+escapeHTML(svc.name)+'</option>').join('')
+                + '</select></div><div class="spc2"><label>整票计费重量（kg）</label><input type="number" min="12" step="any" id="sf-wfsSea-seaShipmentKg" value="'+settingsDraft.fulfillment.wfsSea.seaShipmentKg+'"></div>'
+              : '')
             + MODE_FIELDS[channel].map(([label, key]) => `<div class="spc2">${settingsFeeLabel(channel, label, key)}<input type="number" id="sf-${channel}-${key}" value="${settingsDraft.fulfillment[channel][key]}" min="0" step="0.01"></div>`).join('') + '</div>'
             + (channel === 'sff' ? `<details id="sf-sff-tariff-details" style="margin:8px 0 18px;border:1px solid var(--bd);border-radius:8px;padding:10px 12px" ontoggle="if(this.open)renderSettingsSffTariffEditor()">
               <summary style="cursor:pointer;color:var(--blue);font-size:12px;font-weight:700">展开 / 修改直邮渠道报价表</summary>
@@ -3415,7 +3474,7 @@
         const help = key === 'qty' ? $('qty').previousElementSibling.title : key === 'commPct' ? '本行固定佣金（百分比）。填写非空时覆盖共同佣金及类目；与指定类目不能同时填写。' : '';
         const sharedKey = key === 'pr' ? 'profit' : key;
         const fallback = ['headRateCNY'].includes(key) ? F[channel][key] : getParams()[sharedKey];
-        return `<td><input type="${key === 'sku' ? 'text' : 'number'}" class="${key === 'sku' ? 'w-sku' : 'w-sm'}" id="b${id}-${key}" value="${escapeHTML(value)}" step="any" ${key !== 'sku' ? 'min="0"' : ''} title="${escapeHTML(help)}" ${isDirect && ['headRateCNY'].includes(key) ? 'disabled' : ''} ${fallback !== undefined ? `placeholder="${['headRateCNY'].includes(key) ? '跟随物流参数' : '跟随共享参数'}"` : ''}></td>`;
+        return `<td><input type="${key === 'sku' ? 'text' : 'number'}" class="${key === 'sku' ? 'w-sku' : 'w-sm'}" id="b${id}-${key}" value="${escapeHTML(value)}" step="any" ${key !== 'sku' ? 'min="0"' : ''} title="${escapeHTML(help)}" ${['headRateCNY'].includes(key) && channel !== 'wfsAir' ? 'disabled' : ''} ${fallback !== undefined ? `placeholder="${['headRateCNY'].includes(key) ? '跟随物流参数' : '跟随共享参数'}"` : ''}></td>`;
       }).join('') + Object.keys(C).map(key => `<td class="res" data-price-result id="b${id}-${key}">—</td>`).join('') + `<td><button class="del-btn" onclick="removeBatchRow(${id})">×</button></td>`;
       $('btbl-body').appendChild(tr); if (weightKg !== null) writeWeightPair(weightKg, id); return id;
     }
@@ -3423,7 +3482,7 @@
       const channel = $('b' + id + '-fulfill').value;
       $('b' + id + '-wfsType').disabled = CHANNELS[channel].kind === 'direct';
       $('b' + id + '-sffService').disabled = CHANNELS[channel].kind !== 'direct';
-      ['headRateCNY'].forEach(key => { const input = $('b' + id + '-' + key); input.disabled = CHANNELS[channel].kind === 'direct'; input.value = ''; input.placeholder = F[channel][key] === undefined ? '' : '跟随物流参数'; });
+      ['headRateCNY'].forEach(key => { const input = $('b' + id + '-' + key); input.disabled = channel !== 'wfsAir'; input.value = ''; input.placeholder = channel === 'wfsSea' ? '海运自动档价' : channel === 'wfsAir' ? '跟随空运参数' : ''; });
       $('batch-row-' + id).querySelectorAll('[data-price-result]').forEach(cell => { cell.textContent = '—'; cell.title = ''; });
     }
     function removeBatchRow(id) { $('batch-row-' + id)?.remove(); if (_bFill.stat[id]) fillSettle(id, 'fail', ''); }
@@ -3442,7 +3501,7 @@
           fees.serviceId = value('sffService');
         }
         const product = { cost: Number(value('cost')), weightKg: readWeightKg(id), qty: integer(value('qty')), l: Number(value('l')), w: Number(value('w')), h: Number(value('h')), wfsType: Number(value('wfsType')) };
-        ['headRateCNY'].forEach(key => { if (CHANNELS[channel].kind === 'warehouse' && value(key) !== '') fees[key] = Number(value(key)); });
+        ['headRateCNY'].forEach(key => { if (channel === 'wfsAir' && value(key) !== '') fees[key] = Number(value(key)); });
         for (const key of Object.keys(C)) {
           const p = getParams(key);
           [['rate', 'rate'], ['packingCNY', 'packingCNY'], ['pr', 'profit'], ['disc', 'disc']].forEach(([field, param]) => { if (value(field) !== '') p[param] = Number(value(field)); });
@@ -3582,6 +3641,10 @@
             const value = saved.fulfillment?.[channel]?.[key];
             if (typeof value === 'number' && Number.isFinite(value)) config.fulfillment[channel][key] = value;
           }));
+          // Preserve new sea selections; migrate old sea pricing to the CLX 12kg+ starter tier.
+          if (SEA_WEST_TARIFFS[saved.fulfillment?.wfsSea?.seaService]) config.fulfillment.wfsSea.seaService=saved.fulfillment.wfsSea.seaService;
+          const previousSeaWeight = saved.fulfillment?.wfsSea?.seaShipmentKg;
+          if (Number.isFinite(previousSeaWeight) && previousSeaWeight >= 12) config.fulfillment.wfsSea.seaShipmentKg=previousSeaWeight;
           // Existing settings retain the selected channel; old flat freight fields are obsolete.
           const savedServiceId = saved.fulfillment?.sff?.serviceId;
           if (SFF_TARIFF_DEFAULTS[savedServiceId]) config.fulfillment.sff.serviceId = savedServiceId;
@@ -3652,7 +3715,7 @@
         });
         el.addEventListener('input', () => el.setCustomValidity(''));
       });
-      ['cost', 'qty', 'diml', 'dimw', 'dimh', 'wfs-type', 'wfs-storage-rate', 'wfs-storage-days', 'wfs-storage-mode', 'wfs-storage-start', ...Object.values(FIELD_IDS).flatMap(Object.values)].forEach(id => $(id).addEventListener('input', () => {
+      ['cost', 'qty', 'diml', 'dimw', 'dimh', 'wfs-type', 'wfs-sea-service', 'wfs-sea-shipment', 'wfs-storage-rate', 'wfs-storage-days', 'wfs-storage-mode', 'wfs-storage-start', ...Object.values(FIELD_IDS).flatMap(Object.values)].forEach(id => $(id).addEventListener('input', () => {
         if (document.activeElement?.hasAttribute('data-freight-step')) {
           const raw = document.activeElement.value.trim().replace(/[,，]/g, '.');
           if (raw !== '' && !/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)) return;
