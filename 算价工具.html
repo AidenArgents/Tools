@@ -980,6 +980,40 @@
       font-size: 13px
     }
 
+    /* Profit and gross-margin KPIs share a prominent two-line amount style. */
+    .rr.kpi {
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+    .rr.kpi > span:last-child {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      min-width: 0;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.25;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .rr.kpi .kpi-cny {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1.2;
+      color: var(--t3);
+    }
+    .rr.kpi .negative {
+      color: var(--red);
+    }
+    .rr.kpi .negative .kpi-cny {
+      color: var(--red);
+    }
+
     .left-col .card {
       padding: 14px 16px;
       margin-bottom: 11px
@@ -2962,10 +2996,10 @@
       slices.push({ val: Math.max(0, result.afterAd), label: result.ad > 0 ? '广告后毛利' : '利润', color: COLORS.profit });
       if (result.ad > 0) slices.push({ val: result.ad, label: '广告费', color: COLORS.ad });
       return `<div data-pie-scope class="breakdown-grid"><div>${feeRows(result.rows, revenue, rate)}
-        <div class="rr bld" data-pie-key="利润"><span>利润${result.ad > 0 ? '（广告前）' : ''}</span><span>USD ${fmtProfit(result.profit)}</span></div>
+        <div class="rr bld kpi" data-pie-key="利润"><span>利润${result.ad > 0 ? '（广告前）' : ''}</span><span class="${result.profit < 0 ? 'negative' : ''}">USD ${fmtProfit(result.profit)}<small class="kpi-cny">≈￥${fmtProfit(result.profit * rate)}</small></span></div>
         ${result.ad > 0 ? `<div class="rr" data-pie-key="广告费"><span>广告费</span><span>USD ${fmt(result.ad)}</span></div>
-        <div class="rr bld" data-pie-key="广告后毛利"><span>广告后毛利</span><span style="color:${result.afterAd < 0 ? 'var(--red)' : 'var(--green)'}">USD ${fmtProfit(result.afterAd)}</span></div>` : ''}
-        <div class="rr"><span>毛利率${result.ad > 0 ? '（广告后）' : ''}</span><span>${revenue > 0 ? fmtProfit(result.afterAd / revenue * 100) : '0.00'}%</span></div>
+        <div class="rr bld kpi" data-pie-key="广告后毛利"><span>广告后毛利</span><span class="${result.afterAd < 0 ? 'negative' : ''}">USD ${fmtProfit(result.afterAd)}<small class="kpi-cny">≈￥${fmtProfit(result.afterAd * rate)}</small></span></div>` : ''}
+        <div class="rr bld kpi"><span>毛利率${result.ad > 0 ? '（广告后）' : ''}</span><span class="${result.afterAd < 0 ? 'negative' : ''}">${revenue > 0 ? fmtProfit(result.afterAd / revenue * 100) : '0.00'}%</span></div>
         </div><div>${makePie(slices, 165, revenue).svg}</div></div>`;
     }
 
