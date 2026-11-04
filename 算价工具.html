@@ -772,7 +772,7 @@
       border-left-color: var(--green);
       background: linear-gradient(135deg,#f8fafc 0%,#fff 100%)
     }
-    .module-ad {
+    .module-performance {
       border-color: #f9c35c;
       border-left-color: #f59e0b;
       background: #fffdf5
@@ -1741,12 +1741,12 @@
           <div id="common-fee-grid"></div>
         </div>
         
-<div class="card right-module module-ad" id="ad-card">
+<div class="card right-module module-performance" id="performance-settings">
           <div class="ch"><div class="dot" style="background:#f97316"></div>广告费 <span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">填 ACoS 或 ROAS 任一，自动换算 · 不进定价，只从毛利里扣 · 广告按每单计，与「个数/件」无关</span></div>
           <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
-            <div class="f" style="flex:1 1 120px"><label>广告占比 ACoS (%)</label><input type="number" id="ad-rate" step="0.1" min="0" placeholder="如 5 或 80" oninput="onAdInput('rate')"></div>
+            <div class="f" style="flex:1 1 120px"><label>广告占比 ACoS (%)</label><input type="number" id="acos-input" step="0.1" min="0" placeholder="如 5 或 80" oninput="onAdInput('rate')"></div>
             <div style="display:flex;align-items:center;height:40px;font-size:20px;font-weight:700;color:#f97316" title="ACoS 与 ROAS 互为倒数，自动换算">⇄</div>
-            <div class="f" style="flex:1 1 120px"><label>投入产出比 ROAS</label><input type="number" id="ad-roi" step="0.01" min="0" placeholder="如 20 或 1.25" oninput="onAdInput('roi')"></div>
+            <div class="f" style="flex:1 1 120px"><label>投入产出比 ROAS</label><input type="number" id="roas-input" step="0.01" min="0" placeholder="如 20 或 1.25" oninput="onAdInput('roi')"></div>
             <div style="flex:1.4 1 180px;align-self:stretch;display:flex;align-items:center"><div style="font-size:11px;color:var(--t3);line-height:1.6;border-left:2.5px solid #f9a825;padding-left:10px">单均广告费 <b style="color:#e07b00">CPA</b> = 售价 × ACoS<br>价格随卡片不同，<b style="color:var(--t2)">见上下各卡明细</b></div></div>
           </div>
         </div>
@@ -2329,7 +2329,7 @@
     };
     function integer(value) { const n = Number(value); if (!Number.isSafeInteger(n) || n < 1) throw new Error('数量须为正整数'); return n; }
 
-    const getAd = () => $('ad-rate')?.dataset.preciseValue !== undefined && $('ad-rate').value === $('ad-rate').dataset.displayedValue ? Number($('ad-rate').dataset.preciseValue) : gv('ad-rate');
+    const getAd = () => $('acos-input')?.dataset.preciseValue !== undefined && $('acos-input').value === $('acos-input').dataset.displayedValue ? Number($('acos-input').dataset.preciseValue) : gv('acos-input');
     const KG_PER_LB = 0.45359237;
     const kgToLb = kg => kg / KG_PER_LB;
     const lbToKg = lb => lb * KG_PER_LB;
@@ -3035,10 +3035,10 @@
         .catch(() => { if (label) label.textContent = '复制失败，请手动复制'; });
     }
     function onAdInput(source) {
-      const edited = source === 'rate' ? $('ad-rate') : $('ad-roi');
+      const edited = source === 'rate' ? $('acos-input') : $('roas-input');
       delete edited.dataset.preciseValue;
       delete edited.dataset.displayedValue;
-      const target = source === 'rate' ? $('ad-roi') : $('ad-rate');
+      const target = source === 'rate' ? $('roas-input') : $('acos-input');
       const raw = Number(edited.value), precise = raw > 0 ? 100 / raw : null;
       target.value = precise === null ? '' : shownNumber(precise);
       if (precise === null) { delete target.dataset.preciseValue; delete target.dataset.displayedValue; }
