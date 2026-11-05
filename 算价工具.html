@@ -2783,7 +2783,7 @@
       if(!el)return;
       try{
         const quote=airQuote(F.wfsAir);
-        el.innerHTML='<div class="sea-rate-grid single"><div class="sea-rate-tier current static"><small>'+quote.name+'</small><b>¥'+quote.rate.toFixed(2)+'/kg</b></div></div>';
+        el.innerHTML='<div class="sea-rate-grid single"><div class="sea-rate-tier current static"><small>统一价</small><b>¥'+quote.rate.toFixed(2)+'/kg</b></div></div>';
       }catch(e){el.textContent=e.message;}
     }
     function saveSeaWestChoice() {
@@ -3224,7 +3224,7 @@
         Object.entries(AIR_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === F.wfsAir.airService ? ' selected' : '') +
           '>' + escapeHTML(svc.name) + '</option>').join('') +
         '</select><div class="sea-rate-grid single"><div class="sea-rate-tier current static"><small>' +
-        escapeHTML(air.name) + '</small><b>¥' + air.rate.toFixed(2) + '/kg</b></div></div></div>' +
+        '统一价</small><b>¥' + air.rate.toFixed(2) + '/kg</b></div></div></div>' +
         '<div class="batch-logistics-item"><label for="b-shared-sff">直邮默认渠道</label><select id="b-shared-sff" onchange="selectBatchLogistics(\'sff\',this.value)">' +
         Object.entries(SFF_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === F.sff.serviceId ? ' selected' : '') +
           '>' + escapeHTML(svc.name) + '</option>').join('') +
