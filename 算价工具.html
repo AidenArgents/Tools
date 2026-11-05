@@ -2014,12 +2014,12 @@
         [
           "退款率(%)",
           "refund",
-          0
+          5
         ],
         [
           "汇损(%)",
           "fxloss",
-          0
+          1
         ],
         [
           "联盟(%)",
@@ -2091,6 +2091,7 @@
     const SETTINGS_KEY = 'pricing_us_settings_v3';
     const SFF_TARIFF_VERSION_KEY = 'pricing_us_sff_tariffs_20261104_six_channels_v1';
     const PROFIT_40_MIGRATION_KEY = 'pricing_us_profit_40_migrated_v1';
+    const FEES_20261105_MIGRATION_KEY = 'pricing_us_refund5_fxloss1_migrated_v1';
     const SEA_WEST_CHOICE_KEY = 'pricing_us_sea_west_last_choice_v1';
     const AIR_CHOICE_KEY = 'pricing_us_air_last_choice_v1';
     const clone = value => JSON.parse(JSON.stringify(value));
@@ -3848,7 +3849,8 @@
     function initializePricing() {
       try {
         const migrateProfit = localStorage.getItem(PROFIT_40_MIGRATION_KEY) !== 'done';
-        let profitMigrated = false;
+        const migrateFeeDefaults = localStorage.getItem(FEES_20261105_MIGRATION_KEY) !== 'done';
+        let profitMigrated = false, feeDefaultsMigrated = false;
         const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
         if (saved) {
           const config = clone(DEFAULT_CONFIG);
@@ -3859,6 +3861,12 @@
               if (param[1] === 'profit' && migrateProfit && param[2] === 20) {
                 param[2] = 40;
                 profitMigrated = true;
+              }
+              // Old cached 0% defaults would otherwise override the new 5% / 1%.
+              // Nonzero custom fee settings remain untouched.
+              if (migrateFeeDefaults && param[2] === 0 && (param[1] === 'refund' || param[1] === 'fxloss')) {
+                param[2] = param[1] === 'refund' ? 5 : 1;
+                feeDefaultsMigrated = true;
               }
             }
           });
@@ -3906,12 +3914,13 @@
           config.platforms[cur].commissionCategory = REFERRAL_RULES.some(rule => rule.id === category) ? category : null;
           if (CHANNELS[saved.defaultChannel]) config.defaultChannel = saved.defaultChannel;
           validateConfig(config); C = config.platforms; F = config.fulfillment; SFF_TARIFFS = clone(config.sffTariffs); defaultChannel = config.defaultChannel;
-          if (profitMigrated || !hasCurrentSffRates || !containsSixChannels || renamedSffLabels)
+          if (profitMigrated || feeDefaultsMigrated || !hasCurrentSffRates || !containsSixChannels || renamedSffLabels)
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(currentConfig()));
           if (!hasCurrentSffRates || !containsSixChannels)
             localStorage.setItem(SFF_TARIFF_VERSION_KEY, 'done');
         }
         if (migrateProfit) localStorage.setItem(PROFIT_40_MIGRATION_KEY, 'done');
+        if (migrateFeeDefaults) localStorage.setItem(FEES_20261105_MIGRATION_KEY, 'done');
       } catch (_) {}
       // This lightweight preference survives reloads even without opening "参数设置".
       // It takes priority over old saved settings for just the sea channel and tier.
