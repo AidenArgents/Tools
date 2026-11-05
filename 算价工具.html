@@ -1694,10 +1694,12 @@
             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
               <input type="text" id="skuQueryInput" placeholder="输入领星 SKU，精确匹配"
                 style="flex: 1; height: 36px; padding: 0 12px; border: 1.5px solid #d1fae5; border-radius: 6px; background: white; color: #059669; font-weight: 600;">
-              <button onclick="querySKUFromERP()"
+              <button onclick="querySKUFromERP()" title="2分钟内相同SKU可复用查询结果"
                 style="padding: 0 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s; height: 36px;">
                 查询
               </button>
+              <button type="button" onclick="querySKUFromERP(true)" title="忽略缓存，实时读取领星"
+                style="padding:0 10px;height:36px;border:1px solid #a7f3d0;border-radius:6px;background:#fff;color:#047857;cursor:pointer;font-size:12px;white-space:nowrap">实时刷新</button>
             </div>
 
             <div style="display:flex; gap:12px; align-items:flex-start">
@@ -1714,7 +1716,7 @@
               <div style="width:230px; flex-shrink:0; padding:8px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px">
                 <a href="https://erp.lingxing.com/erp/productManage" target="_blank" rel="noopener noreferrer"
                   style="font-size:12px;color:#1d4ed8;font-weight:700">打开领星产品管理 ↗</a>
-                <div style="color:#64748b;font-size:11px;margin-top:5px;line-height:1.6">请保持领星已登录，并重载更新后的 Ianto 插件。读取采购成本、默认包装毛重及尺寸；重量显示 kg / lb，尺寸统一为 cm。</div>
+                <div style="color:#64748b;font-size:11px;margin-top:5px;line-height:1.6">请保持领星已登录，并重载更新后的 Ianto 插件。读取采购成本、默认包装毛重及尺寸；重量填写 g / lb，尺寸统一为 cm；重复SKU近期查询结果会复用，「实时刷新」可跳过缓存。</div>
               </div>
             </div>
           </div>
@@ -4088,6 +4090,23 @@
       document.getElementById('skuQueryError').textContent = msg;
     }
 
+    // Only short-lived successful exact-SKU responses are cached. No persistent product-cost storage.
+    const ERP_CACHE_TTL_MS = 120000, ERP_CACHE_LIMIT = 100;
+    const _erpSKUCache = new Map();
+    function readERPFromCache(sku) {
+      const entry = _erpSKUCache.get(sku);
+      if (!entry) return null;
+      if (Date.now() - entry.time >= ERP_CACHE_TTL_MS) { _erpSKUCache.delete(sku); return null; }
+      _erpSKUCache.delete(sku); _erpSKUCache.set(sku, entry);
+      return { ...entry.item, warnings: Array.isArray(entry.item.warnings) ? [...entry.item.warnings] : [] };
+    }
+    function storeERPInCache(item) {
+      if (!item || item.__source !== 'lingxing' || typeof item.sku !== 'string'
+          || typeof item.costPrice !== 'number' || !Number.isFinite(item.costPrice) || item.costPrice < 0) return;
+      _erpSKUCache.delete(item.sku);
+      _erpSKUCache.set(item.sku, {time:Date.now(),item:{...item,warnings:Array.isArray(item.warnings)?[...item.warnings]:[]}});
+      while (_erpSKUCache.size > ERP_CACHE_LIMIT) _erpSKUCache.delete(_erpSKUCache.keys().next().value);
+    }
     // 每个查询带独立编号，旧回包不能覆盖新 SKU 或其他算价页面。
     let _erpSerial = 0, _singleERPRequest = null, _singleERPTimer = null;
     function createERPRequest(sku, type, rowId) {
@@ -4095,7 +4114,7 @@
         requestId: 'lx-' + Date.now() + '-' + (++_erpSerial) + '-' + Math.random().toString(36).slice(2, 8) };
     }
 
-    function querySKUFromERP() {
+    function querySKUFromERP(forceFresh = false) {
       const sku = document.getElementById('skuQueryInput').value.trim(); // 保持大小写敏感
       if (!sku) { showSKUError('请输入SKU'); return; }
 
@@ -4111,7 +4130,10 @@
         _singleERPRequest = null;
         showSKUError('领星查询无响应，请重载 Ianto 插件、刷新算价工具，并保持领星产品管理页已登录');
       }, 40000);
-      _erpEmit('REQUEST_ERP_FETCH', request);
+      const cached = forceFresh ? null : readERPFromCache(sku);
+      if (cached) {
+        window.erpFetchHandler({ detail:{reqData:request,success:true,data:cached,fromCache:true} });
+      } else _erpEmit('REQUEST_ERP_FETCH', request);
     }
 
     // ── 批量填充：节流队列 + 状态登记 + 失败重试 + 问题行定位 ──
@@ -4153,7 +4175,12 @@
         const request = createERPRequest(job.sku, 'batch', job.rowId);
         _bFill.active[job.rowId] = request;
         _bFill.timers[job.rowId] = setTimeout(() => fillSettle(job.rowId, 'fail', '⏱ 查询无响应：请重载 Ianto、刷新工具并登录领星，可点「重试失败」'), FILL_GUARD);
-        _erpEmit('REQUEST_ERP_FETCH', request);
+        const cached = readERPFromCache(job.sku);
+        if (cached) {
+          setTimeout(() => window.erpFetchHandler({detail:{
+            reqData:request,success:true,data:cached,fromCache:true
+          }}), 0);
+        } else _erpEmit('REQUEST_ERP_FETCH', request);
         fillRenderStat();
         setTimeout(tick, FILL_GAP);
       })();
@@ -4283,6 +4310,7 @@
       }
       const valid = value => typeof value === 'number' && Number.isFinite(value) && value >= 0;
       if (!valid(item.costPrice)) return fail('领星未提供有效采购成本，请手动核对');
+      if (!res.fromCache) storeERPInCache(item);
       const warnings = Array.isArray(item.warnings) ? item.warnings : [];
       const assign = (id, value) => {
         if (!valid(value)) return;
@@ -4306,7 +4334,7 @@
       }
       const erpWeightText = valid(item.weight) ? weightText(item.weight / 1000) : '未填写';
       const dimText = [item.length, item.width, item.height].map(n => valid(n) ? n : '未填写').join('×') + 'cm';
-      let message = '领星采购成本 ￥' + item.costPrice + ' · 包装毛重 ' + erpWeightText + ' · 包装尺寸 ' + dimText;
+      let message = (res.fromCache ? '近期缓存 · ' : '') + '领星采购成本 ￥' + item.costPrice + ' · 包装毛重 ' + erpWeightText + ' · 包装尺寸 ' + dimText;
       if (erpFillMode === 'cost') message += '（仅回填成本）';
       else if (batchHasPhysical) message += '（保留行内已有重量及尺寸）';
       if (warnings.length) message += ' · ⚠ ' + warnings.join('；');
