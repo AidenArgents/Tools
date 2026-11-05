@@ -1762,8 +1762,8 @@
             <div class="f" style="margin-bottom:8px">
               <label for="wfs-sea-service">海运渠道</label>
               <select id="wfs-sea-service" onchange="onSeaWestServiceChange()">
-                <option value="clx">美森正班-海派（CLX）</option>
                 <option value="hede">合德加班-海派</option>
+                <option value="clx">美森正班-海派（CLX）</option>
               </select>
             </div>
             <div class="fee-note" style="margin-bottom:6px">选择对应计费档位</div>
@@ -2719,8 +2719,8 @@
 
     // Mainland China -> US West sea freight: CLX uses weight bands, Hede uses seasons.
     const SEA_WEST_TARIFFS = {
-      clx: {name:'美森正班-海派（CLX）',kind:'weight',tiers:[[12,17.3],[51,15.3],[100,14.8]]},
-      hede: {name:'合德加班-海派',kind:'season',tiers:[['off','淡季',14],['peak','旺季',16]]}
+      hede: {name:'合德加班-海派',kind:'season',tiers:[['off','淡季',14],['peak','旺季',16]]},
+      clx: {name:'美森正班-海派（CLX）',kind:'weight',tiers:[[12,17.3],[51,15.3],[100,14.8]]}
     };
     const AIR_TARIFFS = {
       upsRed:{name:'UPS 红单',rate:67}
