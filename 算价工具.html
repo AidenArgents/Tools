@@ -2412,7 +2412,7 @@
     const kgToLb = kg => kg / KG_PER_LB;
     const lbToKg = lb => lb * KG_PER_LB;
     const formatWeight = value => shownNumber(value);
-    const weightText = kg => `${formatWeight(kg * 1000)} g / ${formatWeight(kg)} kg / ${formatWeight(kgToLb(kg))} lb`;
+    const weightText = kg => `${formatWeight(kg * 1000)} g / ${String(Number(kg.toFixed(6)))} kg / ${formatWeight(kgToLb(kg))} lb`;
     // Form and batch weights are grams, but all downstream carrier calculations use kg.
     function normalizeWeightPair(gValue, lbValue) {
       const hasG = String(gValue ?? '').trim() !== '', hasLb = String(lbValue ?? '').trim() !== '';
@@ -3701,7 +3701,7 @@
       const earlyFields = BATCH_FIELDS.slice(0, -3);
       const legacy = !current && !priorFull && !beforeCommission && String(header[qtyIndex] || '').trim() === '个数 / 套'
         && String(header[qtyIndex + 1] || '').trim() === '内含件数'
-        && earlyFields.every(([label], i) => String(header[i + (i > qtyIndex ? 1 : 0)] || '').trim()
+        && earlyFields.every(([label,key], i) => String(header[i + (i > qtyIndex ? 1 : 0)] || '').trim()
           === (i === qtyIndex ? '个数 / 套' : key === 'wt' ? '重量(kg)' : label));
       const isOldKgHeader = String(header[BATCH_FIELDS.findIndex(([,key]) => key === 'wt')] || '').trim() === '重量(kg)';
       if (!current && !priorFull && !beforeCommission && !legacy) return { accepted, errors: ['表头与当前模板不一致，请下载最新版批量算价模板'] };
