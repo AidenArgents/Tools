@@ -380,6 +380,19 @@
     .sea-rate-tier.static { cursor:default;box-shadow:none }
     .sea-rate-grid.season { grid-template-columns:repeat(2,minmax(0,1fr)) }
     .sea-rate-grid.single { grid-template-columns:repeat(3,minmax(0,1fr)) }
+    .batch-logistics-grid {
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:10px;
+    }
+    .batch-logistics-item {
+      border:1px solid var(--bd);border-radius:9px;padding:11px 12px;background:var(--w);min-width:0;
+    }
+    .batch-logistics-item label { display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px }
+    .batch-logistics-item select { width:100%;margin:0 0 8px;font-size:12px }
+    .batch-logistics-item .sea-rate-grid { gap:6px }
+    .batch-logistics-item .sea-rate-tier { min-height:55px;padding:8px 9px;gap:5px }
+    .batch-logistics-item .sea-rate-tier b { font-size:12px }
+    .batch-logistics-item .fee-note { line-height:1.55;margin-top:8px }
+    .batch-logistics-item .sea-rate-grid.single { grid-template-columns:repeat(2,minmax(0,1fr)) }
     @media(max-width:430px) {
       .sea-rate-grid { gap:5px }
       .sea-rate-tier { min-height:60px;padding:9px 7px }
@@ -1935,6 +1948,10 @@
       <div class="card" style="margin-bottom:14px">
         <div class="ch">Walmart 共享参数 · 单品与批量同步</div>
         <div id="batch-params-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px"></div>
+        <div class="batch-logistics" id="batch-logistics" aria-label="批量物流渠道和档位">
+          <div class="ch" style="margin-top:14px;margin-bottom:10px">物流渠道与费率 · 单品和批量共用</div>
+          <div class="batch-logistics-grid" id="batch-logistics-grid"></div>
+        </div>
         <div id="batch-fee-summary" style="font-size:11px;color:var(--t3);line-height:1.7;margin-top:12px"></div>
       </div>
       <div class="btbl-wrap">
@@ -3165,10 +3182,59 @@
     }
     function renderP() { $('common-fee-grid').innerHTML = orderedParams().map(([label, key, value]) => paramInput(label, key, value, 'p-', 'single')).join(''); }
     function renderFulfillment() { Object.entries(FIELD_IDS).forEach(([channel, fields]) => Object.entries(fields).forEach(([key, id]) => { $(id).value = F[channel][key]; })); $('sff-service').value = F.sff.serviceId; renderSffTariffTable(); $('wfs-sea-service').value = F.wfsSea.seaService; renderSeaWestRates(); $('wfs-air-service').value=F.wfsAir.airService; renderAirRates(); $('wfs-storage-rate').value = F.wfsSea.storageRateUSD; $('wfs-storage-days').value = F.wfsSea.storageDays; $('wfs-storage-mode').value = F.wfsSea.storageMode || 'auto'; $('wfs-storage-start').value = storageStart(F.wfsSea); updateStorageControls(); }
+
+    function selectBatchLogistics(channel, value) {
+      if (channel === 'wfsSea' && SEA_WEST_TARIFFS[value]) {
+        F.wfsSea.seaService = value;
+        $('wfs-sea-service').value = value;
+        saveSeaWestChoice();
+        renderSeaWestRates();
+      } else if (channel === 'wfsAir' && AIR_TARIFFS[value]) {
+        F.wfsAir.airService = value;
+        $('wfs-air-service').value = value;
+        saveAirChoice();
+        renderAirRates();
+      } else if (channel === 'sff' && SFF_TARIFFS[value]) {
+        F.sff.serviceId = value;
+        $('sff-service').value = value;
+        renderSffTariffTable();
+      } else return;
+      renderBatchParams();
+      invalidateResults();
+    }
+    function renderBatchLogistics() {
+      const box = $('batch-logistics-grid');
+      if (!box) return;
+      const sea = seaWestQuote(F.wfsSea), air = airQuote(F.wfsAir);
+      const seaOptions = Object.entries(SEA_WEST_TARIFFS).map(([id,svc]) =>
+        '<option value="' + id + '"' + (id === F.wfsSea.seaService ? ' selected' : '') + '>' + escapeHTML(svc.name) + '</option>').join('');
+      const seaBands = sea.kind === 'weight'
+        ? '<div class="sea-rate-grid">' + sea.service.tiers.map(([weight,rate]) =>
+            '<button type="button" class="sea-rate-tier' + (weight === sea.minKg ? ' current' : '') +
+            '" aria-pressed="' + (weight === sea.minKg) + '" onclick="selectSeaWestTier(' + weight + ')"><small>' +
+            weight + 'kg+</small><b>¥' + rate.toFixed(2) + '/kg</b></button>').join('') + '</div>'
+        : '<div class="sea-rate-grid season">' + sea.service.tiers.map(([id,label,rate]) =>
+            '<button type="button" class="sea-rate-tier' + (id === sea.season ? ' current' : '') +
+            '" aria-pressed="' + (id === sea.season) + '" onclick="selectSeaSeason(\'' + id + '\')"><small>' +
+            escapeHTML(label) + '</small><b>¥' + rate.toFixed(2) + '/kg</b></button>').join('') + '</div>';
+      box.innerHTML =
+        '<div class="batch-logistics-item"><label for="b-shared-sea">WFS 海运渠道</label><select id="b-shared-sea" onchange="selectBatchLogistics(\'wfsSea\',this.value)">' +
+        seaOptions + '</select>' + seaBands + '</div>' +
+        '<div class="batch-logistics-item"><label for="b-shared-air">WFS 空运渠道</label><select id="b-shared-air" onchange="selectBatchLogistics(\'wfsAir\',this.value)">' +
+        Object.entries(AIR_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === F.wfsAir.airService ? ' selected' : '') +
+          '>' + escapeHTML(svc.name) + '</option>').join('') +
+        '</select><div class="sea-rate-grid single"><div class="sea-rate-tier current static"><small>' +
+        escapeHTML(air.name) + '</small><b>¥' + air.rate.toFixed(2) + '/kg</b></div></div></div>' +
+        '<div class="batch-logistics-item"><label for="b-shared-sff">直邮默认渠道</label><select id="b-shared-sff" onchange="selectBatchLogistics(\'sff\',this.value)">' +
+        Object.entries(SFF_TARIFFS).map(([id,svc]) => '<option value="' + id + '"' + (id === F.sff.serviceId ? ' selected' : '') +
+          '>' + escapeHTML(svc.name) + '</option>').join('') +
+        '</select><div class="fee-note">每行可选直邮渠道覆盖这里的默认值；海运、空运默认使用上面的共享选项。</div></div>';
+    }
     function renderBatchParams() {
       $('batch-params-container').innerHTML = orderedParams().map(([label, key, value]) => paramInput(label, key, value, 'bp-', 'batch')).join('');
       const sea=seaWestQuote(F.wfsSea);
-      $('batch-fee-summary').textContent = `WFS 海运美西：${sea.service.name} · ${sea.bandLabel}档 ¥${sea.rate.toFixed(2)}/kg，单品按实重分摊；空运：${airQuote(F.wfsAir).name} ¥${airQuote(F.wfsAir).rate.toFixed(2)}/kg（计费重量沿用空运参数）。WFS仓储共用。SFF国内直邮：${SFF_TARIFFS[F.sff.serviceId].name}，按实际整单重量匹配报价；批量行跟随所选渠道和档位。`;
+      $('batch-fee-summary').textContent = `WFS 海运美西：${sea.service.name} · ${sea.bandLabel}档 ¥${sea.rate.toFixed(2)}/kg；空运：${airQuote(F.wfsAir).name} ¥${airQuote(F.wfsAir).rate.toFixed(2)}/kg。两者头程都按每件实际重量计算，WFS配送费和仓储费与单品共用；默认直邮 ${SFF_TARIFFS[F.sff.serviceId].name} 按整单重量匹配费率及挂号费。每行可选独立物流方式，直邮可再单独选渠道。`;
+      renderBatchLogistics();
     }
     function go(key) {
       if (!C[key]) return;
@@ -3589,7 +3655,9 @@
       ['物流方式(wfsSea/wfsAir/sff)', 'fulfill'], ['WFS属性(0普通/1服装/2危险品/3两者)', 'wfsType'], ['汇率(￥/USD)', 'rate'], ['头程单价(￥/kg)', 'headRateCNY'], ['打包杂费(￥/单)', 'packingCNY'], ['利润率(%)', 'pr'], ['折扣(% off)', 'disc'],
       ['佣金类目（空=共同）', 'commCategory'], ['固定佣金(%)（空=共同）', 'commPct'], ['直邮渠道(空=默认)', 'sffService']
     ];
-    const BATCH_COLUMNS = BATCH_FIELDS.filter(([, key]) => key !== 'wtlb');
+    // Retain the retired manual head-rate field for old Excel imports, but not in the new UI/template.
+    const BATCH_EXCEL_FIELDS = BATCH_FIELDS.filter(([, key]) => key !== 'headRateCNY');
+    const BATCH_COLUMNS = BATCH_EXCEL_FIELDS.filter(([, key]) => key !== 'wtlb');
     function renderBatchHead() {
       $('batch-head').innerHTML = '<tr>' + BATCH_COLUMNS.map(([label, key]) => `<th>${key === 'wt' ? '重量 (g / lb)' : label}${!['country', 'sku'].includes(key) ? `<br><button class="col-copy-btn" onclick="copyCol('${key}')">复制↓</button>` : ''}</th>`).join('')
         + Object.values(C).map(cfg => `<th style="background:var(--blu);color:var(--blue)">${escapeHTML(cfg.platform)} (${cfg.currency})</th>`).join('') + '<th></th></tr>';
@@ -3621,7 +3689,7 @@
       const channel = $('b' + id + '-fulfill').value;
       $('b' + id + '-wfsType').disabled = CHANNELS[channel].kind === 'direct';
       $('b' + id + '-sffService').disabled = CHANNELS[channel].kind !== 'direct';
-      ['headRateCNY'].forEach(key => { const input = $('b' + id + '-' + key); input.disabled = true; input.value = ''; input.placeholder = channel === 'wfsSea' ? '跟随海运档位' : channel === 'wfsAir' ? 'UPS红单 ¥67/kg' : ''; });
+      // Per-row head rate was retired: the rate comes from the selected carrier and band.
       $('batch-row-' + id).querySelectorAll('[data-price-result]').forEach(cell => { cell.textContent = '—'; cell.title = ''; });
     }
     function removeBatchRow(id) { $('batch-row-' + id)?.remove(); if (_bFill.stat[id]) fillSettle(id, 'fail', ''); }
@@ -3658,7 +3726,9 @@
           const quote = sellableOrderQuote(product, fees, p, channel), price = quote.total, original = originalPrice(price, p.disc);
           const cell = $('b' + id + '-' + key);
           cell.innerHTML = C[key].currency + ' ' + fmt(price) + (product.qty > 1 ? '<div style="font-size:10px;color:var(--t2)">单件 ' + C[key].currency + ' ' + fmt(quote.unitPrice) + ' × ' + product.qty + '</div>' : '');
-          cell.title = (channel === 'sff' ? 'SFF ' + SFF_TARIFFS[fees.serviceId].name : CHANNELS[channel].name) + ' · 理论整单 USD ' + fmt(quote.theoretical) + ' · 可上架单件 USD ' + fmt(quote.unitPrice) + ' · 实际整单 USD ' + fmt(price) + ' · 划线原价 USD ' + fmt(original) + (referralRule(p) ? ' · ' + referralRule(p).name + ' · 实际佣金 ' + fmt(commissionAmount(price, product, p) / price * 100) + '%' : '');
+          cell.title = (channel === 'sff' ? 'SFF ' + SFF_TARIFFS[fees.serviceId].name
+            : channel === 'wfsSea' ? 'WFS 海运 ' + seaWestQuote(fees).service.name + ' ' + seaWestQuote(fees).bandLabel + ' ¥' + seaWestQuote(fees).rate + '/kg'
+            : 'WFS 空运 ' + airQuote(fees).name + ' ¥' + airQuote(fees).rate + '/kg') + ' · 理论整单 USD ' + fmt(quote.theoretical) + ' · 可上架单件 USD ' + fmt(quote.unitPrice) + ' · 实际整单 USD ' + fmt(price) + ' · 划线原价 USD ' + fmt(original) + (referralRule(p) ? ' · ' + referralRule(p).name + ' · 实际佣金 ' + fmt(commissionAmount(price, product, p) / price * 100) + '%' : '');
         }
         return true;
       } catch (error) {
@@ -3685,11 +3755,23 @@
           ...Object.entries(CHANNELS).filter(([channel]) => channel !== 'sff').map(([channel,info]) => ({ country:'US',sku:info.name+'示例',cost:20,wt:100,wtlb:kgToLb(0.1),l:10,w:5,h:5,qty:1,fulfill:channel,wfsType:0 })),
           ...Object.entries(SFF_TARIFFS).map(([serviceId,svc]) => ({ country:'US',sku:'直邮'+svc.name+'示例',cost:6.9,wt:180,wtlb:kgToLb(0.18),l:10,w:5,h:5,qty:1,fulfill:'sff',sffService:serviceId,wfsType:0 }))
         ];
-        const data = [BATCH_FIELDS.map(([label]) => label), ...examples.map(item => BATCH_FIELDS.map(([, key]) => item[key] ?? ''))];
+        const data = [BATCH_EXCEL_FIELDS.map(([label]) => label), ...examples.map(item => BATCH_EXCEL_FIELDS.map(([, key]) => item[key] ?? ''))];
         const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(data), '批量算价模板'); XLSX.writeFile(workbook, '美国算价_批量模板.xlsx');
       } catch (error) { $('batch-note').textContent = error.message; }
     }
     function parseBatchData(rows) {
+      // Canonicalize new templates (without the retired head-rate column) to the historical schema.
+      // Previously downloaded templates, including kg-era files, retain their original parsing path.
+      const newHeader = rows[0] || [];
+      const matchesNew = BATCH_EXCEL_FIELDS.every(([label], i) => String(newHeader[i] || '').trim() === label);
+      if (matchesNew) {
+        const oldRateIndex = BATCH_FIELDS.findIndex(([, key]) => key === 'headRateCNY');
+        rows = rows.map((row, i) => {
+          const copy = [...row];
+          copy.splice(oldRateIndex, 0, i === 0 ? BATCH_FIELDS[oldRateIndex][0] : '');
+          return copy;
+        });
+      }
       const accepted = [], errors = [];
       const header = rows[0] || [];
       const qtyIndex = BATCH_FIELDS.findIndex(([, key]) => key === 'qty');
@@ -3748,11 +3830,11 @@
       reader.readAsArrayBuffer(file); event.target.value = '';
     }
     function batchExportData() {
-      const data = [BATCH_FIELDS.map(([label]) => label).concat(Object.values(C).map(cfg => cfg.platform + ' (' + cfg.currency + ')'))];
+      const data = [BATCH_EXCEL_FIELDS.map(([label]) => label).concat(Object.values(C).map(cfg => cfg.platform + ' (' + cfg.currency + ')'))];
       document.querySelectorAll('#btbl-body tr').forEach(row => {
         const id = row.id.replace('batch-row-', '');
         if (!$('b' + id + '-sku').value.trim() && $('b' + id + '-cost').value === '') return;
-        data.push(BATCH_FIELDS.map(([, key]) => key === 'country' ? 'US' : ['wt', 'wtlb'].includes(key) ? (weightInputs(id).every(input => input.value === '') ? '' : key === 'wt' ? readWeightKg(id) * 1000 : kgToLb(readWeightKg(id))) : $('b' + id + '-' + key)?.value ?? '').concat(Object.keys(C).map(key => {
+        data.push(BATCH_EXCEL_FIELDS.map(([, key]) => key === 'country' ? 'US' : ['wt', 'wtlb'].includes(key) ? (weightInputs(id).every(input => input.value === '') ? '' : key === 'wt' ? readWeightKg(id) * 1000 : kgToLb(readWeightKg(id))) : $('b' + id + '-' + key)?.value ?? '').concat(Object.keys(C).map(key => {
           const text = $('b' + id + '-' + key).textContent; return text.startsWith(C[key].currency + ' ') ? Number((text.match(/^\S+\s+([\d.]+)/) || [])[1]) : '';
         })));
       }); return data;
