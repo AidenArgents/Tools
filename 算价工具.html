@@ -1714,7 +1714,7 @@
           </div>
           <div class="kit-panel" id="kit-panel" style="display:none">
             <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：按配件数量汇总成本、重量和体积。配件长宽高用于估算累计占用空间；下方商品长宽高必须填写<strong>组合完成后的实际包装外尺寸</strong>，不自动套用配件体积。订单销售数量通常填1。</div>
-            <div class="kit-head"><span>配件</span><span>成本 ￥</span><span>重量 kg</span><span>×</span><span></span></div>
+            <div class="kit-head"><span>配件</span><span>成本 ￥</span><span>重量 g</span><span>×</span><span></span></div>
             <div id="kit-rows"></div>
             <div id="kit-warning" role="alert" style="display:none;color:#b91c1c;font-size:11px;margin:3px 0 8px"></div>
             <button type="button" class="kit-add" onclick="addKitPart()">＋ 添加配件</button>
@@ -1723,7 +1723,7 @@
           <div class="g3" style="margin-bottom:11px">
             <div class="f"><label id="cost-label">商品成本 (￥)</label><input type="text" inputmode="decimal" id="cost" data-expr-input
                 style="background:#f0fdf8;border-color:#b2f2e0"></div>
-            <div class="f"><label id="weight-label" for="weight">重量 (kg)</label><input type="text" inputmode="decimal" id="weight" data-expr-input
+            <div class="f"><label id="weight-label" for="weight">重量 (g)</label><input type="text" inputmode="decimal" id="weight" data-expr-input
                 style="background:#f0fdf8;border-color:#b2f2e0">
               <label for="weight-lb" style="margin-top:6px">重量 (lb)</label><input type="text" inputmode="decimal" id="weight-lb" data-expr-input
                 style="background:#f0fdf8;border-color:#b2f2e0">
@@ -1739,7 +1739,7 @@
           </div>
           <div style="font-size:11px;color:var(--t3);line-height:1.7;margin:9px 0 10px">
             <span id="weight-summary" style="color:var(--t2)">整单实际总重：—</span><br>
-            商品成本、重量、包装尺寸（长、宽、高）均可输入数字或算式（如 9+1+2+4），失焦后显示计算结果；包装体积根据长宽高自动计算。重量 kg ↔ lb 双向换算；WFS 根据最终包装重量和尺寸确定计费档。
+            商品成本、重量、包装尺寸（长、宽、高）均可输入数字或算式（如 9+1+2+4），失焦后显示计算结果；包装体积根据长宽高自动计算。重量 g ↔ lb 双向换算，内部自动转换为 kg 计算费用；WFS 根据最终包装重量和尺寸确定计费档。
           </div>
           <div class="hr"></div>
           <div class="ch"><div class="dot" style="background:var(--green)"></div>物流方式参数</div>
@@ -2217,7 +2217,7 @@
       $('fill-kit-btn')?.classList.toggle('on', productFillMode === 'kit');
       $('kit-panel').style.display = productFillMode === 'kit' ? '' : 'none';
       $('cost-label').textContent = productFillMode === 'kit' ? '组合装成本合计 (￥)' : '商品成本 (￥)';
-      $('weight-label').textContent = productFillMode === 'kit' ? '组合装重量合计 (kg)' : '重量 (kg)';
+      $('weight-label').textContent = productFillMode === 'kit' ? '组合装重量合计 (g)' : '重量 (g)';
       ['cost', 'weight', 'weight-lb'].forEach(id => { $(id).readOnly = productFillMode === 'kit'; });
       if (productFillMode === 'kit') {
         renderKitRows();
@@ -2240,7 +2240,7 @@
           '<div class="kit-row-main">' +
           '<input data-kit-field="name" aria-label="配件名称" placeholder="配件' + (i + 1) + '" value="' + escapeHTML(p.name) + '">' +
           '<input data-kit-field="cost" aria-label="配件成本" inputmode="decimal" placeholder="成本或算式" value="' + escapeHTML(kitDisplayValue(p.cost)) + '">' +
-          '<input data-kit-field="wt" aria-label="配件重量 kg" inputmode="decimal" placeholder="kg或算式" value="' + escapeHTML(kitDisplayValue(p.wt)) + '">' +
+          '<input data-kit-field="wt" aria-label="配件重量 g" inputmode="decimal" placeholder="g或算式" value="' + escapeHTML(kitDisplayValue(p.wt)) + '">' +
           '<input data-kit-field="qty" aria-label="配件数量" type="number" min="1" step="1" value="' + escapeHTML(p.qty) + '">' +
           '<button type="button" class="kit-del" onclick="removeKitPart(' + i + ')"' + delDisabled + ' title="删除配件">×</button></div>' +
           '<div class="kit-row-dims">' +
@@ -2373,7 +2373,7 @@
           + '。成本和重量自动合计到下方输入框；物流仍按组合完成后的实际包装尺寸计算。';
       }
       applyExprValue($('cost'), totals.errors.length || !totals.hasParts ? '' : totals.cost);
-      if (!totals.errors.length && totals.requiresWeight) writeWeightPair(totals.weight, undefined, 'both');
+      if (!totals.errors.length && totals.requiresWeight) writeWeightPair(totals.weight / 1000, undefined, 'both');
       else {
         applyExprValue($('weight'), '');
         applyExprValue($('weight-lb'), '');
@@ -2412,22 +2412,22 @@
     const kgToLb = kg => kg / KG_PER_LB;
     const lbToKg = lb => lb * KG_PER_LB;
     const formatWeight = value => shownNumber(value);
-    const weightText = kg => `${formatWeight(kg)} kg / ${formatWeight(kgToLb(kg))} lb`;
-    function normalizeWeightPair(kgValue, lbValue) {
-      const hasKg = String(kgValue ?? '').trim() !== '', hasLb = String(lbValue ?? '').trim() !== '';
-      if (!hasKg && !hasLb) return null;
-      const kg = hasKg ? Number(kgValue) : lbToKg(Number(lbValue));
-      if (!Number.isFinite(kg) || kg < 0 || (hasLb && (!Number.isFinite(Number(lbValue)) || Number(lbValue) < 0))) throw new Error('重量须为非负数');
-      if (hasKg && hasLb) {
+    const weightText = kg => `${formatWeight(kg * 1000)} g / ${formatWeight(kg)} kg / ${formatWeight(kgToLb(kg))} lb`;
+    // Form and batch weights are grams, but all downstream carrier calculations use kg.
+    function normalizeWeightPair(gValue, lbValue) {
+      const hasG = String(gValue ?? '').trim() !== '', hasLb = String(lbValue ?? '').trim() !== '';
+      if (!hasG && !hasLb) return null;
+      const grams = hasG ? Number(gValue) : lbToKg(Number(lbValue)) * 1000, kg = grams / 1000;
+      if (!Number.isFinite(kg) || kg < 0 || (hasLb && (!Number.isFinite(Number(lbValue)) || Number(lbValue) < 0)))
+        throw new Error('重量须为非负数');
+      if (hasG && hasLb) {
         const lb = Number(lbValue);
         const exact = Math.abs(kg - lbToKg(lb)) <= Math.max(0.000001, kg * 1e-12);
-        // Accept a counterpart rounded UP to the two decimals shown by this tool.
-        // Use the kg value as authoritative when both fields are supplied.
-        const kgDecimals = (String(kgValue).split('.')[1] || '').length;
         const lbDecimals = (String(lbValue).split('.')[1] || '').length;
+        const gramDecimals = (String(gValue).split('.')[1] || '').length;
         const roundedLb = lbDecimals <= 2 && Math.abs(roundDecimal(kgToLb(kg), 'up') - lb) < 1e-8;
-        const roundedKg = kgDecimals <= 2 && Math.abs(roundDecimal(lbToKg(lb), 'up') - kg) < 1e-8;
-        if (!exact && !roundedLb && !roundedKg) throw new Error('kg 与 lb 重量不一致，请核对');
+        const roundedG = gramDecimals <= 2 && Math.abs(roundDecimal(lbToKg(lb) * 1000, 'up') - grams) < 1e-8;
+        if (!exact && !roundedLb && !roundedG) throw new Error('g 与 lb 重量不一致，请核对');
       }
       return kg;
     }
@@ -2435,7 +2435,6 @@
       return rowId === undefined ? [$('weight'), $('weight-lb')] : [$('b' + rowId + '-wt'), $('b' + rowId + '-wtlb')];
     }
     function applySyncedWeightValue(el, value, derivedFormula) {
-      // Both weight fields retain editable conversion formulas.
       const expr = _exprMap.get(el) || '';
       const previous = expr ? _evalExpr(expr) : NaN;
       const unchanged = Number.isFinite(previous) &&
@@ -2446,49 +2445,50 @@
       return _exprMap.get(el) || (el.hasAttribute('data-expr-input') && el.dataset.num !== undefined ? el.dataset.num : el.value);
     }
     function writeWeightPair(kg, rowId, editedUnit) {
-      const [kgInput, lbInput] = weightInputs(rowId);
-      const fromKg = editedUnit === 'kg' && kgInput.hasAttribute('data-expr-input');
+      const [gInput, lbInput] = weightInputs(rowId);
+      const fromG = editedUnit === 'g' && gInput.hasAttribute('data-expr-input');
       const fromLb = editedUnit === 'lb' && lbInput.hasAttribute('data-expr-input');
-      if (editedUnit !== 'kg') {
-        if (kgInput.hasAttribute('data-expr-input')) {
-          const expr = fromLb ? '(' + weightExpression(lbInput) + ')*' + KG_PER_LB : '';
-          applySyncedWeightValue(kgInput, kg, expr);
-        } else kgInput.value = formatWeight(kg);
+      if (editedUnit !== 'g') {
+        if (gInput.hasAttribute('data-expr-input')) {
+          const expr = fromLb ? '(' + weightExpression(lbInput) + ')*' + KG_PER_LB + '*1000' : '';
+          applySyncedWeightValue(gInput, kg * 1000, expr);
+        } else gInput.value = formatWeight(kg * 1000);
       }
       if (editedUnit !== 'lb') {
         if (lbInput.hasAttribute('data-expr-input')) {
-          const expr = fromKg ? '(' + weightExpression(kgInput) + ')/' + KG_PER_LB : '';
+          const expr = fromG ? '(' + weightExpression(gInput) + ')/1000/' + KG_PER_LB : '';
           applySyncedWeightValue(lbInput, kgToLb(kg), expr);
         } else lbInput.value = formatWeight(kgToLb(kg));
       }
-      kgInput.dataset.weightKg = String(kg);
-      kgInput.dataset.syncedWeightValue = kgInput.value;
+      gInput.dataset.weightKg = String(kg);
+      gInput.dataset.syncedWeightValue = gInput.value;
     }
     function syncWeightInputs(unit, rowId) {
-      const [kgInput, lbInput] = weightInputs(rowId), source = unit === 'kg' ? kgInput : lbInput;
+      const [gInput, lbInput] = weightInputs(rowId), source = unit === 'g' ? gInput : lbInput;
       if (source.hasAttribute('data-expr-editing')) return;
       const raw = source.hasAttribute('data-expr-input') && source.dataset.num ? source.dataset.num : source.value;
       const value = Number(raw);
       if (raw === '' || !Number.isFinite(value) || value < 0) {
-        const other = unit === 'kg' ? lbInput : kgInput;
+        const other = unit === 'g' ? lbInput : gInput;
         if (other.hasAttribute('data-expr-input')) applyExprValue(other, '');
         else other.value = '';
-        delete kgInput.dataset.weightKg; delete kgInput.dataset.syncedWeightValue;
-      } else writeWeightPair(unit === 'kg' ? value : lbToKg(value), rowId, unit);
+        delete gInput.dataset.weightKg; delete gInput.dataset.syncedWeightValue;
+      } else writeWeightPair(unit === 'g' ? value / 1000 : lbToKg(value), rowId, unit);
       if (rowId === undefined) updateWeightSummary();
     }
     function readWeightKg(rowId) {
       if (rowId === undefined && productFillMode === 'kit') {
         const t = computeKitTotals();
-        return !t.hasParts || t.errors.length ? 0 : t.weight;
+        return !t.hasParts || t.errors.length ? 0 : t.weight / 1000;
       }
-      const [kgInput, lbInput] = weightInputs(rowId);
-      if (kgInput.value !== '') {
-        if (kgInput.hasAttribute('data-expr-editing')) return _evalExpr(kgInput.value);
-        if (kgInput.value === kgInput.dataset.syncedWeightValue && kgInput.dataset.weightKg !== undefined)
-          return Number(kgInput.dataset.weightKg);
-        return kgInput.hasAttribute('data-expr-input') && kgInput.dataset.num !== undefined
-          ? Number(kgInput.dataset.num) : Number(kgInput.value);
+      const [gInput, lbInput] = weightInputs(rowId);
+      if (gInput.value !== '') {
+        if (gInput.hasAttribute('data-expr-editing')) return _evalExpr(gInput.value) / 1000;
+        if (gInput.value === gInput.dataset.syncedWeightValue && gInput.dataset.weightKg !== undefined)
+          return Number(gInput.dataset.weightKg);
+        const grams = gInput.hasAttribute('data-expr-input') && gInput.dataset.num !== undefined
+          ? Number(gInput.dataset.num) : Number(gInput.value);
+        return grams / 1000;
       }
       if (lbInput.value === '') return 0;
       return lbInput.hasAttribute('data-expr-input') && lbInput.dataset.num !== undefined
@@ -3584,14 +3584,14 @@
     }
 
     const BATCH_FIELDS = [
-      ['国家(US)', 'country'], ['SKU / 名称', 'sku'], ['成本(￥)', 'cost'], ['重量(kg)', 'wt'], ['重量(lb)', 'wtlb'],
+      ['国家(US)', 'country'], ['SKU / 名称', 'sku'], ['成本(￥)', 'cost'], ['重量(g)', 'wt'], ['重量(lb)', 'wtlb'],
       ['长(cm)', 'l'], ['宽(cm)', 'w'], ['高(cm)', 'h'], ['订单销售数量', 'qty'],
       ['物流方式(wfsSea/wfsAir/sff)', 'fulfill'], ['WFS属性(0普通/1服装/2危险品/3两者)', 'wfsType'], ['汇率(￥/USD)', 'rate'], ['头程单价(￥/kg)', 'headRateCNY'], ['打包杂费(￥/单)', 'packingCNY'], ['利润率(%)', 'pr'], ['折扣(% off)', 'disc'],
       ['佣金类目（空=共同）', 'commCategory'], ['固定佣金(%)（空=共同）', 'commPct'], ['直邮渠道(空=默认)', 'sffService']
     ];
     const BATCH_COLUMNS = BATCH_FIELDS.filter(([, key]) => key !== 'wtlb');
     function renderBatchHead() {
-      $('batch-head').innerHTML = '<tr>' + BATCH_COLUMNS.map(([label, key]) => `<th>${key === 'wt' ? '重量 (kg / lb)' : label}${!['country', 'sku'].includes(key) ? `<br><button class="col-copy-btn" onclick="copyCol('${key}')">复制↓</button>` : ''}</th>`).join('')
+      $('batch-head').innerHTML = '<tr>' + BATCH_COLUMNS.map(([label, key]) => `<th>${key === 'wt' ? '重量 (g / lb)' : label}${!['country', 'sku'].includes(key) ? `<br><button class="col-copy-btn" onclick="copyCol('${key}')">复制↓</button>` : ''}</th>`).join('')
         + Object.values(C).map(cfg => `<th style="background:var(--blu);color:var(--blue)">${escapeHTML(cfg.platform)} (${cfg.currency})</th>`).join('') + '<th></th></tr>';
     }
     function addBatchRow(data = {}) {
@@ -3606,7 +3606,7 @@
         if (key === 'sffService') return `<td><select id="b${id}-sffService" title="仅SFF生效：空=跟随当前直邮渠道" ${isDirect ? '' : 'disabled'}><option value="">跟随当前直邮渠道</option>${Object.entries(SFF_TARIFFS).map(([key,svc]) => `<option value="${key}"${key === values.sffService ? ' selected' : ''}>${escapeHTML(svc.name)}</option>`).join('')}</select></td>`;
         if (key === 'commCategory') return `<td><select id="b${id}-commCategory" title="空=继承共同佣金；选择类目按官方分档；固定佣金可在右侧填写"><option value="">跟随共同佣金</option><option value="manual"${values.commCategory === 'manual' ? ' selected' : ''}>使用固定佣金</option>${REFERRAL_RULES.map(r => `<option value="${r.id}"${r.id === values.commCategory ? ' selected' : ''}>${escapeHTML(r.name)}</option>`).join('')}</select></td>`;
         if (key === 'wt') return `<td><div style="display:grid;gap:5px">
-          <label style="font-size:10px;color:var(--t3)">kg <input type="number" class="w-sm" id="b${id}-wt" min="0" step="any" aria-label="重量 kg"></label>
+          <label style="font-size:10px;color:var(--t3)">g <input type="number" class="w-sm" id="b${id}-wt" min="0" step="any" aria-label="重量 g"></label>
           <label style="font-size:10px;color:var(--t3)">lb <input type="number" class="w-sm" id="b${id}-wtlb" min="0" step="any" aria-label="重量 lb"></label>
         </div></td>`;
         const value = values[key === 'pr' ? 'profit' : key] ?? '';
@@ -3673,7 +3673,7 @@
     function copyCol(field) {
       const rows = [...document.querySelectorAll('#btbl-body tr')]; if (rows.length < 2) return;
       const first = $(rows[0].id.replace('batch-row-', 'b') + '-' + field); if (!first) return;
-      rows.slice(1).forEach(row => { const target = $(row.id.replace('batch-row-', 'b') + '-' + field); if (target) { target.value = first.value; if (field === 'fulfill') onRowModeChange(row.id.replace('batch-row-', '')); if (field === 'wt' || field === 'wtlb') { const rowId = row.id.replace('batch-row-', ''); if (first.value === '') syncWeightInputs(field === 'wt' ? 'kg' : 'lb', rowId); else writeWeightPair(readWeightKg(rows[0].id.replace('batch-row-', '')), rowId); } } });
+      rows.slice(1).forEach(row => { const target = $(row.id.replace('batch-row-', 'b') + '-' + field); if (target) { target.value = first.value; if (field === 'fulfill') onRowModeChange(row.id.replace('batch-row-', '')); if (field === 'wt' || field === 'wtlb') { const rowId = row.id.replace('batch-row-', ''); if (first.value === '') syncWeightInputs(field === 'wt' ? 'g' : 'lb', rowId); else writeWeightPair(readWeightKg(rows[0].id.replace('batch-row-', '')), rowId); } } });
       invalidateResults(); $('batch-note').textContent = `已复制到其余 ${rows.length - 1} 行`;
     }
     function copyFirstRowToAll() { BATCH_COLUMNS.map(([, key]) => key).filter(key => !['country', 'sku'].includes(key)).forEach(copyCol); }
@@ -3682,8 +3682,8 @@
       try {
         requireXLSX();
         const examples = [
-          ...Object.entries(CHANNELS).filter(([channel]) => channel !== 'sff').map(([channel,info]) => ({ country:'US',sku:info.name+'示例',cost:20,wt:0.1,wtlb:kgToLb(0.1),l:10,w:5,h:5,qty:1,fulfill:channel,wfsType:0 })),
-          ...Object.entries(SFF_TARIFFS).map(([serviceId,svc]) => ({ country:'US',sku:'直邮'+svc.name+'示例',cost:6.9,wt:0.18,wtlb:kgToLb(0.18),l:10,w:5,h:5,qty:1,fulfill:'sff',sffService:serviceId,wfsType:0 }))
+          ...Object.entries(CHANNELS).filter(([channel]) => channel !== 'sff').map(([channel,info]) => ({ country:'US',sku:info.name+'示例',cost:20,wt:100,wtlb:kgToLb(0.1),l:10,w:5,h:5,qty:1,fulfill:channel,wfsType:0 })),
+          ...Object.entries(SFF_TARIFFS).map(([serviceId,svc]) => ({ country:'US',sku:'直邮'+svc.name+'示例',cost:6.9,wt:180,wtlb:kgToLb(0.18),l:10,w:5,h:5,qty:1,fulfill:'sff',sffService:serviceId,wfsType:0 }))
         ];
         const data = [BATCH_FIELDS.map(([label]) => label), ...examples.map(item => BATCH_FIELDS.map(([, key]) => item[key] ?? ''))];
         const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(data), '批量算价模板'); XLSX.writeFile(workbook, '美国算价_批量模板.xlsx');
@@ -3693,15 +3693,17 @@
       const accepted = [], errors = [];
       const header = rows[0] || [];
       const qtyIndex = BATCH_FIELDS.findIndex(([, key]) => key === 'qty');
-      const current = BATCH_FIELDS.every(([label], index) => String(header[index] || '').trim() === label);
       const matches = fields => fields.every(([label], i) => String(header[i] || '').trim() === label);
-      const priorFull = !current && matches(BATCH_FIELDS.slice(0, -1)); // version before direct service selection
-      const beforeCommission = !current && !priorFull && matches(BATCH_FIELDS.slice(0, -3));
+      const matchesOldKg = fields => fields.every(([label,key], i) => String(header[i] || '').trim() === (key === 'wt' ? '重量(kg)' : label));
+      const current = matches(BATCH_FIELDS) || matchesOldKg(BATCH_FIELDS);
+      const priorFull = !current && (matches(BATCH_FIELDS.slice(0, -1)) || matchesOldKg(BATCH_FIELDS.slice(0, -1)));
+      const beforeCommission = !current && !priorFull && (matches(BATCH_FIELDS.slice(0, -3)) || matchesOldKg(BATCH_FIELDS.slice(0, -3)));
       const earlyFields = BATCH_FIELDS.slice(0, -3);
       const legacy = !current && !priorFull && !beforeCommission && String(header[qtyIndex] || '').trim() === '个数 / 套'
         && String(header[qtyIndex + 1] || '').trim() === '内含件数'
         && earlyFields.every(([label], i) => String(header[i + (i > qtyIndex ? 1 : 0)] || '').trim()
-          === (i === qtyIndex ? '个数 / 套' : label));
+          === (i === qtyIndex ? '个数 / 套' : key === 'wt' ? '重量(kg)' : label));
+      const isOldKgHeader = String(header[BATCH_FIELDS.findIndex(([,key]) => key === 'wt')] || '').trim() === '重量(kg)';
       if (!current && !priorFull && !beforeCommission && !legacy) return { accepted, errors: ['表头与当前模板不一致，请下载最新版批量算价模板'] };
       rows.slice(1).forEach((originalCols, index) => {
         const cols = legacy ? originalCols.filter((_, i) => i !== qtyIndex + 1) : originalCols;
@@ -3723,8 +3725,10 @@
           errors.push(`第 ${index + 2} 行佣金类目与固定佣金不能同时设置`); return;
         }
         try {
+          // Older files label the column kg; convert once before normalizing the current g/lb pair.
+          if (isOldKgHeader && String(data.wt).trim() !== '') data.wt = Number(data.wt) * 1000;
           const kg = normalizeWeightPair(data.wt, data.wtlb);
-          if (kg !== null) { data.wt = kg; data.wtlb = kgToLb(kg); }
+          if (kg !== null) { data.wt = kg * 1000; data.wtlb = kgToLb(kg); }
         } catch (error) { errors.push(`第 ${index + 2} 行${error.message}`); return; }
         data.sku = String(data.sku).trim(); accepted.push(data);
       }); return { accepted, errors };
@@ -3748,7 +3752,7 @@
       document.querySelectorAll('#btbl-body tr').forEach(row => {
         const id = row.id.replace('batch-row-', '');
         if (!$('b' + id + '-sku').value.trim() && $('b' + id + '-cost').value === '') return;
-        data.push(BATCH_FIELDS.map(([, key]) => key === 'country' ? 'US' : ['wt', 'wtlb'].includes(key) ? (weightInputs(id).every(input => input.value === '') ? '' : key === 'wt' ? readWeightKg(id) : kgToLb(readWeightKg(id))) : $('b' + id + '-' + key)?.value ?? '').concat(Object.keys(C).map(key => {
+        data.push(BATCH_FIELDS.map(([, key]) => key === 'country' ? 'US' : ['wt', 'wtlb'].includes(key) ? (weightInputs(id).every(input => input.value === '') ? '' : key === 'wt' ? readWeightKg(id) * 1000 : kgToLb(readWeightKg(id))) : $('b' + id + '-' + key)?.value ?? '').concat(Object.keys(C).map(key => {
           const text = $('b' + id + '-' + key).textContent; return text.startsWith(C[key].currency + ' ') ? Number((text.match(/^\S+\s+([\d.]+)/) || [])[1]) : '';
         })));
       }); return data;
@@ -3854,12 +3858,12 @@
       $('btbl-body').addEventListener('change', event => { const row = event.target.closest('tr'); if (row) row.querySelectorAll('[data-price-result]').forEach(cell => { cell.textContent = '—'; cell.title = ''; }); });
       $('btbl-body').addEventListener('input', event => {
         const row = event.target.closest('tr'); if (!row) return;
-        if (event.target.id.endsWith('-wt') || event.target.id.endsWith('-wtlb')) syncWeightInputs(event.target.id.endsWith('-wt') ? 'kg' : 'lb', row.id.replace('batch-row-', ''));
+        if (event.target.id.endsWith('-wt') || event.target.id.endsWith('-wtlb')) syncWeightInputs(event.target.id.endsWith('-wt') ? 'g' : 'lb', row.id.replace('batch-row-', ''));
         row.querySelectorAll('[data-price-result]').forEach(cell => { cell.textContent = '—'; cell.title = ''; });
       });
       ['weight', 'weight-lb'].forEach(id => $(id).addEventListener('input', () => {
         if ($(id).hasAttribute('data-expr-editing')) return;
-        syncWeightInputs(id === 'weight' ? 'kg' : 'lb');
+        syncWeightInputs(id === 'weight' ? 'g' : 'lb');
         invalidateResults();
       }));
       updateWeightSummary();
@@ -4191,7 +4195,7 @@
         const singleIds = { wt: 'weight', l: 'diml', w: 'dimw', h: 'dimh' };
         const input = document.getElementById(isBatch ? 'b' + rowId + '-' + id : (singleIds[id] || id));
         if (!input) return;
-        const next = id === 'wt' ? value / 1000 : value;
+        const next = value; // ERP weight already uses grams; internal calculations convert to kg.
         if (input.hasAttribute('data-expr-input')) applyExprValue(input, next);
         else input.value = next;
         input.dispatchEvent(new Event('input', { bubbles: true }));
