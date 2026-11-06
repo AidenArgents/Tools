@@ -249,8 +249,8 @@ details.report-fold:not([open]) > summary > div::after{content:'▸ 点击展开
     </div>
     <div class="block-body">
       <div class="fg">
-        <label class="fl">📝 商品详情页链接（每行一条 · 支持 Shopee / TikTok Shop / Lazada · 自动识别国家）</label>
-        <textarea class="ft" id="iUrls" rows="5" placeholder="https://shopee.com.br/product/123/456&#10;https://shopee.co.id/product/789/012&#10;..." oninput="onUrlsChange()"></textarea>
+        <label class="fl">📝 商品详情页链接（每行一条 · 支持美国 Walmart / Amazon / eBay 及原有平台 · 自动识别国家）</label>
+        <textarea class="ft" id="iUrls" rows="5" placeholder="https://www.walmart.com/ip/example/123456789&#10;https://www.amazon.com/dp/B012345678&#10;https://www.ebay.com/itm/123456789012&#10;..." oninput="onUrlsChange()"></textarea>
         <div class="fi-hint" id="urlSummary">尚未输入链接</div>
       </div>
       <div id="urlList" class="url-list"></div>
@@ -266,7 +266,7 @@ details.report-fold:not([open]) > summary > div::after{content:'▸ 点击展开
       <div id="comboList" class="country-chips" style="min-height:38px"></div>
       <div class="info-box" style="margin-top:8px;font-size:11px">
         识别到的 <b>国家×平台</b> 组合自动出现在上面 · 点击切换是否参与分析（默认全选）<br>
-        当前已实装：<b>Shopee</b> (BR / ID / PH / VN / TH / MY / SG 等) · <b>TikTok Shop</b> (MX / BR / ID / PH / VN / TH / MY / SG 等) · <b>Lazada</b> (ID / PH / VN / TH / MY / SG) · <b>Tokopedia</b> (ID) · 其他平台占位中
+        美国 <b>Walmart / Amazon / eBay</b> (US) 已接入 Ianto 评论抓取；原有 Shopee、TikTok Shop、Lazada、Tokopedia、Mercado Libre 等仍保留。<br>输入商品详情链接后会自动显示国家×平台；如没有商品评论，可能返回 0 条，不会将 eBay 卖家 Feedback 当作商品评价。
       </div>
     </div>
   </div>
@@ -358,7 +358,7 @@ details.report-fold:not([open]) > summary > div::after{content:'▸ 点击展开
   </div>
 </div>
 
-<div class="ft2">VOC 分析工具 v1 · 评论抓取需配合 Ianto 插件 · 支持 Shopee / TikTok Shop / Lazada</div>
+<div class="ft2">VOC 分析工具 v1 · 评论抓取需配合 Ianto 插件 v2.9.2+ · 美国 Walmart / Amazon / eBay 及原有平台</div>
 </div><!-- /ctn -->
 
 <!-- 设置弹窗 -->
@@ -437,9 +437,12 @@ details.report-fold:not([open]) > summary > div::after{content:'▸ 点击展开
 
 <script>
 // ════════════════════════════════════════════════════════
-// 数据配置 · 国家/平台（从标题工具的拉美 + 东南亚精简，仅 Shopee 国家）
+// 数据配置 · 国家 / 平台（根据商品详情链接自动识别，覆盖美国、拉美与东南亚）
 // ════════════════════════════════════════════════════════
 const REGION_CONFIG = {
+  na: { label:'🌎 北美', countries: {
+    US: { name:'🇺🇸 美国', lang:'en-US' },
+  }},
   latam: { label:'🌎 拉美', countries: {
     BR: { name:'🇧🇷 巴西',     lang:'pt-BR' },
     MX: { name:'🇲🇽 墨西哥',   lang:'es-MX' },
@@ -459,6 +462,8 @@ const REGION_CONFIG = {
 
 // 平台元数据
 const PLAT_META = {
+  walmart:   { name: 'Walmart',       color: '#0071ce', implemented: true },
+  ebay:      { name: 'eBay',          color: '#3665f3', implemented: true },
   shopee:    { name: 'Shopee',        color: '#ee4d2d', implemented: true },
   lazada:    { name: 'Lazada',        color: '#0f146d', implemented: true },
   tokopedia: { name: 'Tokopedia',     color: '#00aa5b', implemented: true },
@@ -491,7 +496,14 @@ const DOMAIN_RULES = [
   { re: /mercadolibre\.com\.mx/i,  cc: 'MX', plat: 'mercado' },
   // Tokopedia
   { re: /tokopedia\.com/i,   cc: 'ID', plat: 'tokopedia' },
+  // Walmart / eBay are US marketplaces; match the hostname, not a URL substring.
+  { re: /(^|\.)walmart\.com$/i, cc: 'US', plat: 'walmart',
+    productPath: /^\/(?:ip\/(?:[^/?#]+\/)?\d{6,}|reviews\/product\/\d{6,})\/?$/i },
+  { re: /(^|\.)ebay\.com$/i, cc: 'US', plat: 'ebay',
+    productPath: /^\/(?:itm\/(?:[^/?#]+\/)?\d{9,15}|urw\/product-reviews\/[^/?#]+)\/?$/i },
   // Amazon
+  { re: /(^|\.)amazon\.com$/i, cc: 'US', plat: 'amazon',
+    productPath: /^\/(?:dp|gp\/product|product-reviews)\/[A-Z0-9]{10}\/?$/i },
   { re: /amazon\.com\.br/i,  cc: 'BR', plat: 'amazon' },
   { re: /amazon\.com\.mx/i,  cc: 'MX', plat: 'amazon' },
   { re: /amazon\.sg/i,       cc: 'SG', plat: 'amazon' },
@@ -723,6 +735,7 @@ function detectFromUrl(url) {
     for (const rule of DOMAIN_RULES) {
       if (rule.re.test(host) || rule.re.test(fullForPath)) {
         const platMeta = PLAT_META[rule.plat];
+        const supportedProductPath = !rule.productPath || rule.productPath.test(u.pathname);
         
         // 如果 cc 是函数，则执行它；否则直接取值
         let cc = (typeof rule.cc === 'function') ? rule.cc(url) : rule.cc;
@@ -731,7 +744,8 @@ function detectFromUrl(url) {
           cc: cc,
           plat: rule.plat,
           comboKey: cc + '_' + rule.plat,
-          valid: !!(platMeta && platMeta.implemented)
+          valid: !!(platMeta && platMeta.implemented && supportedProductPath),
+          invalidReason: supportedProductPath ? '' : '请输入商品详情页或商品评论页链接'
         };
       }
     }
@@ -770,7 +784,7 @@ function renderUrlList() {
     return `<div class="url-item">
       <span class="u-cc ${ccCls}">${escHtml(ccLabel)}</span>
       <span class="u-link" title="${escHtml(p.url)}">${escHtml(p.url)}</span>
-      <span class="u-cnt">${p.valid?'✓':'✗ 未实装'}</span>
+      <span class="u-cnt" title="${escHtml(p.invalidReason||'')}">${p.valid?'✓':p.invalidReason?'✗ 请填商品页':'✗ 未识别/未支持'}</span>
     </div>`;
   }).join('');
 }
@@ -872,7 +886,7 @@ function renderComboList() {
   const unknownCount = parsedUrls.filter(p => !p.cc).length;
 
   if (Object.keys(stats).length === 0 && unknownCount === 0) {
-    wrap.innerHTML = '<span style="color:var(--t3);font-size:12px;padding:8px 0">尚未输入链接 —— 粘贴 Shopee 链接后这里会自动出现"国家×平台"组合</span>';
+    wrap.innerHTML = '<span style="color:var(--t3);font-size:12px;padding:8px 0">尚未输入链接 —— 粘贴商品链接后这里会自动出现"国家×平台"组合</span>';
     return;
   }
 
@@ -908,7 +922,7 @@ function toggleCombo(key) {
 }
 // 国家代码 → emoji 旗
 const CC_FLAG = {
-  BR: '🇧🇷', ID: '🇮🇩', PH: '🇵🇭', MY: '🇲🇾', TH: '🇹🇭', VN: '🇻🇳', SG: '🇸🇬',
+  US: '🇺🇸', BR: '🇧🇷', ID: '🇮🇩', PH: '🇵🇭', MY: '🇲🇾', TH: '🇹🇭', VN: '🇻🇳', SG: '🇸🇬',
   MX: '🇲🇽', AR: '🇦🇷', GLOBAL: '🌐'
 };
 
@@ -1016,7 +1030,7 @@ function resetTemps() {
 }
 function loadSample() {
   document.getElementById('iUrls').value =
-    'https://shopee.com.br/product/1234567/8901234\nhttps://shopee.co.id/product/9876543/2109876';
+    'https://www.walmart.com/ip/example/123456789\nhttps://www.amazon.com/dp/B012345678\nhttps://www.ebay.com/itm/123456789012\nhttps://shopee.com.br/product/1234567/8901234';
   onUrlsChange();
 }
 
@@ -1045,7 +1059,7 @@ function _erpEmit(n,d){if(_inIframe)window.parent.postMessage({_erp:n,detail:d},
  *     }
  *   }
  *
- * Ianto 插件需要在 Shopee 商品详情页：
+ * Ianto 插件需要在支持的商品详情/评论页（含 Walmart、Amazon、eBay）：
  *   1) 滚动到评论区
  *   2) 翻页直到达到 max 条 或 无更多评论
  *   3) 收集每条评论的 text/rating/date/author（rating/date 可选）
@@ -1104,7 +1118,7 @@ async function scrapeReviews(tasks) {
       });
       if (!detail.success) {
         showWarn('Ianto 抓取失败：' + (detail.error || '未知错误') +
-                 ' · 请确认插件已安装并已在 Shopee 域名授权（chrome://extensions → Ianto → 详情）');
+                 ' · 请确认已安装新版 Ianto、扩展已重载，且具有对应平台的网页访问权限（chrome://extensions → Ianto → 详情）');
         resolve({});
         return;
       }
@@ -1359,7 +1373,7 @@ async function startAnalysis() {
   try {
     if (!document.getElementById('aKey').value.trim()) { showWarn('请先填写 Gemini API Key'); return; }
     const validTasks = parsedUrls.filter(p => p.valid && selectedCombos.has(p.comboKey));
-    if (validTasks.length === 0) { showWarn('没有可分析的链接 —— 请确认①链接是已支持平台（Shopee/TikTok Shop/Lazada）且支持的国家；②Step 2 里对应"国家×平台"组合已勾选'); return; }
+    if (validTasks.length === 0) { showWarn('没有可分析的链接 —— 请确认①是支持的平台商品详情页（美国 Walmart/Amazon/eBay 或原有平台，不是搜索页）；②Step 2 里对应"国家×平台"组合已勾选'); return; }
     const max = parseInt(document.getElementById('cfgMaxComments').value) || 200;
     const visibleSet = document.getElementById('cfgVisible').checked;
 
@@ -1412,10 +1426,10 @@ async function startAnalysis() {
 
       // —— 抓评论（必须等完才能继续下一条 · Ianto 单 tab 串行）——
       addDebugTrace(`🕷️ [任务 ${tIdx}/${validTasks.length}] 开始抓评论`,
-        `${task.cc} · ${decodeURIComponent(url).slice(0, 100)}`);
+        `${task.cc} · ${PLAT_META[task.plat]?.name || task.plat} · ${decodeURIComponent(url).slice(0, 100)}`);
       window._setStage(`任务 ${tIdx}/${validTasks.length} 抓评论中...`);
       const tStart = Date.now();
-      const oneResult = await scrapeReviews([{ url, cc: task.cc, max }]);
+      const oneResult = await scrapeReviews([{ url, cc: task.cc, plat: task.plat, max }]);
       const tCost = Math.round((Date.now() - tStart) / 1000);
       const matchedResult = getScrapeTaskData(oneResult, url);
       const taskData = matchedResult.data || { reviews: [], productName: '' };
@@ -1462,7 +1476,7 @@ async function startAnalysis() {
             ratingHist, goodCount, neuCount, badCount, ratingNullCount,
             analysis: null, suggestions: [],
             skipped: true,
-            skipReason: taskData.error ? `抓取报错: ${taskData.error}` : '该链接 0 条评论 —— 商品无评论 / 抓取失败 / 选择器不匹配'
+            skipReason: taskData.error ? `抓取报错: ${taskData.error}` : (taskData.debug?.reason || '该链接 0 条评论 —— 商品无评论 / 抓取失败 / 选择器不匹配')
           };
         }
 
