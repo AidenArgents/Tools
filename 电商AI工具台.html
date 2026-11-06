@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电商AI工具台</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;background:#f5f7fa}
+
+/* ── 左侧导航栏 ── */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;
+  width:160px;
+  background:#1e293b;
+  display:flex;flex-direction:column;
+  z-index:100;
+  user-select:none;
+  transition:width .25s ease;
+}
+.sidebar.collapsed{width:48px}
+.sidebar.collapsed .sb-logo-title,
+.sidebar.collapsed .sb-logo-sub,
+.sidebar.collapsed .label,
+.sidebar.collapsed .sb-footer{display:none}
+.sidebar.collapsed .sb-logo-badge{margin-bottom:0}
+.sidebar.collapsed .sb-item{justify-content:center;padding:10px 0}
+.sidebar.collapsed .sb-item .icon{margin:0}
+
+/* 收起/展开按钮 */
+.sb-toggle{
+  position:absolute;right:-14px;top:50%;transform:translateY(-50%);
+  width:28px;height:28px;border-radius:50%;
+  background:#1e293b;border:2px solid #334155;
+  color:#94a3b8;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:101;
+  transition:transform .25s ease, background .15s;
+}
+.sb-toggle:hover{background:#334155;color:#e2e8f0}
+.sidebar.collapsed .sb-toggle{transform:translateY(-50%) rotate(180deg)}
+.sb-logo{
+  padding:18px 16px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.sb-logo-badge{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#3b82f6,#7c3aed);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:12px;
+  margin-bottom:8px;
+}
+.sb-logo-title{font-size:12px;font-weight:700;color:#f1f5f9;line-height:1.3}
+.sb-logo-sub{font-size:9px;color:#64748b;margin-top:1px}
+
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:4px}
+
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:.15s;
+  text-decoration:none;
+  border:none;background:none;width:100%;text-align:left;
+}
+.sb-item:hover{background:rgba(255,255,255,.06)}
+.sb-item.active{background:rgba(59,130,246,.18);border:1px solid rgba(59,130,246,.3)}
+.sb-item .icon{font-size:18px;flex-shrink:0;width:22px;text-align:center}
+.sb-item .label{display:flex;flex-direction:column;gap:1px}
+.sb-item .label-main{font-size:12px;font-weight:600;color:#e2e8f0;line-height:1.2}
+.sb-item .label-sub{font-size:9px;color:#64748b;line-height:1}
+.sb-item.active .label-main{color:#93c5fd}
+.sb-item.active .label-sub{color:#60a5fa}
+
+.sb-footer{
+  padding:12px 14px;
+  border-top:1px solid rgba(255,255,255,.06);
+  font-size:9px;color:#334155;line-height:1.6;
+}
+
+/* ── iframe 区域 ── */
+.frames{
+  position:fixed;
+  left:160px;top:0;right:0;bottom:0;
+  transition:left .25s ease;
+}
+.sidebar.collapsed~.frames{left:48px}
+.frame-wrap{
+  position:absolute;inset:0;
+  display:none;
+}
+.frame-wrap.active{display:block}
+.frame-wrap iframe{
+  width:100%;height:100%;
+  border:none;
+  background:#f5f7fa;
+}
+
+/* 加载占位 */
+.frame-loading{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;color:#94a3b8;font-size:13px;
+  background:#f5f7fa;
+  pointer-events:none;
+  transition:opacity .3s;
+}
+.frame-loading.hidden{opacity:0}
+.spin{
+  width:32px;height:32px;
+  border:3px solid #e2e8f0;
+  border-top-color:#3b82f6;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ── 左侧导航 ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-toggle" onclick="toggleSidebar()" id="sb-toggle">◀</div>
+  <div class="sb-logo">
+    <div class="sb-logo-badge">AI</div>
+    <div class="sb-logo-title">电商AI工具台</div>
+    <div class="sb-logo-sub">E-Commerce AI Studio</div>
+  </div>
+
+  <nav class="sb-nav">
+    <button class="sb-item active" onclick="switchTo('set')" id="nav-set">
+      <span class="icon">📦</span>
+      <span class="label">
+        <span class="label-main">套图</span>
+        <span class="label-sub">Image Set</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('scene')" id="nav-scene">
+      <span class="icon">🌿</span>
+      <span class="label">
+        <span class="label-main">场景图</span>
+        <span class="label-sub">Scene Image</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('main')" id="nav-main">
+      <span class="icon">🖼️</span>
+      <span class="label">
+        <span class="label-main">主图</span>
+        <span class="label-sub">Main Image</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('replication')" id="nav-replication">
+      <span class="icon">🚀</span>
+      <span class="label">
+        <span class="label-main">复刻图</span>
+        <span class="label-sub">Replication</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('voc')" id="nav-voc">
+      <span class="icon">📊</span>
+      <span class="label">
+        <span class="label-main">VOC分析</span>
+        <span class="label-sub">VOC Analysis</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('title')" id="nav-title">
+      <span class="icon">✏️</span>
+      <span class="label">
+        <span class="label-main">标题生成</span>
+        <span class="label-sub">Title Gen</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('sea')" id="nav-sea">
+      <span class="icon">🌏</span>
+      <span class="label">
+        <span class="label-main">东南亚算价</span>
+        <span class="label-sub">SEA Pricing</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('seacb')" id="nav-seacb">
+      <span class="icon">📦</span>
+      <span class="label">
+        <span class="label-main">跨境/多仓</span>
+        <span class="label-sub">SEA CB/Multi</span>
+      </span>
+    </button>
+    <button class="sb-item" onclick="switchTo('latam')" id="nav-latam">
+      <span class="icon">🌎</span>
+      <span class="label">
+        <span class="label-main">拉美算价</span>
+        <span class="label-sub">LATAM Pricing</span>
+      </span>
+    </button>
+  </nav>
+
+  <div class="sb-footer">
+    八个工具互相独立<br>
+    切换不丢当前进度
+  </div>
+</aside>
+
+<!-- ── iframe 区域 ── -->
+<div class="frames">
+
+  <div class="frame-wrap active" id="frame-set">
+    <div class="frame-loading" id="loading-set">
+      <div class="spin"></div>加载套图工具中…
+    </div>
+    <iframe src="电商AI套图生成工作台.html" onload="onLoad('set')"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-scene">
+    <div class="frame-loading" id="loading-scene">
+      <div class="spin"></div>加载场景图工具中…
+    </div>
+    <iframe src="电商AI场景图生成工作台.html" onload="onLoad('scene')" loading="lazy"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-main">
+    <div class="frame-loading" id="loading-main">
+      <div class="spin"></div>加载主图工具中…
+    </div>
+    <iframe src="电商AI主图生成工作台.html" onload="onLoad('main')" loading="lazy"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-replication">
+    <div class="frame-loading" id="loading-replication">
+      <div class="spin"></div>加载复刻图工具中…
+    </div>
+    <iframe src="电商AI复刻图生成工作台.html" onload="onLoad('replication')" loading="lazy"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-voc">
+    <div class="frame-loading" id="loading-voc">
+      <div class="spin"></div>加载VOC分析工具中…
+    </div>
+    <iframe src="VOC分析工具v1.html" onload="onLoad('voc')" loading="lazy"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-title">
+    <div class="frame-loading" id="loading-title">
+      <div class="spin"></div>加载标题生成工具中…
+    </div>
+    <iframe src="电商标题生成工具v1.html" onload="onLoad('title')" loading="lazy"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-sea">
+    <div class="frame-loading" id="loading-sea">
+      <div class="spin"></div>加载东南亚算价工具中…
+    </div>
+    <iframe src="SEA东南亚算价工具.html" onload="onLoad('sea')" loading="lazy"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-seacb">
+    <div class="frame-loading" id="loading-seacb">
+      <div class="spin"></div>加载跨境/多仓算价工具中…
+    </div>
+    <iframe src="SEA东南亚跨境号直邮和一品多仓算价工具.html" onload="onLoad('seacb')" loading="lazy"></iframe>
+  </div>
+
+  <div class="frame-wrap" id="frame-latam">
+    <div class="frame-loading" id="loading-latam">
+      <div class="spin"></div>加载拉美算价工具中…
+    </div>
+    <iframe src="LATAM拉美算价工具.html" onload="onLoad('latam')" loading="lazy"></iframe>
+  </div>
+
+</div>
+
+<script>
+const tools=['set','scene','main','replication','voc','title','sea','seacb','latam'];
+let current='set';
+
+function switchTo(tool){
+  if(tool===current)return;
+
+  // 隐藏当前
+  document.getElementById('frame-'+current).classList.remove('active');
+  document.getElementById('nav-'+current).classList.remove('active');
+
+  // 显示目标（懒加载：首次切换才真正加载 iframe）
+  const frameWrap=document.getElementById('frame-'+tool);
+  const iframe=frameWrap.querySelector('iframe');
+  if(iframe.hasAttribute('loading')){
+    iframe.removeAttribute('loading'); // 触发加载
+  }
+  frameWrap.classList.add('active');
+  document.getElementById('nav-'+tool).classList.add('active');
+  current=tool;
+  scheduleLoadingFallback(tool);
+  notifyToolVisible(tool);
+}
+
+function hideLoading(tool){
+  const el=document.getElementById('loading-'+tool);
+  if(el)el.classList.add('hidden');
+}
+// 兜底：万一某个 iframe 的 load 事件被慢资源拖住，最多转 8 秒也强制收起遮罩，杜绝"一直转圈"
+function scheduleLoadingFallback(tool){
+  setTimeout(function(){ hideLoading(tool); }, 8000);
+}
+
+function onLoad(tool){
+  hideLoading(tool);
+  notifyToolVisible(tool);
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  notifyToolVisible(current);
+}
+
+function notifyToolVisible(tool){
+  const frameWrap=document.getElementById('frame-'+tool);
+  if(!frameWrap || !frameWrap.classList.contains('active')) return;
+  const iframe=frameWrap.querySelector('iframe');
+  if(!iframe || !iframe.contentWindow) return;
+  setTimeout(() => {
+    try{iframe.contentWindow.postMessage({type:'IANTO_TOOL_VISIBLE', tool}, '*');}catch(ex){}
+  }, 80);
+}
+
+// ── ERP 插件桥接：iframe ↔ 顶层 document ──
+// iframe 用 postMessage 发请求，父页面在顶层 document 派发 CustomEvent（插件监听在这里），
+// 再把插件响应通过 postMessage 广播回所有 iframe。
+window.addEventListener('message', function(e){
+  if(!e.data||!e.data._erp||!e.data._erp.startsWith('REQUEST_'))return;
+  document.dispatchEvent(new CustomEvent(e.data._erp,{detail:e.data.detail}));
+});
+['RESPONSE_SPU_FETCH','RESPONSE_ERP_FETCH','RESPONSE_REVIEW_SCRAPE','RESPONSE_TITLE_SCRAPE','RESPONSE_IANTO_PING'].forEach(function(name){
+  document.addEventListener(name, function(e){
+    document.querySelectorAll('iframe').forEach(function(f){
+      try{f.contentWindow.postMessage({_erp:name,detail:e.detail},'*');}catch(ex){}
+    });
+  });
+});
+
+// 首屏"套图"是即时加载的，同样挂一个兜底超时
+scheduleLoadingFallback('set');
+</script>
+</body>
+</html>

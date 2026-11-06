@@ -1,0 +1,2596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电商标题生成工具</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<style>
+:root{
+  --bg:#f5f7fa;--card:#fff;--card2:#f8fafc;--bdr:#e2e8f0;
+  --t1:#1e293b;--t2:#475569;--t3:#94a3b8;
+  --blue:#3b82f6;--blue-l:#dbeafe;--blue-d:#1d4ed8;
+  --grn:#10b981;--grn-l:#d1fae5;--org:#f59e0b;--org-l:#fef3c7;
+  --red:#ef4444;--vio:#7c3aed;--vio-l:#ede9fe;
+  --r:10px;--r2:14px;
+  --sh:0 1px 3px rgba(0,0,0,.04);--sh2:0 4px 14px rgba(0,0,0,.06);
+  --f:system-ui,-apple-system,'Segoe UI','Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;--fm:'Consolas','Menlo','Microsoft YaHei',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--t1);line-height:1.6;-webkit-font-smoothing:antialiased}
+.ctn{max-width:1300px;margin:0 auto;padding:0 20px}
+
+/* ── Header ── */
+.hd{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--bdr)}
+.hd-row1{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.hd-b{display:flex;align-items:center;gap:10px}
+.hd-logo{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--grn),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px}
+.hd-t{font-size:14px;font-weight:700}.hd-s{font-size:10px;color:var(--t3)}
+.hd-acts{display:flex;gap:4px}
+.hd-btn{padding:5px 14px;border-radius:14px;font-size:11px;font-weight:600;color:var(--t3);border:1px solid var(--bdr);background:#fff;cursor:pointer;font-family:var(--f);transition:.2s}
+.hd-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.hd-api{padding:5px 24px;background:var(--card2);border-top:1px solid var(--bdr);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px}
+.hd-api label{font-weight:600;color:var(--t2);white-space:nowrap}
+.api-inp{padding:4px 8px;border:1.5px solid var(--bdr);border-radius:6px;font-size:11px;font-family:var(--fm);outline:none;background:#fff;min-width:200px}
+.api-inp:focus{border-color:var(--blue)}
+.api-sel{padding:4px 6px;border:1.5px solid var(--bdr);border-radius:6px;font-size:10px;font-family:var(--f);outline:none;background:#fff;max-width:300px}
+.api-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0}
+.api-dot.on{background:var(--grn)}
+.hint{color:var(--t3);font-size:10px}.hint a{color:var(--blue)}
+
+/* ── Blocks ── */
+.block{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);margin-bottom:16px;box-shadow:var(--sh);overflow:hidden}
+.block-h{padding:12px 18px;background:var(--card2);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.block-t{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.num{width:22px;height:22px;border-radius:6px;background:var(--blue);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.block-body{padding:16px}
+
+/* ── Forms ── */
+.fg{margin-bottom:10px}
+.fl{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.fi,.fs,.ft{width:100%;padding:8px 11px;border-radius:var(--r);border:1.5px solid var(--bdr);background:var(--card2);font-size:13px;color:var(--t1);font-family:var(--f);outline:none;transition:.2s}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+.ft{resize:vertical;min-height:60px;line-height:1.5}
+.fi-hint{font-size:10px;color:var(--t3);margin-top:3px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 18px;border-radius:var(--r);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:.2s;font-family:var(--f)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover:not(:disabled){background:var(--blue-d)}
+.btn-g{background:var(--grn);color:#fff}.btn-g:hover:not(:disabled){background:#059669}
+.btn-x{background:var(--card2);color:var(--t2);border:1px solid var(--bdr)}.btn-x:hover{background:#eef1f6}
+.btn-full{width:100%}
+.btn-lg{padding:12px 24px;font-size:14px;border-radius:var(--r2)}
+.btn-sm{padding:4px 11px;font-size:11px}
+.btn-cp{background:var(--card2);color:var(--blue);border:1px solid var(--bdr);font-size:10px;padding:3px 9px;border-radius:6px;cursor:pointer;font-family:var(--f);white-space:nowrap}
+.btn-cp:hover{background:var(--blue-l)}.btn-cp.ok{background:var(--grn-l);color:var(--grn);border-color:var(--grn)}
+.acts{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+
+/* ── Section label ── */
+.sec-lbl{font-size:11px;font-weight:700;color:var(--t2);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.sec-div{border:none;border-top:1px solid var(--bdr);margin:14px 0}
+
+/* ── Region tabs ── */
+.region-tabs{display:flex;gap:4px;margin-bottom:10px;background:var(--card2);padding:3px;border-radius:8px;width:fit-content}
+.region-tab{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--t3);transition:.15s;font-family:var(--f)}
+.region-tab.active{background:#fff;color:var(--blue);box-shadow:var(--sh)}
+
+/* ── Country chips ── */
+.country-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.country-chip{padding:5px 12px;border-radius:16px;border:1.5px solid var(--bdr);background:#fff;cursor:pointer;font-size:12px;font-weight:500;transition:.15s;user-select:none}
+.country-chip:hover{border-color:var(--blue)}
+.country-chip.sel{border-color:var(--blue);background:var(--blue-l);color:var(--blue-d);font-weight:600}
+
+/* ── Country cards ── */
+.country-cards{display:flex;flex-direction:column;gap:8px}
+.cc-card{border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.cc-hd{padding:7px 12px;background:var(--card2);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bdr)}
+.cc-name{font-size:12px;font-weight:700}
+.cc-lang{font-size:10px;color:var(--t3);margin-left:auto;padding:2px 8px;background:#fff;border:1px solid var(--bdr);border-radius:10px}
+.plat-toggles{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px}
+.plat-toggle{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:16px;border:1.5px solid var(--bdr);background:#fff;cursor:pointer;font-size:11px;font-weight:500;transition:.15s;user-select:none}
+.plat-toggle:hover{border-color:var(--blue)}
+.plat-toggle.on{border-color:var(--blue);background:var(--blue-l);color:var(--blue-d)}
+.plat-toggle .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.plat-n-wrap{display:flex;align-items:center;gap:2px;font-size:10px;color:var(--t3)}
+.plat-n-inp{width:32px;padding:2px 4px;border:1px solid var(--bdr);border-radius:4px;font-size:10px;text-align:center;outline:none;font-family:var(--f)}
+.plat-n-inp:focus{border-color:var(--blue)}
+.cc-empty{padding:12px;text-align:center;color:var(--t3);font-size:11px}
+/* ── Language selector (inside country card header) ── */
+.lang-sel{display:flex;gap:3px;margin-left:auto;flex-shrink:0}
+.lang-opt{padding:2px 9px;border-radius:10px;border:1px solid var(--bdr);background:#fff;font-size:10px;font-weight:500;cursor:pointer;font-family:var(--f);color:var(--t2);transition:.15s;white-space:nowrap}
+.lang-opt:hover{border-color:var(--blue);color:var(--blue)}
+.lang-opt.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── Plan blocks (A/B) ── */
+.plan-block{border:1.5px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:8px;transition:.15s}
+.plan-block.on-a{border-color:var(--blue)}
+.plan-block.on-b{border-color:var(--vio)}
+.plan-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;user-select:none;background:var(--card2)}
+.plan-block.on-a .plan-hd{background:var(--blue-l)}
+.plan-block.on-b .plan-hd{background:var(--vio-l)}
+.plan-cb{width:15px;height:15px;cursor:pointer;accent-color:var(--blue);flex-shrink:0}
+.plan-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800}
+.ba{background:var(--blue);color:#fff}.bb{background:var(--vio);color:#fff}
+.plan-title{font-size:12px;font-weight:700}
+.plan-risk{font-size:10px;color:var(--org);margin-left:auto}
+.plan-body{padding:12px 14px;border-top:1px solid var(--bdr);display:flex;flex-direction:column;gap:8px}
+
+/* ── Progress ── */
+.prog-wrap{padding:12px 14px;border-radius:var(--r);background:var(--card2);border:1px solid var(--bdr);margin-bottom:10px}
+.prog-title{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.prog-bar{height:4px;border-radius:2px;background:var(--bdr);overflow:hidden;margin:6px 0}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--vio));transition:width .4s}
+.prog-txt{font-size:10px;color:var(--t2);text-align:center}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Results ── */
+.res-wrap{overflow-x:auto}
+table.res-table{width:100%;border-collapse:collapse;font-size:12px;min-width:940px}
+table.res-table th{background:var(--card2);color:var(--t2);font-weight:600;padding:9px 11px;border-bottom:2px solid var(--bdr);text-align:left;white-space:nowrap}
+table.res-table td{padding:8px 11px;border-bottom:1px solid var(--bdr);vertical-align:top}
+table.res-table tr:hover td{background:#fafbfc}
+.td-mono{font-family:var(--fm);font-size:10px;color:var(--t2);white-space:nowrap}
+.td-info{max-width:160px;font-size:10px;color:var(--t2);line-height:1.5}
+.td-plat{white-space:nowrap}
+.title-item{display:flex;align-items:flex-start;gap:6px;padding:3px 0;border-bottom:1px dashed var(--bdr)}
+.title-item:last-child{border-bottom:none}
+.title-txt{flex:1;font-size:12px;line-height:1.5}
+.src-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;white-space:nowrap}
+.src-a{background:var(--blue-l);color:var(--blue-d)}
+.src-b{background:var(--vio-l);color:var(--vio)}
+.src-ab{background:var(--grn-l);color:#065f46}
+.no-result{text-align:center;padding:36px;color:var(--t3);font-size:13px}
+
+/* ── Warn / info ── */
+.warn{padding:8px 12px;border-radius:var(--r);font-size:11px;background:var(--org-l);border-left:3px solid var(--org);color:#92400e;margin-bottom:10px}
+.info-box{padding:10px 14px;border-radius:var(--r);font-size:11px;background:var(--blue-l);border-left:3px solid var(--blue);color:var(--blue-d);line-height:1.7}
+.hid{display:none!important}
+.dbg-box{margin-top:10px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff;overflow:hidden}
+.dbg-hd{padding:9px 12px;background:var(--card2);border-bottom:1px solid var(--bdr);font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.dbg-body{padding:10px 12px;max-height:320px;overflow:auto;font-size:11px;line-height:1.6;background:#fbfcfe}
+.dbg-item{padding:8px 0;border-bottom:1px dashed var(--bdr)}
+.dbg-item:last-child{border-bottom:none}
+.dbg-k{font-weight:700;color:var(--t2);margin-right:6px}
+.dbg-v{font-family:var(--fm);word-break:break-word;white-space:pre-wrap}
+
+/* ── Settings modal ── */
+.mo-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.mo{background:#fff;border-radius:var(--r2);max-width:780px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.mo-h{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center}
+.mo-t{font-size:15px;font-weight:700}
+.mo-x{background:none;border:none;font-size:20px;cursor:pointer;color:var(--t3);line-height:1}
+.mo-b{padding:18px}
+.mo-sec{margin-bottom:20px}
+.mo-sec-t{font-size:12px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px}
+.pt-area{width:100%;padding:9px;border-radius:var(--r);background:var(--card2);border:1.5px solid var(--bdr);font-size:11px;line-height:1.7;color:var(--t1);font-family:var(--fm);resize:vertical;min-height:90px;outline:none;transition:.2s}
+.pt-area:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+.pt-row{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.pt-lbl{font-size:11px;font-weight:600;color:var(--t2)}
+
+/* ── Temperature sliders ── */
+.temp-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.temp-card{padding:10px 12px;border:1.5px solid var(--bdr);border-radius:var(--r);background:var(--card2)}
+.temp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.temp-title{font-size:12px;font-weight:700;color:var(--t1)}
+.temp-val{font-size:13px;font-weight:700;color:var(--blue);font-family:var(--fm);min-width:44px;text-align:right}
+.temp-desc{font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.6}
+.temp-slider{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,#3b82f6 0%,#8b5cf6 40%,#ef4444 100%);outline:none;cursor:pointer}
+.temp-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.temp-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid var(--blue);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.temp-scale{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;color:var(--t3);font-family:var(--fm)}
+.temp-hint{margin-top:8px;padding:6px 9px;border-radius:6px;font-size:11px;line-height:1.6;background:#f8fafc;border-left:3px solid #94a3b8;color:var(--t2);min-height:30px;transition:.2s}
+.temp-hint.low{background:#eff6ff;border-left-color:#3b82f6;color:#1e40af}
+.temp-hint.mid{background:#f5f3ff;border-left-color:#8b5cf6;color:#5b21b6}
+.temp-hint.high{background:#fef2f2;border-left-color:#ef4444;color:#991b1b}
+.temp-reset{background:none;border:none;font-size:10px;color:var(--t3);cursor:pointer;text-decoration:underline;padding:0}
+.temp-reset:hover{color:var(--blue)}
+
+/* ── Upload box ── */
+.up-box{border:2px dashed var(--bdr);border-radius:var(--r);background:var(--card2);aspect-ratio:1/1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:.2s}
+.up-box:hover{border-color:var(--blue)}
+.up-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:6px}
+.up-url-row{display:flex;gap:4px;margin-top:4px}
+.up-url-row input{flex:1;padding:5px 8px;border:1.5px solid var(--bdr);border-radius:6px;font-size:11px;outline:none;background:var(--card2)}
+.up-url-row input:focus{border-color:var(--blue)}
+.up-url-row button{padding:5px 12px;border:none;border-radius:6px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--f);white-space:nowrap}
+
+/* ── Top grid (step1 + step2 side by side) ── */
+.steps-top{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.steps-top{grid-template-columns:1fr}}
+
+.ft2{text-align:center;padding:20px;margin-top:20px;border-top:1px solid var(--bdr);font-size:11px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="hd">
+  <div class="hd-row1">
+    <div class="hd-b">
+      <div class="hd-logo">T</div>
+      <div><div class="hd-t">电商标题生成工具</div><div class="hd-s">E-Commerce Title Generator</div></div>
+    </div>
+    <div class="hd-acts">
+      <button class="hd-btn" onclick="openSettings()">⚙️ 提示词设置</button>
+      <button class="hd-btn" onclick="exportXLSX()" id="exportBtn" style="display:none">📥 导出 XLSX</button>
+    </div>
+  </div>
+  <div class="hd-api">
+    <div class="api-dot" id="aDot"></div>
+    <label>Gemini API Key:</label>
+    <input class="api-inp" id="aKey" type="password" placeholder="输入 Gemini API Key" oninput="saveSettings();checkApi()">
+    <button class="btn btn-sm btn-x" onclick="var e=document.getElementById('aKey');e.type=e.type==='password'?'text':'password'" style="padding:3px 8px">👁</button>
+    <label>模型:</label>
+    <select class="api-sel" id="aMdl" onchange="saveSettings()">
+      <option value="gemini-2.5-flash">2.5 Flash · $0.10/¥0.7 M（推荐）</option>
+      <option value="gemini-2.5-pro">2.5 Pro · $1.25/¥9 M</option>
+      <option value="gemini-2.5-flash-lite">2.5 Flash-Lite · $0.075/¥0.5 M</option>
+      <option value="gemini-3.1-pro-preview">3.1 Pro · $2/¥14 M</option>
+      <option value="gemini-3-flash-preview">3 Flash · $0.50/¥3.6 M</option>
+      <option value="gemini-3.1-flash-lite-preview">3.1 Flash-Lite · $0.075/¥0.5 M</option>
+    </select>
+    <span class="hint"><a href="https://aistudio.google.com/apikey" target="_blank">获取Key →</a> · Key存于本地</span>
+  </div>
+</header>
+
+<div class="ctn" style="padding-top:16px;padding-bottom:60px">
+
+<!-- ═══ STEPS 1 + 2 SIDE BY SIDE ═══ -->
+<div class="steps-top">
+
+  <!-- ─── STEP 1: 产品信息 ─── -->
+  <div class="block" id="step1">
+    <div class="block-h">
+      <div class="block-t"><span class="num">1</span>📦 产品信息</div>
+    </div>
+    <div class="block-body">
+      <!-- SPU -->
+      <div class="fg">
+        <label class="fl">🔍 SPU 编号（回车抓取）</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="pSpu" class="fi" placeholder="输入SPU编号..." onkeypress="if(event.key==='Enter')fetchSPU()" style="flex:1;font-family:var(--fm)">
+          <button class="btn btn-g" id="fetchBtn" onclick="fetchSPU()" style="flex-shrink:0;padding:0 16px;font-size:12px">↓ 抓取ERP</button>
+        </div>
+      </div>
+      <!-- 产品信息 -->
+      <div class="fg">
+        <label class="fl">📝 产品信息（AI分析卖点/场景/人群）</label>
+        <textarea class="ft" id="iInfo" rows="6" placeholder="产品名称、描述、卖点、规格...&#10;ERP抓取后自动填入，也可手动粘贴。" oninput="saveSettings()"></textarea>
+      </div>
+      <!-- 自定义关键词（跳过 AI 本地化） -->
+      <div class="fg">
+        <label class="fl" style="color:var(--vio)">🎯 自定义关键词（可选 · 填了就跳过 AI 本地化）</label>
+        <textarea class="ft" id="customKeywords" rows="4" placeholder="每行一个关键词，例如：&#10;rodilleras deportivas&#10;rodilleras gimnasio&#10;rodilleras crossfit&#10;&#10;留空则由 AI 自动本地化。填了就直接用这些词（对所有选中的国家生效）。" oninput="saveSettings()" style="border-color:var(--vio);background:var(--vio-l)"></textarea>
+        <div class="fi-hint">💡 适用场景：你已知该产品在目标市场的本地词，不想让 AI 再猜一次（更稳定 · 更省 token）。注意：自定义词会同时用于所有选中的国家，请确保语言匹配。</div>
+      </div>
+      <!-- 图片 -->
+      <div class="fg">
+        <label class="fl">🖼️ 产品主图（可选，AI视觉分析）</label>
+        <div class="up-box" id="upBox"
+          onclick="if(!prodImg)document.getElementById('upF').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+          ondragleave="this.style.borderColor='var(--bdr)'"
+          ondrop="event.preventDefault();this.style.borderColor='var(--bdr)';dropImg(event)">
+          <input type="file" accept="image/*" id="upF" onchange="fileImg(this)" style="display:none">
+          <div id="upPh" style="text-align:center;color:var(--t3)">
+            <div style="font-size:26px;margin-bottom:4px">🖼️</div>
+            <div style="font-size:11px"><b style="color:var(--blue)">点击上传</b> / 拖入 / 粘贴</div>
+          </div>
+          <img id="upPv" style="display:none">
+        </div>
+        <div class="up-url-row">
+          <input type="text" id="urlImg" placeholder="或粘贴图片URL" onpaste="setTimeout(()=>loadUrl(),0)">
+          <button onclick="loadUrl()">加载</button>
+          <button class="btn btn-sm btn-x" onclick="clearImg()" id="clearImgBtn" style="display:none;padding:4px 10px">✕</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 2: 平台 & 方案 ─── -->
+  <div class="block" id="step2">
+    <div class="block-h">
+      <div class="block-t"><span class="num">2</span>🌍 平台选择 & 生成方案</div>
+    </div>
+    <div class="block-body">
+
+      <!-- Level 1: 大区 -->
+      <div class="sec-lbl">🗺️ 目标市场</div>
+      <div class="region-tabs" id="regionTabs"></div>
+
+      <!-- Level 2: 国家 chips -->
+      <div class="country-chips" id="countryChips"></div>
+
+      <!-- Level 3: 国家卡片（语言 + 平台） -->
+      <div class="country-cards" id="countryCards"></div>
+
+      <hr class="sec-div">
+
+      <!-- 方案 A/B -->
+      <div class="sec-lbl">⚡ 生成方案</div>
+
+      <!-- 方案 A -->
+      <div class="plan-block" id="planBlockA">
+        <div class="plan-hd" onclick="togglePlan('A',event)">
+          <input type="checkbox" class="plan-cb" id="useA" checked onclick="event.stopPropagation();updatePlanUI();saveSettings()">
+          <span class="plan-badge ba">A</span>
+          <span class="plan-title">SEO 关键词驱动</span>
+          <span class="plan-risk">⚠️ 词语存在 ≠ 流量，需结合运营</span>
+        </div>
+      </div>
+
+      <!-- 方案 B -->
+      <div class="plan-block" id="planBlockB">
+        <div class="plan-hd" onclick="togglePlan('B',event)">
+          <input type="checkbox" class="plan-cb" id="useB" checked onclick="event.stopPropagation();updatePlanUI();saveSettings()">
+          <span class="plan-badge bb">B</span>
+          <span class="plan-title">竞品爬取 + 改写</span>
+          <span class="plan-risk">⚠️ 竞品成功可能依赖广告/直播</span>
+        </div>
+        <div class="plan-body" id="planBodyB">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--t2)">每平台爬取前</span>
+            <input type="number" id="scrapeTop" value="100" min="10" max="200"
+              style="width:52px;padding:4px 6px;border:1.5px solid var(--bdr);border-radius:5px;font-size:12px;text-align:center;outline:none"
+              oninput="saveSettings()">
+            <span style="font-size:12px;color:var(--t2)">条竞品标题用于分析</span>
+            <span style="font-size:12px;color:var(--t2);margin-left:8px">·</span>
+            <span style="font-size:12px;color:var(--t2)">用前</span>
+            <input type="number" id="scrapeKwCount" value="3" min="0" max="30"
+              style="width:36px;padding:4px 6px;border:1.5px solid var(--bdr);border-radius:5px;font-size:12px;text-align:center;outline:none"
+              oninput="saveSettings()">
+            <span style="font-size:12px;color:var(--t2)">个关键词分别搜索（0=全部）</span>
+          </div>
+          <div class="fi-row" style="margin-top:4px;align-items:center">
+            <span style="font-size:12px;color:var(--t2)">📄 FastMoss 自动翻页：</span>
+            <input type="number" id="scrapePages" min="1" max="20" value="10" style="width:60px;padding:3px 6px;border:1px solid var(--bdr);border-radius:3px;font-size:12px"
+              oninput="saveSettings()">
+            <span style="font-size:12px;color:var(--t2)">页（每页 10 条 · 10 页=100 条 · 只在自动爬取时生效，插件端不变）</span>
+          </div>
+          <div class="fi-row" style="margin-top:4px;align-items:center">
+            <span style="font-size:12px;color:var(--t2);opacity:.75">⛔ 不重试：已用评分最高的词，搜不到 = 平台问题（需登录/弹窗/插件关页太快），不换词</span>
+          </div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;margin-top:4px">
+            <input type="checkbox" id="bVisible" checked onchange="saveSettings()">
+            前台可见：打开可视标签组（可观察爬取进度；不勾选则后台静默运行）
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2);cursor:pointer;margin-top:4px">
+            <input type="checkbox" id="bKeepTabs" checked onchange="saveSettings()">
+            搜索页先别自动关（发给 ERP 桥接层的指令 · 未必被遵守）
+          </label>
+          <div class="fi-hint" style="margin-left:22px;color:var(--t3);font-size:10px">⚠️ 关页其实是 ERP 桥接层做的（不是 Ianto 插件本身），它目前会忽略这个参数。要 100% 保页不关，请走下方【🔬 本地化后暂停】→ 在暂停面板里点【🚀 全部打开】→ 人工复制 → 手动粘贴 → 【⏭️ 跳过爬取】。这条路不经过桥接，页就不会被关。</div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue-d);cursor:pointer;margin-top:4px;font-weight:600">
+            <input type="checkbox" id="bPauseForReview" onchange="saveSettings()">
+            🔬 本地化后暂停：让我核对关键词并手动检查搜索页，再点继续触发爬取
+          </label>
+          <hr class="sec-div" style="margin:10px 0 8px">
+          <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px">📋 备用：手动粘贴竞品标题（自动爬取失败时自动启用）</div>
+          <textarea class="ft" id="bManualTitles" rows="4" placeholder="从搜索结果页面复制商品标题，每行一条。&#10;当 Ianto 自动爬取抓不到标题时，将自动使用此处内容进行竞品分析。" oninput="saveSettings()" style="font-size:11px;min-height:50px"></textarea>
+          <div class="fi-hint">💡 提示：点击生成后，可在调试面板查看搜索URL，手动打开页面复制标题粘贴到此处，再重新生成。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /steps-top -->
+
+<!-- ═══ STEP 3: 生成 ═══ -->
+<div class="block" id="step3">
+  <div class="block-h">
+    <div class="block-t"><span class="num">3</span>✨ 生成标题</div>
+  </div>
+  <div class="block-body">
+    <div class="warn hid" id="genWarn"></div>
+    <div id="scrapeProgress" class="hid">
+      <div class="prog-wrap">
+        <div class="prog-title"><div class="spin"></div>方案B · 正在爬取竞品标题（后台运行，可继续其他操作）...</div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+        <div class="prog-txt" id="progTxt">准备中...</div>
+      </div>
+    </div>
+    <div id="genProgress" class="hid">
+      <div class="prog-wrap">
+        <div class="prog-title"><div class="spin"></div>AI 正在生成标题...</div>
+        <div class="prog-bar"><div class="prog-fill" id="genProgFill" style="width:0%"></div></div>
+        <div class="prog-txt" id="genProgTxt">准备中...</div>
+      </div>
+    </div>
+    <div id="searchLinksBox" class="hid" style="margin-bottom:10px">
+      <div class="dbg-box">
+        <div class="dbg-hd">
+          <span>🔗 搜索链接（点击各行打开 · 浏览器可能限制"全部打开"的数量）</span>
+          <button class="btn btn-sm btn-p" onclick="openAllSearchUrls()" style="padding:4px 12px">🚀 全部打开</button>
+        </div>
+        <div class="dbg-body" id="searchLinksList" style="max-height:240px;padding:6px 12px"></div>
+      </div>
+    </div>
+    <div id="kwConfirmBox" class="hid" style="margin-bottom:10px">
+      <div class="dbg-box" style="border:2px solid var(--blue)">
+        <div class="dbg-hd" style="background:var(--blue-l)">
+          <span style="color:var(--blue-d);font-weight:700">⏸️ 已暂停 · 请检查关键词和搜索链接，确认后点击继续</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-g" onclick="continueAfterPause('continue')" style="padding:5px 14px">▶️ 继续爬取</button>
+            <button class="btn btn-sm btn-x" onclick="continueAfterPause('skip-scrape')" style="padding:5px 14px">⏭️ 跳过爬取</button>
+            <button class="btn btn-sm btn-x" onclick="continueAfterPause('cancel')" style="padding:5px 14px">❌ 取消</button>
+          </div>
+        </div>
+        <div class="dbg-body" id="kwCheckList" style="max-height:300px;padding:10px 14px"></div>
+      </div>
+    </div>
+    <div class="dbg-box" id="debugBox">
+      <div class="dbg-hd">
+        <span>🔎 流程调试面板（每一步的输入/输出/结果）</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-x" onclick="expandAllDbgItems()" style="padding:4px 10px">全部展开</button>
+          <button class="btn btn-sm btn-x" onclick="clearDebugTrace()" style="padding:4px 10px">清空</button>
+        </div>
+      </div>
+      <div class="dbg-body" id="debugTrace" style="max-height:560px">等待开始...</div>
+    </div>
+    <button class="btn btn-g btn-lg btn-full" id="genBtn" onclick="startGenerate()">✨ 开始生成标题</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 4: 结果 ═══ -->
+<div class="block hid" id="step4">
+  <div class="block-h">
+    <div class="block-t"><span class="num">4</span>📋 生成结果</div>
+    <div class="acts">
+      <span id="resultCount" style="font-size:11px;color:var(--t3)"></span>
+      <button class="btn btn-sm btn-g" onclick="exportXLSX()">📥 导出 XLSX</button>
+    </div>
+  </div>
+  <div class="block-body" style="padding:0">
+    <div class="res-wrap">
+      <table class="res-table">
+        <thead>
+          <tr>
+            <th style="width:80px">SPU</th>
+            <th style="width:140px">产品摘要</th>
+            <th style="width:90px">国家</th>
+            <th style="width:90px">平台</th>
+            <th>标题</th>
+            <th style="width:60px">来源</th>
+          </tr>
+        </thead>
+        <tbody id="resTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="ft2">电商标题生成工具 · 方案B需配合 Ianto 插件</div>
+</div><!-- /ctn -->
+
+<!-- ═══ 设置弹窗 ═══ -->
+<div class="mo-bg hid" id="settingsMo">
+  <div class="mo">
+    <div class="mo-h">
+      <div class="mo-t">⚙️ 提示词设置</div>
+      <button class="mo-x" onclick="closeSettings()">×</button>
+    </div>
+    <div class="mo-b">
+      <div class="info-box" style="margin-bottom:16px">
+        提示词变量：<code>{product_info}</code> 产品信息 · <code>{n}</code> 标题数 · <code>{keywords}</code> 关键词 · <code>{language}</code> 语言 · <code>{country}</code> 国家 · <code>{platform}</code> 平台名 · <code>{competitor_titles}</code> 竞品标题 · <code>{charLimit}</code> 字符限制
+      </div>
+
+      <div class="mo-sec">
+        <div class="mo-sec-t">🌡️ Temperature（AI 发挥度） · 分任务设置
+          <button class="temp-reset" onclick="resetTemps()" style="margin-left:auto">恢复默认</button>
+        </div>
+        <div class="temp-grid">
+
+          <div class="temp-card">
+            <div class="temp-head">
+              <span class="temp-title">🌐 本地化关键词（localize）</span>
+              <span class="temp-val" id="tempValLocalize">0.20</span>
+            </div>
+            <div class="temp-desc">决定"产品在当地叫什么"—— 需要稳定、可复现的事实性输出。</div>
+            <input type="range" class="temp-slider" id="tempLocalize" min="0" max="1.5" step="0.05" value="0.2" oninput="onTempChange('localize',this.value)">
+            <div class="temp-scale"><span>0 · 极稳定</span><span>0.5</span><span>1.0</span><span>1.5 · 极发散</span></div>
+            <div class="temp-hint" id="tempHintLocalize"></div>
+          </div>
+
+          <div class="temp-card">
+            <div class="temp-head">
+              <span class="temp-title">📊 竞品分析（analyze · 方案B）</span>
+              <span class="temp-val" id="tempValAnalyze">0.40</span>
+            </div>
+            <div class="temp-desc">从竞品标题里提取共性词+差异化改写 —— 略偏事实整理。</div>
+            <input type="range" class="temp-slider" id="tempAnalyze" min="0" max="1.5" step="0.05" value="0.4" oninput="onTempChange('analyze',this.value)">
+            <div class="temp-scale"><span>0 · 极稳定</span><span>0.5</span><span>1.0</span><span>1.5 · 极发散</span></div>
+            <div class="temp-hint" id="tempHintAnalyze"></div>
+          </div>
+
+          <div class="temp-card">
+            <div class="temp-head">
+              <span class="temp-title">✍️ 标题生成（generate · 方案A）</span>
+              <span class="temp-val" id="tempValGenerate">0.60</span>
+            </div>
+            <div class="temp-desc">创作类任务 —— 在字数/规则框内组合词汇、措辞有一定变化。</div>
+            <input type="range" class="temp-slider" id="tempGenerate" min="0" max="1.5" step="0.05" value="0.6" oninput="onTempChange('generate',this.value)">
+            <div class="temp-scale"><span>0 · 极稳定</span><span>0.5</span><span>1.0</span><span>1.5 · 极发散</span></div>
+            <div class="temp-hint" id="tempHintGenerate"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="mo-sec">
+        <div class="mo-sec-t">🌐 本地化关键词提示词（方案A第一步：生成 {keywords}）</div>
+        <div class="pt-row">
+          <textarea class="pt-area" id="ptLocalize" rows="6" oninput="saveSettings()"></textarea>
+        </div>
+      </div>
+      <div class="mo-sec">
+        <div class="mo-sec-t">🏪 各平台标题生成提示词 · System（方案A专家规则，支持 {n} {language} {platform} {country} {charLimit}）</div>
+        <div id="platPromptList"></div>
+      </div>
+      <div class="mo-sec">
+        <div class="mo-sec-t">✏️ 方案A · User Message（数据+输出指令，支持 {keywords} {product_info} {n} {language}）</div>
+        <div class="pt-row">
+          <textarea class="pt-area" id="ptUserMsgA" rows="4" oninput="saveSettings()"></textarea>
+        </div>
+      </div>
+      <div class="mo-sec">
+        <div class="mo-sec-t">📊 方案B · 竞品分析提示词 · System（分析师角色，支持 {n} {language} {platform} {country}）</div>
+        <div class="pt-row">
+          <textarea class="pt-area" id="ptAnalyze" rows="6" oninput="saveSettings()"></textarea>
+        </div>
+      </div>
+      <div class="mo-sec">
+        <div class="mo-sec-t">✏️ 方案B · User Message（竞品数据+输出指令，支持 {competitor_titles} {product_info} {n} {language} {platform} {country}）</div>
+        <div class="pt-row">
+          <textarea class="pt-area" id="ptUserMsgB" rows="4" oninput="saveSettings()"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-x btn-sm" onclick="resetPrompts()">重置默认</button>
+        <button class="btn btn-g btn-sm" onclick="closeSettings()">保存并关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// 数据配置
+// ════════════════════════════════════════════════════════
+// langs: first entry is default; code used as prompt language variable
+// MX/BR: only one option (locked locale); SEA: primary + English fallback
+const REGION_CONFIG = {
+  latam:{
+    label:'🌎 拉美',
+    countries:{
+      BR:{ name:'🇧🇷 巴西',
+           langs:[{code:'pt-BR',label:'Português (BR)'},{code:'en',label:'English'}],
+           plats:{mercado:true,amazon:false,shopee:true,tiktok:true,aliex:false} },
+      MX:{ name:'🇲🇽 墨西哥',
+           langs:[{code:'es-MX',label:'Español (MX)'},{code:'en',label:'English'}],
+           plats:{mercado:true,amazon:false,tiktok:true,aliex:true,temu:false} },
+    }
+  },
+  sea:{
+    label:'🌏 东南亚',
+    countries:{
+      ID:{ name:'🇮🇩 印尼',
+           langs:[{code:'id',label:'Bahasa Indonesia'},{code:'en',label:'English'}],
+           plats:{tiktok:true,shopee:true,tokopedia:false,lazada:false} },
+      PH:{ name:'🇵🇭 菲律宾',
+           langs:[{code:'tl-en',label:'Taglish'},{code:'en',label:'English'},{code:'fil',label:'Filipino'}],
+           plats:{tiktok:true,shopee:true,lazada:false} },
+      MY:{ name:'🇲🇾 马来西亚',
+           langs:[{code:'ms',label:'Bahasa Melayu'},{code:'en',label:'English'}],
+           plats:{tiktok:true,shopee:true,lazada:false} },
+      TH:{ name:'🇹🇭 泰国',
+           langs:[{code:'th',label:'ภาษาไทย'},{code:'en',label:'English'}],
+           plats:{tiktok:true,shopee:true,lazada:false} },
+      VN:{ name:'🇻🇳 越南',
+           langs:[{code:'vi',label:'Tiếng Việt'},{code:'en',label:'English'}],
+           plats:{tiktok:true,shopee:true,lazada:false} },
+      SG:{ name:'🇸🇬 新加坡',
+           langs:[{code:'en',label:'English'}],
+           plats:{tiktok:true,shopee:true,lazada:false,amazon:false} },
+    }
+  }
+};
+
+// ════════════════════════════════════════════════════════
+// URL 模板 · 插件同步 (Single Source of Truth = 插件)
+// ════════════════════════════════════════════════════════
+// ⚠️ 下面的 PLUGIN_PLATFORM_CONFIG 是从
+//     D:\Claude-Workspace\Ianto\features\feature_multisearch.js
+//     的 ALL_PLATFORM_CONFIG 原样复制而来。
+// ⚠️ 不要手改这段。要改 URL：
+//     1) 改插件 features/feature_multisearch.js
+//     2) 让 Claude 读插件，重跑同步覆盖这段
+// 同步时间: 2026-04-23
+// 占位符: 插件用 [KEYWORD]，下面统一在 buildPlatMetaFromPlugin() 里转成 [KW]
+// ════════════════════════════════════════════════════════
+const PLUGIN_PLATFORM_CONFIG = {
+  "BR": {
+    name: "巴西 (BR)",
+    platforms: [
+      { name: '1-Mercado Livre', url: 'https://lista.mercadolivre.com.br/[KEYWORD]#D[A:[KEYWORD]]', id: 'ml_br', checked: true },
+      { name: '2-Amazon', url: 'https://www.amazon.com.br/s?k=[KEYWORD]&__mk_pt_BR=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss_2', id: 'az_br', checked: true },
+      { name: '3-Shopee', url: 'https://shopee.com.br/search?keyword=[KEYWORD]', id: 'shp_br', checked: true, forceLowercase: true },
+      { name: 'AliExpress', url: 'https://pt.aliexpress.com/wholesale?SearchText=[KEYWORD]', id: 'ali-br', checked: false },
+      { name: 'OLX', url: 'https://www.olx.com.br/brasil?q=[KEYWORD]', id: 'olx-br', checked: false },
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=BR', id: 'fm_br', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=BR', id: 'et_tt', checked: true }
+    ]
+  },
+  "MX": {
+    name: "墨西哥 (MX)",
+    platforms: [
+      { name: '1-Mercado Libre', url: 'https://listado.mercadolibre.com.mx/[KEYWORD]#D[A:[KEYWORD]]', id: 'ml_mx', checked: true },
+      { name: '2-Amazon', url: 'https://www.amazon.com.mx/s?k=[KEYWORD]&__mk_es_MX=%C3%85M%C3%85%C5%BD%C3%95%C3%91&ref=nb_sb_noss_1', id: 'az_mx', checked: true },
+      { name: 'AliExpress', url: 'https://es.aliexpress.com/wholesale?SearchText=[KEYWORD]', id: 'ali_mx', checked: false },
+      { name: 'Temu', url: 'https://www.temu.com/search_result.html?search_key=[KEYWORD]&search_method=user&srch_enter_source=top_search_entrance_10005', id: 'temu', checked: false },
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=MX', id: 'fm_mx', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=MX', id: 'et_tt', checked: true }
+    ]
+  },
+  "ID": {
+    name: "印度尼西亚 (ID)",
+    platforms: [
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=ID', id: 'fm_id', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=ID', id: 'et_tt', checked: true },
+      { name: '1-Shopee', url: 'https://shopee.co.id/search?keyword=[KEYWORD]', id: 'shp_id', checked: true, forceLowercase: true },
+      { name: '2-tokopedia', url: 'https://www.tokopedia.com/search?q=[KEYWORD]', id: 'toko', checked: true, forcePlusSpace: true },
+      { name: 'bilbil', url: 'https://www.blibli.com/cari/[KEYWORD]', id: 'bilbil', checked: false },
+      { name: 'Lazada', url: 'https://www.lazada.co.id/catalog/?q=[KEYWORD]', id: 'laz_id', checked: false }
+    ]
+  },
+  "PH": {
+    name: "菲律宾 (PH)",
+    platforms: [
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=PH', id: 'fm_ph', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=PH', id: 'et_tt', checked: true },
+      { name: '1-Shopee', url: 'https://shopee.ph/search?keyword=[KEYWORD]', id: 'shp_ph', checked: true, forceLowercase: true },
+      { name: '2-Lazada', url: 'https://www.lazada.com.ph/catalog/?q=[KEYWORD]', id: 'laz_ph', checked: true }
+    ]
+  },
+  "MY": {
+    name: "马来西亚 (MY)",
+    platforms: [
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=MY', id: 'fm_my', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=MY', id: 'et_tt', checked: true },
+      { name: '1-Shopee', url: 'https://shopee.com.my/search?keyword=[KEYWORD]', id: 'shp_my', checked: true, forceLowercase: true },
+      { name: 'Lazada', url: 'https://www.lazada.com.my/catalog/?q=[KEYWORD]', id: 'laz_my', checked: false },
+      { name: 'mudah', url: 'https://www.mudah.my/malaysia/all?q=[KEYWORD]', id: 'mudah', checked: false, forcePlusSpace: true }
+    ]
+  },
+  "VN": {
+    name: "越南 (VN)",
+    platforms: [
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=VN', id: 'fm_vn', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=VN', id: 'et_tt', checked: true },
+      { name: '1-Shopee', url: 'https://shopee.vn/search?keyword=[KEYWORD]', id: 'shp_vn', checked: true, forceLowercase: true },
+      { name: 'Lazada', url: 'https://www.lazada.vn/catalog/?q=[KEYWORD]', id: 'laz_vn', checked: false }
+    ]
+  },
+  "TH": {
+    name: "泰国 (TH)",
+    platforms: [
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=TH', id: 'fm_th', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=TH', id: 'et_tt', checked: true },
+      { name: '1-Shopee', url: 'https://shopee.co.th/search?keyword=[KEYWORD]', id: 'shp_th', checked: true, forceLowercase: true },
+      { name: '2-Lazada', url: 'https://www.lazada.co.th/catalog/?q=[KEYWORD]', id: 'laz_th', checked: true }
+    ]
+  },
+  "SG": {
+    name: "新加坡 (SG)",
+    platforms: [
+      { name: 'TT-FastMoss', url: 'https://www.fastmoss.com/zh/e-commerce/search?page=1&words=[KEYWORD]&region=SG', id: 'fm_sg', checked: true },
+      { name: 'TT-Echotik', url: 'https://echotik.live/products?page=1&keyword=[KEYWORD]&type=1&order=total_sale_nd_cnt&sort=desc&per_page=50&country=SG', id: 'et_tt', checked: true },
+      { name: '1-Shopee', url: 'https://shopee.sg/search?keyword=[KEYWORD]', id: 'shp_sg', checked: true, forceLowercase: true },
+      { name: 'Carousell', url: 'https://www.carousell.sg/search/[KEYWORD]', id: 'carousell', checked: false },
+      { name: 'Amazon', url: 'https://www.amazon.sg/s?k=[KEYWORD]&ref=nb_sb_noss', id: 'az_sg', checked: false },
+      { name: 'Lazada', url: 'https://www.lazada.sg/catalog/?q=[KEYWORD]', id: 'laz_sg', checked: false }
+    ]
+  }
+};
+
+// 插件平台 ID → HTML 平台类别 ID 的映射
+// 未出现在这里的插件平台（如 OLX、bilbil、mudah、Carousell）会被忽略，不纳入 HTML 爬取
+const PLUGIN_ID_TO_HTML_PID = {
+  // Mercado
+  ml_br: 'mercado', ml_mx: 'mercado',
+  // Amazon
+  az_br: 'amazon', az_mx: 'amazon', az_sg: 'amazon',
+  // Shopee
+  shp_br: 'shopee', shp_id: 'shopee', shp_ph: 'shopee', shp_my: 'shopee',
+  shp_vn: 'shopee', shp_th: 'shopee', shp_sg: 'shopee',
+  // AliExpress
+  'ali-br': 'aliex', ali_mx: 'aliex',
+  // Lazada
+  laz_id: 'lazada', laz_ph: 'lazada', laz_my: 'lazada',
+  laz_vn: 'lazada', laz_th: 'lazada', laz_sg: 'lazada',
+  // Tokopedia
+  toko: 'tokopedia',
+  // Temu
+  temu: 'temu',
+  // TikTok 数据源（FastMoss + EchoTik 合并在 tiktok 平台下）
+  fm_br: 'tiktok', fm_mx: 'tiktok', fm_id: 'tiktok', fm_ph: 'tiktok',
+  fm_my: 'tiktok', fm_vn: 'tiktok', fm_th: 'tiktok', fm_sg: 'tiktok',
+  et_tt: 'tiktok'
+  // 主动不纳入：olx-br, bilbil, mudah, carousell
+};
+
+// HTML 侧的平台基础元数据（颜色 / 字数限制等非 URL 数据）
+const PLAT_BASE = {
+  tiktok:    { name: 'TikTok Shop',   color: '#010101' },
+  shopee:    { name: 'Shopee',        color: '#ee4d2d', charLimits: { BR: 120, default: 180 } },
+  lazada:    { name: 'Lazada',        color: '#0f146d' },
+  tokopedia: { name: 'Tokopedia',     color: '#00aa5b' },
+  mercado:   { name: 'Mercado Libre', color: '#c8a000' },
+  amazon:    { name: 'Amazon',        color: '#ff9900' },
+  aliex:     { name: 'AliExpress',    color: '#e43226' },
+  temu:      { name: 'Temu',          color: '#f07232' }
+};
+
+// 把插件配置编译成 HTML 用的 PLAT_META
+// 结构: PLAT_META[pid].scrapeUrls[cc] = [{ url, lc, pps }, ...]
+// 每条 URL 携带自己的变换标记（lc = forceLowercase, pps = forcePlusSpace）
+// 严格模式：插件里没配的 (国家 × 平台) 组合，PLAT_META 里也没有，爬取时会自动跳过
+function buildPlatMetaFromPlugin() {
+  const meta = {};
+  Object.keys(PLAT_BASE).forEach(pid => {
+    meta[pid] = { ...PLAT_BASE[pid], scrapeUrls: {} };
+  });
+  Object.entries(PLUGIN_PLATFORM_CONFIG).forEach(([cc, country]) => {
+    country.platforms.forEach(p => {
+      const htmlPid = PLUGIN_ID_TO_HTML_PID[p.id];
+      if (!htmlPid || !meta[htmlPid]) return;
+      if (!meta[htmlPid].scrapeUrls[cc]) meta[htmlPid].scrapeUrls[cc] = [];
+      // 占位符 [KEYWORD] → [KW]（HTML 侧统一使用 [KW]）
+      const urlT = p.url.replace(/\[KEYWORD\]/g, '[KW]');
+      meta[htmlPid].scrapeUrls[cc].push({
+        url: urlT,
+        lc: !!p.forceLowercase,
+        pps: !!p.forcePlusSpace
+      });
+    });
+  });
+  return meta;
+}
+const PLAT_META = buildPlatMetaFromPlugin();
+
+const DEFAULT_PROMPTS = {
+  localize:`角色设定：你是专业的跨境电商产品本地化专家，专注于东南亚和拉美市场。
+核心任务：接收产品信息，提供该产品在{country}市场（{language}）最地道、搜索热度最高的本地化关键词，即消费者在Shopee/Lazada/TikTok/Mercado Libre/AliExpress等电商平台上实际搜索和使用的核心关键词。
+
+【硬性输出规则】
+✅ 输出 8-12 个核心关键词（必须落在这个区间，不要更多也不要更少）
+✅ 按搜索量 × 转化率综合排序，最核心的排前面
+✅ 去重：同义词、单复数、大小写变体只保留最常用的一个
+✅ 每个关键词必须包含"产品名词本身"（例如 rodilleras、almohadillas、yoga mat、tapete、tênis），消费者搜索时依赖这类名词定位品类
+✅ 使用{language}语言输出，用英文逗号分隔，单行输出
+
+【判断要求】
+✅ 首先判断该产品名称所指向的具体产品品类和商业意图
+✅ 一个品类有多种地道说法时，选出最高频的 1-2 个作为代表，不要把所有变体都塞进来
+
+❌ 拒绝生硬直译——若直译在本地无商业意义，必须替换为功能性或品类性的地道表达
+❌ 不输出品牌词，不输出中文，不输出编号或解释
+❌ 绝不输出"纯规格词"或"纯材料词"——这类词没有产品语义，买家不会用它们搜索商品：
+   · 规格/参数词（禁止单独出现）：material / materia / size / talla / tamaño / color / peso / weight / unidad / pack 等
+   · 材料词（禁止单独出现）：EVA / PVC / TPE / nylon / polyester / silicone / foam / espuma / cotton / algodón / rubber / borracha / plástico 等
+   · 正例 ✓：「rodilleras de EVA」「tapete de yoga PVC」（材料是形容修饰产品名词）
+   · 反例 ✗：「material EVA」「PVC foam」「size M」「color rojo」（只有规格/材料，没有产品名词）
+
+产品信息：{product_info}`,
+
+  // ── 方案A · User Message 模板 ──
+  userMsgA:`关键词参考：{keywords}
+产品信息（必须完整消化以下全部信息——规格/材质/颜色/尺寸/适用场景/卖点等）：{product_info}
+
+【若附带了产品图片】：请结合图片识别到的颜色/形态/材质特征，融入标题。
+【若未附带图片】：仅依据产品信息写标题。
+
+请用{language}生成恰好 {n} 条商品标题，每行一条，仅标题文本，不含编号、解释或格式符号。
+【硬性数量】：必须输出 {n} 条（不多不少），每条都必须符合平台字符上限且语义完整，不得截断。`,
+
+  // ── 方案B · System Prompt（竞品分析专家角色）──
+  analyze:`你是跨境电商竞品标题数据分析师。
+
+分析方法（内部执行，不在回复中输出分析过程）：
+· 统计竞品标题高频词组和单词（长词组优先，同义词合并）
+· 提炼核心关键词、产品属性词、场景词
+· 结合产品信息，融入高频词，规避与竞品雷同，生成差异化标题
+
+回复格式：只输出最终商品标题，每行一条，无编号、无分析说明、无解释。`,
+
+  // ── 方案B · User Message 模板 ──
+  userMsgB:`竞品标题（来自{platform} {country}市场）：
+{competitor_titles}
+
+产品信息（必须完整消化以下全部信息——规格/材质/颜色/尺寸/适用场景/卖点等）：{product_info}
+
+【若附带了产品图片】：请结合图片识别到的颜色/形态/材质特征，与产品信息互相印证后融入标题。
+【若未附带图片】：仅依据产品信息写标题。
+
+请用{language}生成恰好 {n} 条差异化商品标题，每行一条，仅标题文本，不含编号或解释。
+【硬性数量】：必须输出 {n} 条（不多不少），每条都必须符合平台字符上限且语义完整，不得截断。`,
+
+  platforms:{
+    tiktok:`你是TikTok Shop电商标题优化专家，专注于{country}市场{language}商品标题生成。
+
+平台算法理解（内化运用，不在回复中描述）：
+· 推荐流算法：基于用户行为（浏览/点赞/停留时长/互动）推送，标题需贴合目标受众兴趣标签
+· 搜索流算法：用户主动搜索时匹配关键词，核心品类词和属性词须前置
+· 购物流算法：综合销量/评分/转化率排名，标题需精准传递商品价值
+
+分析维度（内部完成）：提取产品类型、数量、品牌名、核心属性词、关键词、适用型号、补充关键词、适用场景/对象/用途，综合三种算法逻辑生成标题。
+
+标题规则：
+✅ 【硬性字数】255字符以内（含空格；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 核心关键词前置，兼顾TikTok算法推荐逻辑和用户搜索习惯
+❌ 禁用emoji、颜文字、表情、连接符（|、-、–）、特殊符号、无意义介词
+❌ 不胡编乱造、不生成不符合产品信息的内容
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+
+    shopee:`你是Shopee电商标题优化专家，专注于{country}市场{language}商品标题生成。
+
+平台算法理解（内化运用，不在回复中描述）：
+· 搜索算法：依据关键词相关性和商品质量分排名，标题须精准嵌入高频搜索词
+· 推荐算法：基于用户历史行为和商品标签推送，标题须覆盖品类词和属性词
+· 广告投放算法：依据关键词出价和点击率优化，标题相关性直接影响广告效果
+
+分析维度（内部完成）：提取产品类型、数量、品牌名、核心属性词、关键词、适用型号、适用场景，综合三种算法逻辑生成标题。
+
+标题规则：
+✅ 【硬性字数】{charLimit}字符以内（含空格；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 品类词+核心属性+规格+卖点结构，兼顾Shopee算法逻辑和用户搜索习惯
+❌ 禁用emoji、颜文字、表情、连接符（|、-、–、，、:、&）、特殊符号、无意义介词
+❌ 不胡编乱造、不生成不符合产品信息的内容
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+
+    lazada:`你是Lazada电商标题优化专家，专注于{country}市场{language}商品标题生成。
+
+平台算法理解（内化运用，不在回复中描述）：
+· 相关性排序：依据标题与搜索词的关键词匹配度排名，核心词须精准嵌入
+· 搜索优化：综合商品评分、销量、点击率等质量指标，标题须吸引点击
+· 个性化推荐：基于用户浏览偏好推送，标题须清晰传递品类和使用场景
+
+分析维度（内部完成）：提取产品类型、数量、品牌名、核心属性词、关键词、适用型号、适用场景，综合算法逻辑生成标题。
+
+标题规则：
+✅ 【硬性字数】255字符以内（含空格；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 品类词+核心属性+卖点结构，兼顾Lazada算法逻辑和用户搜索习惯
+❌ 禁用emoji、颜文字、表情、连接符（|、-、–、，、:、&）、特殊符号、无意义介词
+❌ 不胡编乱造、不生成不符合产品信息的内容
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+
+    tokopedia:`你是Tokopedia电商标题优化专家，专注于印尼市场Bahasa Indonesia商品标题生成。
+
+平台特性（内化运用）：Tokopedia搜索算法重视标题与关键词的精准匹配，品类词+核心属性+规格的结构化标题能最大化搜索曝光。
+
+分析维度（内部完成）：提取产品类型、品牌名、核心属性词、适用型号、适用场景，生成结构化标题。
+
+标题规则：
+✅ 【硬性字数】150字符以内（含空格；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 品类词+核心属性+规格结构，突出真实卖点
+❌ 禁用emoji、颜文字、连接符（|、-、–）、特殊符号、无意义介词
+❌ 不胡编乱造，不超出产品真实信息
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+
+    mercado:`你是Mercado Libre电商标题优化专家，专注于{country}市场{language}商品标题生成。
+
+平台算法理解（内化运用，不在回复中描述）：
+· 搜索排名算法：依据标题关键词相关性、销量、评分综合排名，核心词须出现在标题前段
+· 推荐算法：基于用户行为和商品类目标签推送，标题须准确描述品类和核心属性
+· 广告竞价算法：结合出价和标题相关性决定广告展示，标题清晰度直接影响CTR
+
+分析维度（内部完成）：提取产品类型、数量、品牌名、产品属性词、核心关键词、适用型号、补充关键词、适用场景/对象/用途，综合三种算法逻辑生成标题。
+
+标题规则：
+✅ 【硬性字数】50字符以内（含空格；极度精简，只保留最核心信息；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 品类+核心属性结构，核心词前置，兼顾Mercado Libre算法逻辑
+❌ 禁用emoji、颜文字、表情、连接符（|、-、–）、特殊符号、无意义介词
+❌ 不胡编乱造、不生成不符合产品信息的内容
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+
+    amazon:`你是Amazon电商标题优化专家，专注于{country}市场{language}商品标题生成。
+
+平台算法理解（内化运用）：Amazon A9/A10算法根据关键词相关性、转化率、销售速度综合排名。标题是关键词匹配的首要字段，结构化标题能同时提升搜索排名和点击转化。
+
+分析维度（内部完成）：提取产品类型、品牌名、核心特征、数量规格、关键卖点，按照结构化要求生成标题。
+
+标题规则：
+✅ 【硬性字数】200字符以内（含空格；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 品牌（若有）+品类+核心特征+数量规格+关键卖点结构
+❌ 禁用emoji、颜文字、特殊符号
+❌ 不胡编乱造，不超出产品真实信息
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+
+    aliex:`你是AliExpress电商标题优化专家，专注于{country}市场{language}商品标题生成。
+
+平台算法理解（内化运用，不在回复中描述）：
+· 搜索与排序算法：依据标题与搜索词匹配度、商品综合评分排名，关键词密度和相关性至关重要
+· 推荐算法：基于用户画像和行为数据推送，标题须覆盖多维属性词提升触达率
+
+分析维度（内部完成）：提取产品类型、数量、品牌名、产品属性词、核心关键词、适用型号、适用场景，综合两种算法逻辑生成关键词丰富的标题。
+
+标题规则：
+✅ 【硬性字数】218字符以内（含空格；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 品类词+核心属性+规格+使用场景，兼顾AliExpress算法逻辑和用户搜索习惯
+❌ 禁用emoji、颜文字、表情、连接符（|、-、–、，、:、&）、特殊符号、无意义介词
+❌ 不胡编乱造、不生成不符合产品信息的内容
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+
+    temu:`你是Temu电商标题优化专家，专注于{country}市场{language}商品标题生成。
+
+平台特性（内化运用）：Temu依赖关键词相关性和用户行为数据进行商品排名和推荐，简洁直接的标题能提升点击率和转化。
+
+分析维度（内部完成）：提取产品类型、核心卖点、规格属性，生成精简标题。
+
+标题规则：
+✅ 【硬性字数】100字符以内（含空格；简洁直接；必须是完整通顺的短语，不得截断、不得在逗号/单词中途结束；宁可少写也不要超）
+✅ 品类+核心卖点+属性结构
+❌ 禁用emoji、颜文字、特殊符号
+❌ 不胡编乱造，不超出产品真实信息
+
+回复格式：只输出商品标题，每行一条，无编号、无解释。`,
+  }
+};
+
+// ════════════════════════════════════════════════════════
+// 状态
+// ════════════════════════════════════════════════════════
+const LS_KEY = 'title_tool_v3';
+const API_KEY_LS = 'title_tool_apikey';   // 独立槽：API key 单独存，避免被其他 save 误清
+const MANUAL_TITLES_LS = 'title_tool_manual_titles'; // 独立槽：手动粘贴的竞品标题也独立存（比较大，也值得独立）
+const TEMP_LS = 'title_tool_temps';        // 独立槽：三档 temperature 滑竿
+const TEMP_DEFAULTS = { localize: 0.2, analyze: 0.4, generate: 0.6 };
+let userTemps = { ...TEMP_DEFAULTS };      // 实时值（被 callGemini 读取）
+let activeRegion = 'latam';
+let selectedCountries = new Set(['BR']);
+let platSel = {};       // { cc: { pid: n } }  n=0 → 未选
+let langSel = {};       // { cc: lang_code }  defaults to langs[0].code
+let prodImg = null;
+let currentResults = [];
+let prompts = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+let savedLoaded = false;
+let debugTrace = [];
+
+// ════════════════════════════════════════════════════════
+// 工具函数
+// ════════════════════════════════════════════════════════
+function getCountryData(cc) {
+  for (const rk of Object.keys(REGION_CONFIG)) {
+    if (REGION_CONFIG[rk].countries[cc]) return REGION_CONFIG[rk].countries[cc];
+  }
+  return null;
+}
+function getLang(cc) {
+  const cv = getCountryData(cc);
+  if (!cv || !cv.langs || cv.langs.length === 0) return { code: 'en', label: 'English' };
+  const sel = langSel[cc];
+  return cv.langs.find(l => l.code === sel) || cv.langs[0];
+}
+function setLang(cc, code) {
+  langSel[cc] = code;
+  renderCountryCards();
+  saveSettings();
+}
+function getDefaultPlatSel(cc) {
+  const cv = getCountryData(cc);
+  if (!cv) return {};
+  const r = {};
+  Object.entries(cv.plats).forEach(([pid, on]) => { r[pid] = on ? 3 : 0; });
+  return r;
+}
+function getAllCombos(kwOrMap) {
+  // kwOrMap: string（全局kw）或 {cc: encodedKw}（按国家本地化kw）
+  const combos = [];
+  const isKwMap = kwOrMap && typeof kwOrMap === 'object';
+  selectedCountries.forEach(cc => {
+    const cv = getCountryData(cc);
+    if (!cv) return;
+    const lang = getLang(cc);
+    const ccP = platSel[cc] || {};
+    const kwRaw = isKwMap ? (kwOrMap[cc] || '') : (kwOrMap || '');
+    // 支持单个关键词(string)或多个关键词(array)
+    const kwArr = Array.isArray(kwRaw) ? kwRaw.filter(Boolean) : (kwRaw ? [kwRaw] : []);
+    // Iterate REGION_CONFIG platforms (source of truth), not stale platSel keys
+    Object.keys(cv.plats).forEach(pid => {
+      const n = ccP[pid] !== undefined ? ccP[pid] : (cv.plats[pid] ? 3 : 0);
+      if (n > 0 && PLAT_META[pid]) {
+        const pm = PLAT_META[pid];
+        const urls = pm.scrapeUrls || {};
+        // 严格模式：插件里没配的 (国家 × 平台) 组合 → 无 URL，直接跳过（无 GLOBAL 兜底）
+        const rawArr = urls[cc] || [];
+        // 多关键词 × 多URL模板 = 全组合
+        const scrapeUrls = [];
+        if (isKwMap && kwArr.length === 0) {
+          // 无关键词，跳过
+        } else if (rawArr.length === 0) {
+          // 此平台在此国插件未配置，严格模式下跳过
+        } else {
+          // FastMoss 自动翻页：对 fastmoss.com 的 URL 生成 page=1..N 的多份
+          // 兜底要和 UI 默认值 (10) 保持一致 —— 否则字段异常时会静默降级到单页
+          const pagesSetting = parseInt(document.getElementById('scrapePages')?.value) || 10;
+          kwArr.forEach(rawKw => rawArr.forEach(item => {
+            // rawKw 是未编码的原始关键词。按插件规则做变换：
+            // 1) forceLowercase → 先转小写（Shopee 等需要）
+            // 2) encodeURIComponent → URL 编码
+            // 3) forcePlusSpace → 空格编码 %20 改成 + （Tokopedia、mudah 等需要）
+            let kwTransformed = item.lc ? rawKw.toLowerCase() : rawKw;
+            let encoded = encodeURIComponent(kwTransformed);
+            if (item.pps) encoded = encoded.replace(/%20/g, '+');
+            const filled = item.url.replace(/\[KW\]/g, encoded);
+            if (pagesSetting > 1 && /fastmoss\.com/i.test(filled) && /[?&]page=\d+/i.test(filled)) {
+              for (let p = 1; p <= pagesSetting; p++) {
+                scrapeUrls.push(filled.replace(/([?&]page=)\d+/i, `$1${p}`));
+              }
+            } else {
+              scrapeUrls.push(filled);
+            }
+          }));
+        }
+        const cl = pm.charLimits ? (pm.charLimits[cc] || pm.charLimits.default || '') : '';
+        combos.push({
+          key: cc+'_'+pid,
+          cc, ccName: cv.name, pid, platName: pm.name,
+          lang: lang.code, langLabel: lang.label, n,
+          scrapeUrls,
+          platColor: pm.color,
+          charLimit: cl
+        });
+      }
+    });
+  });
+  return combos;
+}
+function normalizeCompareText(text) {
+  return (text || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+function addDebugTrace(title, payload) {
+  const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  debugTrace.push({ time, title, payload });
+  renderDebugTrace();
+}
+// 平台特定提示：哪些平台有已知问题
+function getPlatformWarning(pid) {
+  const warnings = {
+    fastmoss: '⚠️ 第三方数据库，每页 10 条（默认翻 10 页=100 条）；关键词须与品类完全匹配，不支持语义搜索',
+    echotik:  '⚠️ 首次会弹套餐购买弹窗，需插件点击关闭；改国家后需重点搜索',
+    mercado:  '⚠️ 爬取需登录（首次打开请手动登录一次）',
+    tiktok:   '💡 TikTok Shop 结果数少，建议多词搜索合并',
+  };
+  return warnings[pid] || '';
+}
+function showSearchLinks(combos) {
+  const box = document.getElementById('searchLinksBox');
+  const list = document.getElementById('searchLinksList');
+  if (!box || !list) return;
+  const allUrls = [];
+  combos.forEach(c => {
+    (c.scrapeUrls || []).forEach(url => {
+      allUrls.push({ ccName: c.ccName, platName: c.platName, platColor: c.platColor, url, pid: c.pid });
+    });
+  });
+  if (allUrls.length === 0) { box.classList.add('hid'); return; }
+  list.innerHTML = allUrls.map((item, i) => {
+    const decoded = decodeURIComponent(item.url);
+    const short = decoded.length > 90 ? decoded.slice(0, 90) + '...' : decoded;
+    const warn = getPlatformWarning(item.pid);
+    return `<div style="padding:4px 0;border-bottom:1px dashed var(--bdr);display:flex;align-items:center;gap:8px;font-size:11px;flex-wrap:wrap">
+      <span style="white-space:nowrap"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${item.platColor||'#999'};margin-right:3px"></span>${escHtml(item.ccName)} ${escHtml(item.platName)}</span>
+      <a href="${escHtml(item.url)}" target="_blank" rel="noopener" style="color:var(--blue);font-family:var(--fm);font-size:10px;word-break:break-all;flex:1;min-width:200px" title="${escHtml(decoded)}">${escHtml(short)}</a>
+      <button class="btn-cp" onclick="window.open('${item.url.replace(/'/g,"\\'")}','_blank')">打开</button>
+      ${warn ? `<div style="flex-basis:100%;font-size:10px;color:#b45309;padding-left:16px">${escHtml(warn)}</div>` : ''}
+    </div>`;
+  }).join('');
+  list.innerHTML += `<div style="text-align:center;padding:6px;font-size:10px;color:var(--t3)">共 ${allUrls.length} 个搜索页 · 点击链接或"打开"按钮在新标签页查看</div>`;
+  box.classList.remove('hid');
+}
+function openAllSearchUrls() {
+  const btns = document.querySelectorAll('#searchLinksList a[href]');
+  if (btns.length === 0) return;
+  let i = 0;
+  const batchSize = btns.length;
+  (function next() {
+    if (i < batchSize) {
+      window.open(btns[i].href, '_blank');
+      i++;
+      setTimeout(next, 350);
+    }
+  })();
+}
+function renderDebugTrace() {
+  const el = document.getElementById('debugTrace');
+  if (!el) return;
+  if (debugTrace.length === 0) {
+    el.textContent = '等待开始...';
+    return;
+  }
+  // 根据标题前缀识别步骤类别，上不同颜色
+  function categoryStyle(title) {
+    if (/📤/.test(title)) return 'border-left:3px solid #3b82f6;background:#eff6ff'; // 发送 - 蓝
+    if (/📥/.test(title)) return 'border-left:3px solid #7c3aed;background:#f3e8ff'; // 接收 - 紫
+    if (/✅|✨/.test(title)) return 'border-left:3px solid #10b981;background:#ecfdf5'; // 成功 - 绿
+    if (/❌/.test(title)) return 'border-left:3px solid #ef4444;background:#fef2f2'; // 错误 - 红
+    if (/⏭️|♻️/.test(title)) return 'border-left:3px solid #f59e0b;background:#fffbeb'; // 跳过/回退 - 橙
+    if (/🕷️|📊/.test(title)) return 'border-left:3px solid #06b6d4;background:#ecfeff'; // 爬取 - 青
+    if (/🧩/.test(title)) return 'border-left:3px solid #7c3aed;background:#faf5ff'; // 汇总 - 紫
+    return 'border-left:3px solid #94a3b8;background:#f8fafc';
+  }
+  el.innerHTML = debugTrace.map((item, idx) => {
+    const payload = typeof item.payload === 'string' ? item.payload : JSON.stringify(item.payload, null, 2);
+    const style = categoryStyle(item.title);
+    const isLong = payload.length > 400;
+    const preview = isLong ? payload.slice(0, 400) + '...' : payload;
+    return `
+    <div class="dbg-item" style="${style};padding:6px 10px;margin-bottom:4px;border-radius:4px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+        <div><span class="dbg-k">[${escHtml(item.time)}]</span>${escHtml(item.title)}</div>
+        ${isLong ? `<button class="btn-cp" onclick="toggleDbgItem(${idx})" id="dbgToggle_${idx}" style="padding:2px 8px">展开全文</button>` : ''}
+      </div>
+      <div class="dbg-v" id="dbgContent_${idx}" data-full="${escHtml(payload)}" data-preview="${escHtml(preview)}">${escHtml(preview)}</div>
+    </div>
+  `;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+function toggleDbgItem(idx) {
+  const content = document.getElementById('dbgContent_'+idx);
+  const btn = document.getElementById('dbgToggle_'+idx);
+  if (!content || !btn) return;
+  if (btn.textContent === '展开全文') {
+    content.textContent = content.dataset.full;
+    btn.textContent = '折叠';
+  } else {
+    content.textContent = content.dataset.preview;
+    btn.textContent = '展开全文';
+  }
+}
+function expandAllDbgItems() {
+  document.querySelectorAll('[id^="dbgContent_"]').forEach(el => {
+    if (el.dataset.full) el.textContent = el.dataset.full;
+  });
+  document.querySelectorAll('[id^="dbgToggle_"]').forEach(btn => {
+    btn.textContent = '折叠';
+  });
+}
+function clearDebugTrace() {
+  debugTrace = [];
+  renderDebugTrace();
+  const slBox = document.getElementById('searchLinksBox');
+  if (slBox) slBox.classList.add('hid');
+  const kcBox = document.getElementById('kwConfirmBox');
+  if (kcBox) kcBox.classList.add('hid');
+}
+
+// ════════════════════════════════════════════════════════
+// 暂停检查模式（本地化后暂停，让用户核对关键词/手动查搜索页）
+// ════════════════════════════════════════════════════════
+let _pauseResolver = null;
+function continueAfterPause(action) {
+  const box = document.getElementById('kwConfirmBox');
+  if (box) box.classList.add('hid');
+  if (_pauseResolver) {
+    const fn = _pauseResolver;
+    _pauseResolver = null;
+    fn(action || 'continue');
+  }
+}
+function waitForUserReview() {
+  return new Promise(resolve => { _pauseResolver = resolve; });
+}
+// === 关键词打分：帮用户判断哪个词该选 ===
+// 设计原则（按重要性排序）：
+//   1. 与产品信息词根契合度（权重最高，0-60分）——是否真讲这个产品
+//   2. 核心短词优先（1-2词/≤15字符加分）——实际买家就搜短词
+//   3. 语言合法性（非中文市场含中文 = 一票否决）
+//   4. 长词组反而不加分（搜索量低，结果少）
+//   5. 纯规格/材料词（EVA、material、size、color 等）不是搜索意图词 → 重罚
+// === 规格词黑名单（材料/参数类 · 买家不会拿这些当搜索主词）===
+const SPEC_WORDS_RE = /^(material|materia|size|talla|tamaño|tamanho|tama|color|colour|cor|weight|peso|brand|marca|model|modelo|type|tipo|producto|produto|articulo|artigo|item|unit|unidad|unidade|pack|paquete|pacote|includes|incluye|inclui)$/i;
+const MATERIAL_RE = /^(eva|pvc|tpe|tpu|pu|pp|pe|abs|nbr|nylon|poli[eéê]ster|polyester|silicone|silicona|silicon|foam|espuma|rubber|borracha|goma|caucho|plastic|pl[aá]stico|cotton|algod[oó]n|algodao|algod|leather|cuero|couro|metal|acero|hierro|aluminium|aluminio|alum[ií]nio|linen|linho|wool|lana|fiber|fibra|memory)$/i;
+function scoreKeyword(kw, productInfo, cc) {
+  const s = (kw || '').trim();
+  if (!s) return { score: 0, tags: ['空'] };
+  const tags = [];
+  let score = 0;
+  const len = s.length;
+  const wordCount = s.split(/\s+/).filter(Boolean).length;
+
+  // ── 提取 token，并分离"意图词"和"规格/材料词"──
+  const allTokens = s.toLowerCase().split(/[^a-z0-9\u4e00-\u9fa5ñáéíóúãâêôçü]+/i).filter(t => t.length >= 2);
+  const specTokens = allTokens.filter(t => SPEC_WORDS_RE.test(t) || MATERIAL_RE.test(t));
+  const contentTokens = allTokens.filter(t => !SPEC_WORDS_RE.test(t) && !MATERIAL_RE.test(t) && t.length >= 3);
+
+  // 纯规格/材料词（没有任何产品名词）→ 不是搜索意图词，重罚
+  if (allTokens.length > 0 && contentTokens.length === 0) {
+    tags.push('⚠️纯规格/材料词·非搜索意图');
+    score -= 60;
+  } else if (specTokens.length > 0 && contentTokens.length > 0) {
+    // 混合（如"zapatos de cuero"：内容词+材料词）→ 标记，但不罚
+    tags.push(`含规格词×${specTokens.length}`);
+  }
+
+  // ── 维度 1：与产品信息的契合度（最重要，0-60分）──
+  // 关键改动：只用 contentTokens 计算契合度，规格/材料词不参与匹配
+  // 否则"material EVA"会因为 product info 里有"Material: EVA"字面而虚高
+  let matchBonus = 0;
+  if (productInfo && contentTokens.length > 0) {
+    const pInfo = productInfo.toLowerCase();
+    let hits = 0;
+    contentTokens.forEach(t => { if (pInfo.includes(t)) hits++; });
+    const ratio = hits / contentTokens.length;
+    matchBonus = Math.round(ratio * 60); // 0-60
+    if (ratio >= 0.8)      tags.push(`🎯贴合产品(${hits}/${contentTokens.length})`);
+    else if (ratio >= 0.5) tags.push(`✓部分贴合(${hits}/${contentTokens.length})`);
+    else if (ratio >= 0.2) tags.push(`△弱贴合(${hits}/${contentTokens.length})`);
+    else                   tags.push(`✗不贴合(${hits}/${contentTokens.length})`);
+  } else if (productInfo && contentTokens.length === 0) {
+    tags.push('无内容词可匹配');
+  }
+  score += matchBonus;
+
+  // ── 维度 2：核心短词加分（用户实际搜索习惯：短词更好）──
+  let lenBonus = 0;
+  if (wordCount === 1 && len >= 3 && len <= 15) { lenBonus = 25; tags.push('核心单词'); }
+  else if (wordCount === 2 && len <= 20)        { lenBonus = 20; tags.push('双词组合'); }
+  else if (wordCount === 3 && len <= 28)        { lenBonus = 10; tags.push('三词'); }
+  else if (wordCount >= 4)                       { lenBonus = 0;  tags.push(`${wordCount}词·过具体`); }
+  if (len < 3)        { lenBonus -= 25; tags.push('过短<3字符'); }
+  else if (len > 40)  { lenBonus -= 15; tags.push('过长>40字符'); }
+  score += lenBonus;
+
+  // ── 维度 3：硬性排除（语言/符号/停用词）──
+  if (cc && cc !== 'CN' && containsChinese(s)) { score -= 80; tags.push('⚠️含中文'); }
+  if (/[@#$%^&*=+<>{}[\]\\|`~]/.test(s))       { score -= 15; tags.push('特殊符'); }
+  if (/[！？。，；：、]/.test(s))               { score -= 10; tags.push('标点'); }
+  if (/^(the|los|las|el|la|de|para|con|y|o|in|on|at|untuk|dan|atau|cho|với|dengan)$/i.test(s)) {
+    score -= 50; tags.push('停用词');
+  }
+  if (/^(my|mi|your|tu)\s/i.test(s)) { score -= 10; tags.push('人称开头'); }
+
+  return {
+    score: Math.max(0, Math.min(100, Math.round(score))),
+    tags,
+    matchBonus, lenBonus, wordCount, len
+  };
+}
+function scoreBadge(score) {
+  let color, label;
+  if (score >= 70) { color = '#10b981'; label = '强推'; }
+  else if (score >= 50) { color = '#3b82f6'; label = '可用'; }
+  else if (score >= 30) { color = '#f59e0b'; label = '一般'; }
+  else { color = '#ef4444'; label = '慎用'; }
+  return `<span style="display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;background:${color};color:#fff;font-weight:700" title="契合度是最主要依据，短核心词加分，长词组不加分">${score} ${label}</span>`;
+}
+// 把每个国家的本地化关键词渲染成可勾选 chip 列表
+function showKeywordCheckList(localKws, localKwMap) {
+  const box = document.getElementById('kwCheckList');
+  if (!box) return;
+  const productInfo = (document.getElementById('iInfo')?.value || '').trim();
+  const ccs = Object.keys(localKwMap);
+  if (ccs.length === 0) { box.innerHTML = '<div style="color:#ef4444">⚠️ 没有可用的本地化关键词</div>'; return; }
+  box.innerHTML = ccs.map(cc => {
+    const ccName = getCountryData(cc)?.name || cc;
+    const allList = (localKws[cc] || '').split(',').map(s => s.trim()).filter(Boolean);
+    // 默认勾选的词 = 已经写入 localKwMap 的（即会被拿去搜索的）
+    // localKwMap 现在存的是原始关键词（不编码），直接用 Set 比对即可
+    const selectedDecoded = new Set(localKwMap[cc] || []);
+    if (allList.length === 0) {
+      return `<div style="padding:8px 0;border-bottom:1px dashed var(--bdr)">
+        <div style="font-weight:600;color:#ef4444;font-size:12px">⚠️ ${escHtml(ccName)} · 本地化失败，无关键词</div>
+      </div>`;
+    }
+    // 打分并按分值排序，仅排序展示顺序（原顺序也记录）
+    const scored = allList.map((kw, i) => ({ kw, origIdx: i, ...scoreKeyword(kw, productInfo, cc) }));
+    scored.sort((a, b) => b.score - a.score);
+    const chips = scored.map(({ kw, score, tags }) => {
+      const checked = selectedDecoded.has(kw) ? 'checked' : '';
+      // 低分的默认高亮成红底提示
+      const lowScore = score < 30;
+      return `<label class="kw-chip" title="评分:${score} · ${tags.join(', ')}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;margin:2px 3px 2px 0;border:1px solid ${lowScore ? '#fecaca' : 'var(--bdr)'};border-radius:12px;font-size:11px;cursor:pointer;background:${checked ? '#dbeafe' : (lowScore ? '#fef2f2' : '#fff')};color:${checked ? '#1e40af' : (lowScore ? '#991b1b' : '#334155')}">
+        <input type="checkbox" ${checked} data-cc="${escHtml(cc)}" data-kw="${escHtml(kw)}" data-score="${score}" onchange="toggleKeywordChip(this)" style="margin:0">
+        <span>${escHtml(kw)}</span>
+        ${scoreBadge(score)}
+      </label>`;
+    }).join('');
+    const recomCount = scored.filter(x => x.score >= 70).length;
+    const usableCount = scored.filter(x => x.score >= 50).length;
+    return `<div style="padding:8px 0;border-bottom:1px dashed var(--bdr)">
+      <div style="font-weight:600;font-size:12px;color:var(--blue-d);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>🌏 ${escHtml(ccName)} <span style="font-weight:400;color:var(--t3);font-size:10px">（已按评分排序 · 默认勾选 ${selectedDecoded.size}/${allList.length}）</span></span>
+        <span style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-x" onclick="selectKwsByScore('${escHtml(cc)}', 70)" style="padding:2px 8px;font-size:10px">只选推荐(≥70分) · ${recomCount}个</button>
+          <button class="btn btn-sm btn-x" onclick="selectKwsByScore('${escHtml(cc)}', 50)" style="padding:2px 8px;font-size:10px">选可用(≥50分) · ${usableCount}个</button>
+          <button class="btn btn-sm btn-x" onclick="selectKwsByScore('${escHtml(cc)}', 0)" style="padding:2px 8px;font-size:10px">全选</button>
+          <button class="btn btn-sm btn-x" onclick="selectKwsByScore('${escHtml(cc)}', 999)" style="padding:2px 8px;font-size:10px">全不选</button>
+        </span>
+      </div>
+      <div>${chips}</div>
+    </div>`;
+  }).join('');
+  box.innerHTML += `<div style="padding:10px 0 2px;font-size:11px;color:var(--t3);line-height:1.6">
+    <div><strong style="color:var(--blue-d)">💡 打分逻辑（契合度为主，短词优先）：</strong></div>
+    <div>· <strong>维度1</strong>（0-60分）与产品信息词根契合度——核心判断该词是不是真在讲这个产品</div>
+    <div>· <strong>维度2</strong>（0-25分）短核心词加分：单词/双词 + 长度≤15字符最高；4词以上不加分</div>
+    <div>· <strong>维度3</strong>（负分）非目标语种(含中文-80) / 停用词(-50) / 符号(-15)</div>
+    <div style="margin-top:4px"><strong>强推(≥70分)</strong>：契合产品 + 核心短词 → 本地买家高概率搜这种词</div>
+    <div><strong>可用(50-69分)</strong>：要么稍长、要么契合度不够高，能搜到但结果数可能一般</div>
+    <div><strong>一般/慎用(&lt;50分)</strong>：和产品关系弱、或冗长、或夹杂问题 → 不建议拿去搜索</div>
+    <div style="margin-top:4px;color:var(--blue-d)">👉 正常操作建议：点【只选推荐(≥70)】→ 手动打开 1-2 个看搜索结果对不对 → 再批量爬</div>
+  </div>`;
+}
+function selectKwsByScore(cc, minScore) {
+  document.querySelectorAll(`#kwCheckList input[type="checkbox"][data-cc="${cc}"]`).forEach(cb => {
+    const sc = parseInt(cb.dataset.score) || 0;
+    const shouldCheck = (minScore === 999) ? false : (sc >= minScore);
+    if (cb.checked !== shouldCheck) { cb.checked = shouldCheck; toggleKeywordChip(cb); }
+  });
+}
+function toggleKeywordChip(cb) {
+  const label = cb.closest('.kw-chip');
+  if (!label) return;
+  if (cb.checked) {
+    label.style.background = '#dbeafe';
+    label.style.color = '#1e40af';
+  } else {
+    label.style.background = '#fff';
+    label.style.color = '#334155';
+  }
+}
+// 收集用户勾选的关键词（按国家分组，返回 { cc: [rawKw, ...] }）
+// 注意：存原始关键词，不做编码。编码在 getAllCombos 的 URL 填充点统一完成。
+function getSelectedKeywordsByCC() {
+  const result = {};
+  document.querySelectorAll('#kwCheckList input[type="checkbox"][data-cc]').forEach(cb => {
+    const cc = cb.dataset.cc;
+    const kw = cb.dataset.kw;
+    if (!cc || !kw) return;
+    if (!result[cc]) result[cc] = [];
+    if (cb.checked) result[cc].push(kw);
+  });
+  return result;
+}
+function sanitizeLocalizedKeywords(raw, targetCC) {
+  const lines = (raw || '')
+    .split(/[\n,;|]/)
+    .map(s => s.trim().replace(/^[-*#\d\.\)\(、\s]+/, '').trim())
+    .filter(Boolean);
+  const badLead = /^(好的|当然|下面|以下|作为|根据|基于|我已|我已经|我会|我将|请|为你|为您|您|你的|您的|产品信息|分析|总结|说明|Here|Sure|Based on|I have|I've|Below|Product information)/i;
+  const rejectChinese = targetCC && targetCC !== 'CN';
+  const out = [];
+  const seen = new Set();
+  lines.forEach(item => {
+    if (item.length < 2 || item.length > 50) return;
+    if (badLead.test(item)) return;
+    if (/[。！？!?]/.test(item)) return;
+    if (/[:：]/.test(item) && item.length > 18) return;
+    // 非中国市场：丢弃含中文的词条
+    if (rejectChinese && containsChinese(item)) return;
+    const norm = normalizeCompareText(item);
+    if (seen.has(norm)) return;
+    seen.add(norm);
+    out.push(item);
+  });
+  return out;
+}
+function extractSearchTokens(text) {
+  return Array.from(new Set(
+    normalizeCompareText(text)
+      .split(/[^a-z0-9\u4e00-\u9fa5]+/)
+      .map(s => s.trim())
+      .filter(s => s.length >= 3 && !/^\d+$/.test(s))
+  ));
+}
+function validateCompetitorTitles(titles, keywords) {
+  const cleaned = (titles || []).map(t => (t || '').trim()).filter(t => t.length >= 6);
+  if (cleaned.length < 2) return { ok: false, reason: '竞品标题数量过少，已跳过B方案' };
+
+  const joined = normalizeCompareText(cleaned.join(' '));
+  if (/(all categories|customer service|buyer protection|help center|sign in|wishlist|cart|mi cuenta|iniciar sesion|carrito|favoritos|categorias|ofertas|servicio al cliente|atendimento|entrar|minha conta|carrinho)/i.test(joined)) {
+    return { ok: false, reason: '抓取结果疑似站点导航或页面噪音，已跳过B方案' };
+  }
+
+  const tokens = extractSearchTokens(keywords).slice(0, 8);
+  if (tokens.length > 0) {
+    const hitCount = tokens.filter(t => joined.includes(t)).length;
+    if (hitCount === 0) {
+      return { ok: false, reason: '抓取结果与本地化搜索词不相关，已跳过B方案' };
+    }
+  }
+  return { ok: true, reason: '' };
+}
+function containsChinese(text) {
+  return /[\u4e00-\u9fa5]/.test(text || '');
+}
+
+// ════════════════════════════════════════════════════════
+// UI 渲染
+// ════════════════════════════════════════════════════════
+function renderRegionTabs() {
+  const el = document.getElementById('regionTabs');
+  el.innerHTML = '';
+  Object.entries(REGION_CONFIG).forEach(([rk, rv]) => {
+    const btn = document.createElement('button');
+    btn.className = 'region-tab' + (activeRegion===rk ? ' active' : '');
+    btn.textContent = rv.label;
+    btn.onclick = () => { activeRegion=rk; renderRegionTabs(); renderCountryChips(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderCountryChips() {
+  const el = document.getElementById('countryChips');
+  el.innerHTML = '';
+  const region = REGION_CONFIG[activeRegion];
+  if (!region) return;
+  Object.entries(region.countries).forEach(([cc, cv]) => {
+    const chip = document.createElement('div');
+    chip.className = 'country-chip' + (selectedCountries.has(cc) ? ' sel' : '');
+    chip.textContent = cv.name;
+    chip.onclick = () => toggleCountry(cc);
+    el.appendChild(chip);
+  });
+}
+
+function renderCountryCards() {
+  const el = document.getElementById('countryCards');
+  el.innerHTML = '';
+  if (selectedCountries.size === 0) {
+    el.innerHTML = '<div class="cc-empty">👆 请在上方选择目标国家</div>';
+    return;
+  }
+  selectedCountries.forEach(cc => {
+    const cv = getCountryData(cc);
+    if (!cv) return;
+    if (!platSel[cc]) platSel[cc] = getDefaultPlatSel(cc);
+
+    const card = document.createElement('div');
+    card.className = 'cc-card';
+
+    let platsHtml = '';
+    Object.keys(cv.plats).forEach(pid => {
+      const pm = PLAT_META[pid];
+      if (!pm) return;
+      const n = platSel[cc][pid] !== undefined ? platSel[cc][pid] : (cv.plats[pid] ? 3 : 0);
+      const isOn = n > 0;
+      platsHtml += `
+        <div class="plat-toggle ${isOn?'on':''}" onclick="togglePlatToggle('${cc}','${pid}')">
+          <span class="dot" style="background:${pm.color}"></span>
+          <span>${pm.name}</span>
+          <span class="plat-n-wrap" onclick="event.stopPropagation()">
+            ×<input class="plat-n-inp" type="number" value="${isOn?n:3}" min="1" max="10"
+              onchange="setPlatN('${cc}','${pid}',parseInt(this.value)||1)"
+              onclick="event.stopPropagation()">
+          </span>
+        </div>`;
+    });
+
+    const selLang = getLang(cc);
+    const langBtns = (cv.langs || []).map(l =>
+      `<button class="lang-opt${selLang.code===l.code?' active':''}"
+        onclick="setLang('${cc}','${l.code}');event.stopPropagation()">${l.label}</button>`
+    ).join('');
+
+    card.innerHTML = `
+      <div class="cc-hd">
+        <span class="cc-name">${cv.name}</span>
+        <div class="lang-sel">${langBtns}</div>
+      </div>
+      <div class="plat-toggles">${platsHtml}</div>`;
+    el.appendChild(card);
+  });
+}
+
+function toggleCountry(cc) {
+  if (selectedCountries.has(cc)) {
+    selectedCountries.delete(cc);
+  } else {
+    selectedCountries.add(cc);
+    if (!platSel[cc]) platSel[cc] = getDefaultPlatSel(cc);
+  }
+  renderCountryChips();
+  renderCountryCards();
+  saveSettings();
+}
+
+function togglePlatToggle(cc, pid) {
+  if (!platSel[cc]) platSel[cc] = getDefaultPlatSel(cc);
+  const cur = platSel[cc][pid] || 0;
+  platSel[cc][pid] = cur > 0 ? 0 : 3;
+  renderCountryCards();
+  saveSettings();
+}
+
+function setPlatN(cc, pid, n) {
+  if (!platSel[cc]) platSel[cc] = getDefaultPlatSel(cc);
+  platSel[cc][pid] = n;
+  saveSettings();
+}
+
+function togglePlan(m, event) {
+  const cb = document.getElementById('use'+m);
+  cb.checked = !cb.checked;
+  updatePlanUI();
+  saveSettings();
+}
+
+function updatePlanUI() {
+  const ua = document.getElementById('useA').checked;
+  const ub = document.getElementById('useB').checked;
+  document.getElementById('planBlockA').className = 'plan-block' + (ua ? ' on-a' : '');
+  document.getElementById('planBlockB').className = 'plan-block' + (ub ? ' on-b' : '');
+  document.getElementById('planBodyB').style.display = ub ? '' : 'none';
+}
+
+function renderPlatPromptList() {
+  const list = document.getElementById('platPromptList');
+  list.innerHTML = '';
+  Object.entries(PLAT_META).forEach(([pid, pm]) => {
+    const val = (prompts.platforms && prompts.platforms[pid]) || DEFAULT_PROMPTS.platforms[pid] || '';
+    const row = document.createElement('div');
+    row.className = 'pt-row';
+    row.innerHTML = `
+      <div class="pt-lbl" style="color:${pm.color}">${pm.name}</div>
+      <textarea class="pt-area" id="pt_${pid}" rows="4" oninput="saveSettings()">${escHtml(val)}</textarea>`;
+    list.appendChild(row);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// 设置 存/读
+// ════════════════════════════════════════════════════════
+function saveSettings() {
+  if (window._loadingSettings) return;
+  try {
+    const platPrompts = {};
+    Object.keys(PLAT_META).forEach(pid => {
+      const el = document.getElementById('pt_'+pid);
+      if (el) platPrompts[pid] = el.value;
+    });
+    prompts = {
+      localize:  document.getElementById('ptLocalize')?.value  || DEFAULT_PROMPTS.localize,
+      analyze:   document.getElementById('ptAnalyze')?.value   || DEFAULT_PROMPTS.analyze,
+      userMsgA:  document.getElementById('ptUserMsgA')?.value  || DEFAULT_PROMPTS.userMsgA,
+      userMsgB:  document.getElementById('ptUserMsgB')?.value  || DEFAULT_PROMPTS.userMsgB,
+      platforms: platPrompts
+    };
+    // === API key 写到独立槽 · 非空才写（防止 input 未加载时写回空值清掉已存 key）===
+    const keyNow = document.getElementById('aKey')?.value || '';
+    if (keyNow.trim().length > 0) {
+      localStorage.setItem(API_KEY_LS, keyNow);
+    }
+    // === 手动粘贴标题也独立存（体积大，不拖累主 JSON）===
+    const manualNow = document.getElementById('bManualTitles')?.value || '';
+    if (manualNow) localStorage.setItem(MANUAL_TITLES_LS, manualNow);
+    // === 主设置 JSON：不再包含 apiKey / manualTitles（已独立）===
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      model:    document.getElementById('aMdl').value,
+      info:     document.getElementById('iInfo').value,
+      spu:      document.getElementById('pSpu').value,
+      activeRegion,
+      selectedCountries: [...selectedCountries],
+      platSel, langSel,
+      useA:     document.getElementById('useA').checked,
+      useB:     document.getElementById('useB').checked,
+      bVisible: document.getElementById('bVisible').checked,
+      bKeepTabs:document.getElementById('bKeepTabs').checked,
+      bPauseForReview:document.getElementById('bPauseForReview')?.checked || false,
+      scrapeTop:document.getElementById('scrapeTop').value,
+      scrapeKwCount:document.getElementById('scrapeKwCount')?.value ?? '3',
+      scrapePages:document.getElementById('scrapePages')?.value ?? '10',
+      customKeywords:document.getElementById('customKeywords')?.value || '',
+    }));
+    checkApi();
+  } catch(e) {}
+}
+
+function loadSettings() {
+  window._loadingSettings = true;
+  try {
+    // === API key：优先从独立槽读；老数据（v3 主 JSON 里有 apiKey）作为 fallback 并自动迁移 ===
+    let apiKeyLoaded = localStorage.getItem(API_KEY_LS) || '';
+    // === 手动粘贴标题：独立槽 + fallback ===
+    let manualLoaded = localStorage.getItem(MANUAL_TITLES_LS) || '';
+
+    const raw = localStorage.getItem(LS_KEY);
+    // 老数据兼容：如果主 JSON 里还有 apiKey/manualTitles，迁移到独立槽
+    if (raw) {
+      try {
+        const legacy = JSON.parse(raw);
+        if (!apiKeyLoaded && legacy.apiKey) {
+          apiKeyLoaded = legacy.apiKey;
+          localStorage.setItem(API_KEY_LS, apiKeyLoaded);
+        }
+        if (!manualLoaded && legacy.manualTitles) {
+          manualLoaded = legacy.manualTitles;
+          localStorage.setItem(MANUAL_TITLES_LS, manualLoaded);
+        }
+      } catch {}
+    }
+    // 回填独立槽内容到 UI
+    if (apiKeyLoaded) document.getElementById('aKey').value = apiKeyLoaded;
+    if (manualLoaded && document.getElementById('bManualTitles')) {
+      document.getElementById('bManualTitles').value = manualLoaded;
+    }
+
+    if (!raw) { window._loadingSettings=false; savedLoaded=true; renderAll(); return; }
+    const s = JSON.parse(raw);
+    if (s.model)    document.getElementById('aMdl').value = s.model;
+    if (s.info)     document.getElementById('iInfo').value = s.info;
+    if (s.spu)      document.getElementById('pSpu').value = s.spu;
+    if (s.scrapeTop)document.getElementById('scrapeTop').value = s.scrapeTop;
+    if (s.scrapeKwCount && document.getElementById('scrapeKwCount')) document.getElementById('scrapeKwCount').value = s.scrapeKwCount;
+    if (s.scrapePages && document.getElementById('scrapePages')) document.getElementById('scrapePages').value = s.scrapePages;
+    if (s.customKeywords != null && document.getElementById('customKeywords')) document.getElementById('customKeywords').value = s.customKeywords;
+    // scrapeRetry 已在 UI 中移除 · manualTitles 已迁移到独立槽（上方回填）
+    if (s.useA != null) document.getElementById('useA').checked = s.useA;
+    if (s.useB != null) document.getElementById('useB').checked = s.useB;
+    if (s.bVisible != null) document.getElementById('bVisible').checked = s.bVisible;
+    if (s.bKeepTabs != null) document.getElementById('bKeepTabs').checked = s.bKeepTabs;
+    if (s.bPauseForReview != null && document.getElementById('bPauseForReview')) document.getElementById('bPauseForReview').checked = s.bPauseForReview;
+    if (s.activeRegion) activeRegion = s.activeRegion;
+    if (s.selectedCountries) selectedCountries = new Set(s.selectedCountries);
+    if (s.platSel) platSel = s.platSel;
+    if (s.langSel) langSel = s.langSel;
+    // 提示词不做持久化，始终使用 DEFAULT_PROMPTS（由 init 代码在页面加载时填入）
+    updatePlanUI();
+  } catch(e) {}
+  window._loadingSettings = false;
+  savedLoaded = true;
+  renderAll();
+  renderPlatPromptList();
+  checkApi();
+}
+
+function renderAll() {
+  renderRegionTabs();
+  renderCountryChips();
+  renderCountryCards();
+  updatePlanUI();
+}
+
+function resetPrompts() {
+  if (!confirm('重置所有提示词为默认值？')) return;
+  prompts = JSON.parse(JSON.stringify(DEFAULT_PROMPTS));
+  document.getElementById('ptLocalize').value  = prompts.localize;
+  document.getElementById('ptAnalyze').value   = prompts.analyze;
+  document.getElementById('ptUserMsgA').value  = prompts.userMsgA;
+  document.getElementById('ptUserMsgB').value  = prompts.userMsgB;
+  renderPlatPromptList();
+  saveSettings();
+}
+
+// ════════════════════════════════════════════════════════
+// 温度滑竿（三档：localize / analyze / generate）
+// ════════════════════════════════════════════════════════
+// 动态提示文案：根据当前温度值相对默认值的偏离程度，告诉用户调高/调低的后果
+function buildTempHint(task, value) {
+  const v = parseFloat(value);
+  const def = TEMP_DEFAULTS[task];
+  const delta = v - def;
+  // 阈值：±0.1 内算"接近默认"，>+0.15 算"偏高"，<-0.15 算"偏低"
+  let level = 'mid';
+  if (v <= 0.25) level = 'low';
+  else if (v >= 0.85) level = 'high';
+
+  const COPY = {
+    localize: {
+      low:  '📌 当前偏低：同一产品多次调用会输出几乎一致的关键词列表 → <b>稳定但可能保守</b>，倾向最常见的高频词。',
+      mid:  '⚖️ 当前适中：在高频词基础上会夹带少量替代说法，覆盖面略宽。建议保持在 0.2~0.4。',
+      high: '⚠️ 当前偏高：会给出更多边缘同义词/长尾词，<b>每次结果差异明显</b>，下游抓取 URL 会跟着抖。本地化这类事实任务通常不建议 >0.5。'
+    },
+    analyze: {
+      low:  '📌 当前偏低：严格按竞品高频词组合，<b>措辞保守、接近竞品均值</b>。适合想稳妥不出错的场景。',
+      mid:  '⚖️ 当前适中：在共性词基础上做适度改写，兼顾相关性和差异化。建议 0.3~0.5。',
+      high: '⚠️ 当前偏高：会大胆跳出竞品高频词，<b>差异化更强但可能偏离搜索习惯</b>。竞品相关性可能下降。'
+    },
+    generate: {
+      low:  '📌 当前偏低：同一产品多次跑会得到<b>高度相似</b>的标题，词序和用词都很接近。想要稳定产出时用。',
+      mid:  '⚖️ 当前适中：措辞有变化但都围绕核心卖点。推荐 0.5~0.7。',
+      high: '⚠️ 当前偏高：标题措辞大胆、花样多，<b>但容易冲破平台字数/违反规则</b>（塞过多修饰词、重复关键词、偏离产品信息），每次跑差异大。'
+    }
+  };
+  return { level, html: COPY[task][level] + ` <span style="opacity:.6">（默认 ${def.toFixed(2)}，当前 ${v.toFixed(2)}${delta>0?' · 比默认高 '+delta.toFixed(2):delta<0?' · 比默认低 '+(-delta).toFixed(2):' · 与默认一致'}）</span>` };
+}
+
+function applyTempToUI(task) {
+  const v = userTemps[task];
+  const Cap = task.charAt(0).toUpperCase() + task.slice(1);
+  const slider = document.getElementById('temp' + Cap);
+  const valEl  = document.getElementById('tempVal' + Cap);
+  const hintEl = document.getElementById('tempHint' + Cap);
+  if (slider) slider.value = v;
+  if (valEl)  valEl.textContent = Number(v).toFixed(2);
+  if (hintEl) {
+    const { level, html } = buildTempHint(task, v);
+    hintEl.className = 'temp-hint ' + level;
+    hintEl.innerHTML = html;
+  }
+}
+
+function onTempChange(task, value) {
+  const v = Math.max(0, Math.min(1.5, parseFloat(value) || 0));
+  userTemps[task] = v;
+  applyTempToUI(task);
+  try { localStorage.setItem(TEMP_LS, JSON.stringify(userTemps)); } catch(e) {}
+}
+
+function loadTemps() {
+  try {
+    const raw = localStorage.getItem(TEMP_LS);
+    if (raw) {
+      const s = JSON.parse(raw);
+      ['localize','analyze','generate'].forEach(k => {
+        if (typeof s[k] === 'number' && !Number.isNaN(s[k])) userTemps[k] = s[k];
+      });
+    }
+  } catch(e) {}
+  ['localize','analyze','generate'].forEach(applyTempToUI);
+}
+
+function resetTemps() {
+  if (!confirm('把三档 Temperature 都恢复到默认值？\nlocalize 0.20 / analyze 0.40 / generate 0.60')) return;
+  userTemps = { ...TEMP_DEFAULTS };
+  try { localStorage.setItem(TEMP_LS, JSON.stringify(userTemps)); } catch(e) {}
+  ['localize','analyze','generate'].forEach(applyTempToUI);
+}
+
+function checkApi() {
+  document.getElementById('aDot').className = 'api-dot' +
+    (document.getElementById('aKey').value.trim().length > 10 ? ' on' : '');
+}
+
+// ════════════════════════════════════════════════════════
+// 图片处理
+// ════════════════════════════════════════════════════════
+function fileImg(input) {
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => setImg(e.target.result);
+  r.readAsDataURL(file);
+}
+function dropImg(e) {
+  const file = e.dataTransfer.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => setImg(ev.target.result);
+  r.readAsDataURL(file);
+}
+// 全局粘贴：拦截剪贴板中的图片数据（Ctrl+V）
+document.addEventListener('paste', function(e) {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.startsWith('image/')) {
+      e.preventDefault();
+      const file = items[i].getAsFile();
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = ev => setImg(ev.target.result);
+      r.readAsDataURL(file);
+      return;
+    }
+  }
+});
+function loadUrl() {
+  const url = document.getElementById('urlImg').value.trim();
+  if (url) setImg(url);
+}
+function setImg(src) {
+  prodImg = src;
+  document.getElementById('upPh').style.display = 'none';
+  const pv = document.getElementById('upPv');
+  pv.src = src; pv.style.display = 'block';
+  document.getElementById('clearImgBtn').style.display = '';
+  document.getElementById('upBox').style.cursor = 'default';
+}
+function clearImg() {
+  prodImg = null;
+  document.getElementById('upPh').style.display = '';
+  const pv = document.getElementById('upPv');
+  pv.src = ''; pv.style.display = 'none';
+  document.getElementById('clearImgBtn').style.display = 'none';
+  document.getElementById('upF').value = '';
+  document.getElementById('urlImg').value = '';
+  document.getElementById('upBox').style.cursor = 'pointer';
+}
+
+// ════════════════════════════════════════════════════════
+// ERP 桥接
+// ════════════════════════════════════════════════════════
+const _inIframe=(function(){try{return window.self!==window.top}catch(e){return true}})();
+const _erpCbs={};
+if(_inIframe){window.addEventListener('message',function(e){if(e.data&&e.data._erp){var c=_erpCbs[e.data._erp];if(c)c.slice().forEach(function(fn){fn({detail:e.data.detail})})}});}
+function _erpOn(n,fn){if(_inIframe){(_erpCbs[n]=_erpCbs[n]||[]).push(fn)}else document.addEventListener(n,fn)}
+function _erpOff(n,fn){if(_inIframe){var a=_erpCbs[n];if(a){var i=a.indexOf(fn);if(i>=0)a.splice(i,1)}}else document.removeEventListener(n,fn)}
+function _erpEmit(n,d){if(_inIframe)window.parent.postMessage({_erp:n,detail:d},'*');else document.dispatchEvent(new CustomEvent(n,{detail:d}))}
+
+function fetchSPU() {
+  const spu = document.getElementById('pSpu').value.trim();
+  if (!spu) return alert('请输入SPU编号');
+  const btn = document.getElementById('fetchBtn');
+  btn.textContent = '⏳ 抓取中...'; btn.disabled = true;
+  document.getElementById('iInfo').value = '⏳ 正在同步ERP数据...';
+
+  const handler = function(e) {
+    _erpOff('RESPONSE_SPU_FETCH', handler);
+    const res = e.detail;
+    btn.textContent = '↓ 抓取ERP'; btn.disabled = false;
+    if (res.debug !== 'V24_FINAL') {
+      document.getElementById('iInfo').value = '';
+      return alert('🚨 插件版本不同步，请刷新Ianto扩展');
+    }
+    let title='', desc='';
+    const apiObj = res.infoData?.obj;
+    if (apiObj) {
+      const data = Array.isArray(apiObj) ? apiObj[0] : apiObj;
+      title = data?.name_cn||''; desc = data?.description_en||'';
+    }
+    if ((!title||!desc) && res.htmlData) {
+      const h = res.htmlData;
+      const tM = h.match(/chinaname["'][^>]*?value=["']([^"']*)["']/i);
+      title = title||(tM?tM[1]:'');
+      const dM = h.match(/describeenglish["'][^>]*?>([\s\S]*?)<\//i);
+      if (dM) desc = desc||dM[1].replace(/<[^>]+>/g,'').trim();
+    }
+    document.getElementById('iInfo').value = (title||desc)
+      ? `【产品标题】\n${title.trim()}\n\n【详细描述】\n${desc.trim()}` : '';
+    const rawImgs = res.imgData?.obj;
+    const imgArr = Array.isArray(rawImgs)?(Array.isArray(rawImgs[0])?rawImgs[0]:rawImgs):[];
+    const valid = imgArr.filter(i=>i&&(i.pictureUrl||i.picture_url));
+    const wImg = valid.find(i=>(i.pictureUrl||i.picture_url||'').includes('_W'));
+    const imgUrl = wImg?(wImg.pictureUrl||wImg.picture_url):(valid[0]?.pictureUrl||valid[0]?.picture_url);
+    if (imgUrl) setImg(imgUrl);
+    if (title||imgUrl) {
+      btn.textContent='✓ 成功';
+      setTimeout(()=>{btn.textContent='↓ 抓取ERP';},1500);
+    } else {
+      alert('❌ 未能获取有效数据，请确认已登录ERP');
+    }
+    saveSettings();
+  };
+  _erpOn('RESPONSE_SPU_FETCH', handler);
+  _erpEmit('REQUEST_SPU_FETCH', { spu });
+}
+
+// ════════════════════════════════════════════════════════
+// Gemini API
+// ════════════════════════════════════════════════════════
+async function callGemini(systemPrompt, userPrompt, imgData, opts = {}) {
+  // opts.task: 'localize' (事实性任务，需要稳定输出) | 'generate' (创作任务，可以更灵活) | 'analyze' (竞品分析)
+  // 默认 'generate'（向后兼容）
+  const task = opts.task || 'generate';
+  // 温度分任务，支持用户在 设置弹窗 → 温度滑竿 中覆盖：
+  // - localize: 0.2 → 关键词稳定，同一个产品多次调用结果接近
+  // - analyze:  0.4 → 竞品分析略收敛（偏事实整理）
+  // - generate: 0.6 → 标题生成保留一定创造性
+  const userTemp = (userTemps && typeof userTemps[task] === 'number') ? userTemps[task] : TEMP_DEFAULTS[task];
+  const temperature = opts.temperature ?? userTemp ?? 0.6;
+  const key = document.getElementById('aKey').value.trim();
+  const mdl = document.getElementById('aMdl').value;
+  if (!key) throw new Error('请先填写Gemini API Key');
+  const parts = [];
+  if (imgData) {
+    try { const b64=await cleanImageB64(imgData); if(b64) parts.push({inline_data:{mime_type:'image/jpeg',data:b64}}); } catch(e) {}
+  }
+  parts.push({text:userPrompt});
+  const body = {
+    system_instruction:{parts:[{text:systemPrompt}]},
+    contents:[{role:'user',parts}],
+    generationConfig:{temperature,maxOutputTokens:2048}
+  };
+  let res;
+  try {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${mdl}:generateContent?key=${key}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}
+    );
+  } catch (netErr) {
+    // fetch 本身失败 = 网络层错 (TypeError: Failed to fetch)
+    // 最常见: VPN 断 / DNS 污染 / 防火墙 / Google 服务在当前网络不可达
+    throw new Error(
+      `网络层错误：无法连接到 Gemini API\n\n` +
+      `原始错误：${netErr.message || netErr}\n\n` +
+      `排查：\n` +
+      `① 能否打开 https://aistudio.google.com ？不能 → 检查 VPN / 网络\n` +
+      `② F12 Network 看 generativelanguage.googleapis.com 请求状态（failed/canceled = 连不上）\n` +
+      `③ 同机器其他 Google 服务能用吗？`
+    );
+  }
+  if (!res.ok) {
+    const txt = await res.text();
+    // 细化常见 HTTP 状态码
+    const hint = res.status === 401 || res.status === 403
+      ? '（API key 无效 / 被禁用 / 项目未开通 Gemini）'
+      : res.status === 429 ? '（配额超限 · 等几分钟或换 key）'
+      : res.status === 400 ? '（请求参数问题 · 可能是模型名错误或 prompt 含非法字段）'
+      : res.status >= 500 ? '（Google 服务抽风 · 几分钟后重试）'
+      : '';
+    throw new Error(`API错误 ${res.status}${hint}: ${txt.slice(0,300)}`);
+  }
+  const d = await res.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+function cleanImageB64(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w=img.width, h=img.height, max=1536;
+      if (w>max||h>max){const s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s);}
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',0.9).split(',')[1]);
+    };
+    img.onerror = () => resolve(dataUrl.startsWith('data:') ? (dataUrl.split(',')[1] || null) : null);
+    img.src = dataUrl;
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// 主流程：生成
+// ════════════════════════════════════════════════════════
+async function startGenerate() {
+  document.getElementById('genWarn').className = 'warn hid';
+  clearDebugTrace();
+  addDebugTrace('🟢 [开始] 任务启动', {
+    方案A: document.getElementById('useA').checked,
+    方案B: document.getElementById('useB').checked,
+    SPU: document.getElementById('pSpu').value.trim() || '（空）',
+    已选国家: [...selectedCountries],
+    产品信息预览: (document.getElementById('iInfo').value || '').slice(0, 200)
+  });
+
+  const info = document.getElementById('iInfo').value.trim();
+  if (!info) { showWarn('请先填写产品信息'); return; }
+  if (selectedCountries.size === 0) { showWarn('请选择至少一个目标国家'); return; }
+  const useA = document.getElementById('useA').checked;
+  const useB = document.getElementById('useB').checked;
+  if (!useA && !useB) { showWarn('请至少选择一种生成方案'); return; }
+  if (!document.getElementById('aKey').value.trim()) { showWarn('请填写Gemini API Key'); return; }
+
+  const spu = document.getElementById('pSpu').value.trim() || '—';
+  const kw = buildKwFromInfo(info);
+  const combos = getAllCombos(kw);
+  if (combos.length === 0) { showWarn('请至少选择一个平台（在国家卡片中点亮平台）'); return; }
+
+  const genBtn = document.getElementById('genBtn');
+  genBtn.disabled = true;
+  currentResults = [];
+  document.getElementById('step4').classList.add('hid');
+  document.getElementById('exportBtn').style.display = 'none';
+
+  try {
+    // === AI generation 进度UI ===
+    const genProg = document.getElementById('genProgress');
+    const genFill = document.getElementById('genProgFill');
+    const genTxt  = document.getElementById('genProgTxt');
+    genProg.classList.remove('hid');
+
+    // === 第一步：本地化关键词（A/B共用，必须在爬取前完成以便B用本地词搜索）===
+    const localKws = {};      // { cc: "kw1, kw2, ..." }  → Plan A {keywords}占位符
+    const localKwMap = {};    // { cc: [encodedKw, ...] } → Plan B 首轮爬取URL
+    const kwPool = {};        // { cc: [{kw, score, ...}] } → 排序过的全部词（含未选中的，用于重试回退）
+    const uniqueCCs = [...new Set(Array.from(selectedCountries))];
+
+    // 自定义关键词：用户每行一个；非空则跳过 AI 本地化，对所有国家共用
+    const customKwRaw = (document.getElementById('customKeywords')?.value || '').trim();
+    const customKwList = customKwRaw
+      ? customKwRaw.split('\n').map(s => s.trim()).filter(s => s.length > 0)
+      : [];
+    const useCustomKw = customKwList.length > 0;
+
+    for (const cc of uniqueCCs) {
+      const ccName = getCountryData(cc)?.name || cc;
+      if (useCustomKw) {
+        genTxt.textContent = `使用自定义关键词 · ${ccName}（跳过 AI 本地化）...`;
+        const kwInput = document.getElementById('scrapeKwCount')?.value;
+        const kwParsed = parseInt(kwInput);
+        const kwCount = Number.isNaN(kwParsed) ? 3 : kwParsed;
+        const searchKws = kwCount > 0 ? customKwList.slice(0, kwCount) : customKwList.slice();
+        localKws[cc] = customKwList.join(', ');
+        localKwMap[cc] = searchKws;
+        kwPool[cc] = customKwList.map(k => ({ kw: k, score: 100, tags: ['custom'] }));
+        addDebugTrace(`🎯 [步骤1] 使用用户自定义关键词 · ${ccName}（已跳过 AI 本地化）`, {
+          全部自定义词: customKwList,
+          首轮搜索词: searchKws,
+          搜索次数限制: kwCount === 0 ? '全部' : kwCount
+        });
+        continue;
+      }
+      genTxt.textContent = `关键词本地化 · ${ccName}...`;
+      try {
+        const langLabel = getLang(cc).label;
+        const locPt = (prompts.localize || DEFAULT_PROMPTS.localize)
+          .replace(/{product_info}/g, info)
+          .replace(/{language}/g, langLabel)
+          .replace(/{country}/g, ccName);
+        const sysP = `你是跨境电商产品本地化专家。你必须只用${langLabel}语言输出关键词，严禁输出任何中文字符。`;
+        const raw = await callGemini(sysP, locPt, prodImg, { task: 'localize' });
+        const kwList = sanitizeLocalizedKeywords(raw, cc);
+        if (kwList.length === 0) throw new Error('本地化关键词为空或全被过滤（可能AI仍在输出中文）');
+        // 用评分排序，按分数从高到低选词（而不是按AI给的原始顺序）
+        // 注意：UI 默认值是 3；字段异常时 isNaN(kwInput) 为 true，视为"使用默认 3 个"
+        // 0 在语义上 = 全部，是合法值不能当成兜底（否则字段丢失会爆炸成全部词去搜）
+        const kwInput = document.getElementById('scrapeKwCount')?.value;
+        const kwParsed = parseInt(kwInput);
+        const kwCount = Number.isNaN(kwParsed) ? 3 : kwParsed;
+        const validKws = kwList.filter(k => k.length >= 3 && !containsChinese(k));
+        const scored = validKws
+          .map(k => ({ kw: k, ...scoreKeyword(k, info, cc) }))
+          .filter(x => x.score >= 20) // 丢弃慎用词
+          .sort((a, b) => b.score - a.score);
+        kwPool[cc] = scored; // 供后续重试回退使用
+        const picked = kwCount > 0 ? scored.slice(0, kwCount) : scored.slice();
+        const searchKws = picked.map(x => x.kw);
+        if (searchKws.length === 0) searchKws.push(kwList[0]); // 兜底
+        localKws[cc] = kwList.join(', ');
+        localKwMap[cc] = searchKws; // 原始关键词，编码在 URL 填充点统一做
+        addDebugTrace(`📥 [步骤1] AI本地化原始返回 · ${ccName}`, raw);
+        addDebugTrace(`✨ [步骤1] 本地化词 → 评分排序 · ${ccName}`, {
+          清洗后关键词列表: kwList,
+          评分排序后: scored.map(x => `[${x.score}] ${x.kw}`),
+          首轮搜索词: searchKws,
+          回退词池: scored.filter(x => !searchKws.includes(x.kw)).map(x => `[${x.score}] ${x.kw}`),
+          搜索次数限制: kwCount === 0 ? '全部' : kwCount
+        });
+      } catch(e) {
+        localKws[cc] = '';
+        localKwMap[cc] = [];
+        addDebugTrace(`❌ [步骤1] 本地化失败 · ${ccName}`, e.message || String(e));
+      }
+    }
+
+    // 用本地化关键词重建combos（让B方案用正确语言搜索）
+    let localCombos = getAllCombos(localKwMap);
+    let finalCombos = localCombos.length > 0 ? localCombos : combos;
+
+    // === 展示搜索链接（方便手动打开） ===
+    if (useB) showSearchLinks(finalCombos);
+
+    // === 暂停检查（仅当B方案 + 勾选了"本地化后暂停"） ===
+    let skipScrape = false;
+    if (useB && document.getElementById('bPauseForReview')?.checked) {
+      showKeywordCheckList(localKws, localKwMap);
+      const pauseBox = document.getElementById('kwConfirmBox');
+      if (pauseBox) pauseBox.classList.remove('hid');
+      genTxt.textContent = '⏸️ 已暂停 · 请在面板里核对关键词 / 手动查搜索页 / 粘贴标题，然后点【继续爬取】';
+      addDebugTrace('⏸️ [暂停] 等待用户核对关键词和搜索页', {
+        待搜索URL数: finalCombos.reduce((s, c) => s + (c.scrapeUrls?.length || 0), 0),
+        提示: '请在面板里勾选要搜索的关键词，也可以手动打开上方搜索链接、把标题粘贴到"手动粘贴"框'
+      });
+      const action = await waitForUserReview();
+      if (action === 'cancel') {
+        addDebugTrace('❌ [取消] 用户取消了本次任务', {});
+        throw new Error('用户取消');
+      }
+      if (action === 'skip-scrape') {
+        skipScrape = true;
+        addDebugTrace('⏭️ [跳过] 用户选择跳过自动爬取（将回退到手动粘贴的竞品标题）', {});
+      } else {
+        // 用户勾选了新的关键词组合 → 重建 localKwMap / finalCombos
+        const picked = getSelectedKeywordsByCC();
+        // 兜底：如果某个国家一个都没勾，保留原来的第一个，避免空URL
+        uniqueCCs.forEach(cc => {
+          if (!picked[cc] || picked[cc].length === 0) {
+            const first = (localKwMap[cc] || []).slice(0, 1);
+            if (first.length > 0) picked[cc] = first;
+          }
+        });
+        // 覆盖 localKwMap
+        Object.keys(picked).forEach(cc => { localKwMap[cc] = picked[cc]; });
+        const rebuilt = getAllCombos(localKwMap);
+        if (rebuilt.length > 0) finalCombos = rebuilt;
+        showSearchLinks(finalCombos);
+        addDebugTrace('▶️ [继续] 用户确认关键词后恢复执行', {
+          最终关键词按国家: picked, // 已经是原始关键词，无需解码
+          最终待搜索URL数: finalCombos.reduce((s, c) => s + (c.scrapeUrls?.length || 0), 0)
+        });
+      }
+    }
+
+    let done = 0;
+    const total = finalCombos.length * ((useA?1:0) + (useB?1:0));
+
+    // === 第二步：方案A生成（优先执行，无需等待B爬取）===
+    if (useA) {
+      for (const combo of finalCombos) {
+        const n = combo.n;
+        const kws = localKws[combo.cc] || '';
+        genTxt.textContent = `方案A · ${combo.ccName} ${combo.platName}...`;
+        try {
+          const pt = getCurrentPlatPrompt(combo.pid);
+          const sysP = pt
+            .replace(/{n}/g, n).replace(/{platform}/g, combo.platName)
+            .replace(/{language}/g, combo.langLabel).replace(/{country}/g, combo.ccName)
+            .replace(/{charLimit}/g, combo.charLimit || '');
+          const userMsgATpl = prompts.userMsgA || DEFAULT_PROMPTS.userMsgA;
+          const userP = userMsgATpl
+            .replace(/{keywords}/g, kws).replace(/{product_info}/g, info)
+            .replace(/{n}/g, n).replace(/{language}/g, combo.langLabel)
+            .replace(/{platform}/g, combo.platName).replace(/{country}/g, combo.ccName);
+          addDebugTrace(`📤 [方案A发送] ${combo.ccName} ${combo.platName} · System Prompt`, sysP);
+          addDebugTrace(`📤 [方案A发送] ${combo.ccName} ${combo.platName} · User Prompt`, userP);
+          addDebugTrace(`📎 [方案A附件] ${combo.ccName} ${combo.platName}`, {
+            图片已附加到请求: !!prodImg,
+            产品信息长度: info.length,
+            产品信息全量: info,
+            使用的本地化关键词: kws || '[空]'
+          });
+          const raw = await callGemini(sysP, userP, prodImg, { task: 'generate' });
+          const titles = parseTitles(raw, n);
+          addDebugTrace(`📥 [方案A返回] ${combo.ccName} ${combo.platName} · AI原始返回`, raw);
+          addDebugTrace(`✅ [方案A结果] ${combo.ccName} ${combo.platName} · 解析后标题`, titles);
+          currentResults.push({spu,info,cc:combo.cc,ccName:combo.ccName,pid:combo.pid,platName:combo.platName,platColor:combo.platColor,lang:combo.langLabel,titles,source:'A'});
+        } catch(e) {
+          addDebugTrace(`❌ [方案A错误] ${combo.ccName} ${combo.platName}`, e.message || String(e));
+          currentResults.push({spu,info,cc:combo.cc,ccName:combo.ccName,pid:combo.pid,platName:combo.platName,platColor:combo.platColor,lang:combo.langLabel,titles:['[A错误] '+e.message],source:'A'});
+        }
+        done++; genFill.style.width=(done/total*100)+'%';
+      }
+      // 方案A完成，先展示结果（方案B爬取期间用户可立刻查看）
+      renderResults();
+    }
+
+    // === 第三步：Plan B 爬取（用本地化URL + 自动重试）===
+    let scrapeResults = {};
+    if (useB && !skipScrape) {
+      scrapeResults = await runScrapeB(finalCombos);
+
+      // ── 不重试 · 失败就失败 ──
+      // 理由：我们已经按分数选了最优的头部词，换词没有比这更好的依据。
+      // 搜不到 = 平台问题（需登录/有弹窗/插件关页太快），不是关键词问题，换词反而会拿次优词污染结果。
+      const failedCombos = finalCombos.filter(c => (scrapeResults[c.key] || []).length < 2);
+      if (failedCombos.length > 0) {
+        addDebugTrace(`⚠️ [未重试] ${failedCombos.length} 个 combo 抓取 <2 条 · 按规则不换词`, {
+          失败: failedCombos.map(c => `${c.ccName} ${c.platName} (${(scrapeResults[c.key] || []).length}条)`),
+          依据: '已用评分最高的词，换次优词无根据。搜不到通常是平台问题：需登录 / 有弹窗 / 插件关页太快',
+          建议: '若要提升命中率，改插件（见文档），不要动关键词'
+        });
+      }
+    } else if (useB && skipScrape) {
+      addDebugTrace('⏭️ [步骤3] 跳过自动爬取（用户选择）', { 将使用手动粘贴标题: true });
+    }
+
+    // === 第四步：方案B生成 ===
+    if (useB) {
+      for (const combo of finalCombos) {
+        const n = combo.n;
+        const kws = localKws[combo.cc] || '';
+        // Plan B：analyze提示词作 system（分析师角色），userMsgB 提供竞品数据+输出指令
+        genTxt.textContent = `方案B · ${combo.ccName} ${combo.platName}...`;
+        const topN = parseInt(document.getElementById('scrapeTop').value) || 100;
+        let competitorTitles = (scrapeResults[combo.key] || []).slice(0, topN);
+        let titleSource = '自动爬取';
+        // 备用：自动爬取不足2条时，回退到手动粘贴的竞品标题
+        if (competitorTitles.length < 2) {
+          const manualRaw = (document.getElementById('bManualTitles')?.value || '').trim();
+          if (manualRaw) {
+            competitorTitles = manualRaw.split('\n').map(l => l.trim()).filter(l => l.length >= 6).slice(0, topN);
+            titleSource = '手动粘贴';
+            addDebugTrace(`♻️ [方案B回退] ${combo.ccName} ${combo.platName} · 使用手动粘贴标题`, { 数量: competitorTitles.length });
+          }
+        }
+        const kwValidation = validateCompetitorTitles(competitorTitles, kws);
+        const topTitles = competitorTitles.join('\n');
+        addDebugTrace(`🧩 [方案B汇总] ${combo.ccName} ${combo.platName} · 待分析竞品`, {
+          本地化关键词: kws || '[空]',
+          搜索URL列表: combo.scrapeUrls || [],
+          标题来源: titleSource,
+          竞品数量: competitorTitles.length,
+          竞品标题: competitorTitles,
+          相关性校验: kwValidation
+        });
+        if (topTitles && kwValidation.ok) {
+          try {
+            const anaSys = getCurrentAnalyzePrompt()
+              .replace(/{n}/g, n).replace(/{language}/g, combo.langLabel)
+              .replace(/{platform}/g, combo.platName).replace(/{country}/g, combo.ccName);
+            const userMsgBTpl = prompts.userMsgB || DEFAULT_PROMPTS.userMsgB;
+            const anaUser = userMsgBTpl
+              .replace(/{competitor_titles}/g, topTitles).replace(/{product_info}/g, info)
+              .replace(/{n}/g, n).replace(/{language}/g, combo.langLabel)
+              .replace(/{platform}/g, combo.platName).replace(/{country}/g, combo.ccName);
+            addDebugTrace(`📤 [方案B发送] ${combo.ccName} ${combo.platName} · System Prompt`, anaSys);
+            addDebugTrace(`📤 [方案B发送] ${combo.ccName} ${combo.platName} · User Prompt`, anaUser);
+            addDebugTrace(`📎 [方案B附件] ${combo.ccName} ${combo.platName}`, {
+              图片已附加到请求: !!prodImg,
+              产品信息长度: info.length,
+              产品信息全量: info,
+              竞品标题条数: competitorTitles.length,
+              标题来源: titleSource
+            });
+            const raw = await callGemini(anaSys, anaUser, prodImg, { task: 'analyze' });
+            const titles = parseTitles(raw, n);
+            addDebugTrace(`📥 [方案B返回] ${combo.ccName} ${combo.platName} · AI原始返回`, raw);
+            addDebugTrace(`✅ [方案B结果] ${combo.ccName} ${combo.platName} · 解析后标题`, titles);
+            currentResults.push({spu,info,cc:combo.cc,ccName:combo.ccName,pid:combo.pid,platName:combo.platName,platColor:combo.platColor,lang:combo.langLabel,titles,source:'B'});
+          } catch(e) {
+            addDebugTrace(`❌ [方案B错误] ${combo.ccName} ${combo.platName}`, e.message || String(e));
+            currentResults.push({spu,info,cc:combo.cc,ccName:combo.ccName,pid:combo.pid,platName:combo.platName,platColor:combo.platColor,lang:combo.langLabel,titles:['[B错误] '+e.message],source:'B'});
+          }
+        } else if (topTitles) {
+          addDebugTrace(`⏭️ [方案B跳过] ${combo.ccName} ${combo.platName}`, kwValidation.reason);
+          currentResults.push({spu,info,cc:combo.cc,ccName:combo.ccName,pid:combo.pid,platName:combo.platName,platColor:combo.platColor,lang:combo.langLabel,titles:['[B跳过] ' + kwValidation.reason],source:'B'});
+        } else {
+          addDebugTrace(`⏭️ [方案B跳过] ${combo.ccName} ${combo.platName}`, '未爬取到竞品标题且无手动粘贴内容');
+          currentResults.push({spu,info,cc:combo.cc,ccName:combo.ccName,pid:combo.pid,platName:combo.platName,platColor:combo.platColor,lang:combo.langLabel,titles:['[B] 未爬取到竞品标题'],source:'B'});
+        }
+        done++; genFill.style.width=(done/total*100)+'%';
+      }
+    }
+
+    genProg.classList.add('hid');
+    renderResults();
+  } catch(e) {
+    if (e.message === '用户取消') {
+      addDebugTrace('🛑 [结束] 任务已取消', {});
+    } else {
+      showWarn('生成失败：' + e.message);
+    }
+  } finally {
+    genBtn.disabled = false;
+    document.getElementById('scrapeProgress').classList.add('hid');
+    document.getElementById('genProgress').classList.add('hid');
+    // 兜底：万一 resolver 还挂着，解开，避免下次卡住
+    if (_pauseResolver) { _pauseResolver = null; }
+    const kcBox = document.getElementById('kwConfirmBox');
+    if (kcBox) kcBox.classList.add('hid');
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// Plan B 爬取
+// ════════════════════════════════════════════════════════
+async function runScrapeB(combos) {
+  const scrapeDiv = document.getElementById('scrapeProgress');
+  const progFill  = document.getElementById('progFill');
+  const progTxt   = document.getElementById('progTxt');
+  scrapeDiv.classList.remove('hid');
+  progTxt.textContent = '正在触发Ianto爬取...';
+  progFill.style.width = '5%';
+
+  // Flatten array scrapeUrls into individual tab entries; track comboKey for merging
+  const platforms = [];
+  combos.forEach(c => {
+    if (!c.scrapeUrls || c.scrapeUrls.length === 0) {
+      addDebugTrace(`⏭️ [步骤2] 跳过爬取 · ${c.ccName} ${c.platName}`, '缺少有效本地化搜索词，未发起搜索');
+      return;
+    }
+    (c.scrapeUrls || []).forEach((url, i) => {
+      const subKey = c.scrapeUrls.length > 1 ? `${c.key}_s${i}` : c.key;
+      platforms.push({ name: subKey, comboKey: c.key, url });
+      addDebugTrace(`🕷️ [步骤2] 准备爬取 · ${c.ccName} ${c.platName}`, { URL: decodeURIComponent(url), comboKey: c.key });
+    });
+  });
+
+  if (platforms.length === 0) { scrapeDiv.classList.add('hid'); return {}; }
+
+  const keepTabsOpen = document.getElementById('bKeepTabs').checked;
+  // 注：keepTabsOpen 会发给 Ianto，但插件当前版本会忽略它并在抓完后关页（插件侧需改）。
+
+  // ── 动态超时：按 URL 数 × 每个 URL 预算（秒） + 缓冲 ──
+  // FastMoss / EchoTik 单页渲染 3-6s，算上插件开关页开销，按 8s/URL 估算
+  const SEC_PER_URL = 8;
+  const BUFFER_SEC = 30;
+  const TIMEOUT_MS = Math.min(platforms.length * SEC_PER_URL + BUFFER_SEC, 900) * 1000; // 最多 15 分钟
+  const timeoutSecDisp = Math.round(TIMEOUT_MS / 1000);
+
+  progTxt.textContent = `开始爬取 ${platforms.length} 个来源（预计最多 ${timeoutSecDisp}s · 后台标签组运行）`;
+  progFill.style.width = '10%';
+
+  return new Promise(resolve => {
+    const tStart = Date.now();
+    let sawAnyResponse = false;
+
+    function onResponse(e) {
+      _erpOff('RESPONSE_TITLE_SCRAPE', onResponse);
+      clearInterval(progTimer); clearTimeout(timeoutTimer); clearTimeout(heartbeatTimer);
+      scrapeDiv.classList.add('hid');
+      const detail = e.detail;
+      sawAnyResponse = true;
+      if (!detail.success) {
+        alert('方案B爬取提示：' + detail.error + '\n\n如未安装Ianto插件，方案B将跳过。可在B方案区域手动粘贴竞品标题后重新生成。');
+        resolve({});
+        return;
+      }
+      // Merge sub-results back to comboKey + 按URL分别记录
+      const out = {};
+      platforms.forEach(p => {
+        const titles = detail.results?.[p.name] || [];
+        out[p.comboKey] = (out[p.comboKey] || []).concat(titles);
+        addDebugTrace(`🕷️ [步骤2] 爬取单URL结果 · ${p.comboKey}`, {
+          URL: decodeURIComponent(p.url),
+          抓取数量: titles.length,
+          标题全量: titles,
+        });
+      });
+      // 按combo汇总去重
+      Object.keys(out).forEach(k => {
+        const before = out[k].length;
+        out[k] = [...new Set(out[k])];
+        addDebugTrace(`📊 [步骤2] 爬取合并结果 · ${k}`, {
+          合并前总数: before,
+          去重后总数: out[k].length,
+          合并后标题: out[k]
+        });
+      });
+      resolve(out);
+    }
+
+    const visible = document.getElementById('bVisible').checked;
+    _erpOn('RESPONSE_TITLE_SCRAPE', onResponse);
+    _erpEmit('REQUEST_TITLE_SCRAPE', { platforms, visible, keepTabsOpen });
+    addDebugTrace('🚀 [步骤2] 已发送爬取请求给Ianto插件', {
+      可见模式: visible,
+      保留标签页指令: keepTabsOpen,
+      总URL数: platforms.length,
+      动态超时: `${timeoutSecDisp}s（${SEC_PER_URL}s/URL + ${BUFFER_SEC}s 缓冲）`,
+      插件行为提示: '若插件未装 / 未授权 file:// / 已卸载，将在超时后直接失败。HTML 端不再兜底 window.open（之前已移除）',
+      平台列表: platforms
+    });
+
+    let pct = 10;
+    const progTimer = setInterval(() => {
+      pct = Math.min(pct + 1.0, 85);
+      progFill.style.width = pct + '%';
+      const elapsed = Math.round((Date.now() - tStart) / 1000);
+      progTxt.textContent = `爬取中... ${Math.round(pct)}% · ${elapsed}s/${timeoutSecDisp}s · ${platforms.length} 个 URL${visible ? '（可见模式）' : '（后台）'}`;
+    }, 2000);
+
+    // 心跳诊断：30s 内插件若无任何响应，警告（但不中断，仍等超时）
+    const heartbeatTimer = setTimeout(() => {
+      if (!sawAnyResponse) {
+        addDebugTrace('⚠️ [步骤2] 30s 内未收到 Ianto 任何响应 · 可能故障', {
+          排查清单: [
+            '1. chrome://extensions 里 Ianto 是否启用？',
+            '2. Ianto 详情页是否勾选「允许访问文件网址」(file:// 页面必需)',
+            '3. 是否刚重载过 Ianto？重载后本页要刷新一次才能重新注入 content script',
+            '4. 控制台是否有报错 (F12 看 Console)'
+          ],
+          当前页URL: location.href,
+          是否iframe: _inIframe
+        });
+        progTxt.textContent = `⚠️ 插件 30s 无响应 · 请按 F12 看 Console · 仍在等待（${timeoutSecDisp}s 超时）...`;
+      }
+    }, 30000);
+
+    const timeoutTimer = setTimeout(() => {
+      clearInterval(progTimer);
+      clearTimeout(heartbeatTimer);
+      _erpOff('RESPONSE_TITLE_SCRAPE', onResponse);
+      scrapeDiv.classList.add('hid');
+      const diagTip = sawAnyResponse
+        ? '插件有部分响应但未完成，可尝试减少关键词数量或 FastMoss 翻页数'
+        : '插件全程无响应 · 检查：① Ianto 启用 ② 允许 file:// 访问 ③ 本页刷新一次';
+      alert(`方案B爬取超时（${timeoutSecDisp}s / ${platforms.length} 个URL）\n\n诊断：${diagTip}\n\n可在B方案区域手动粘贴竞品标题后重新生成。`);
+      resolve({});
+    }, TIMEOUT_MS);
+  });
+}
+
+function buildKwFromInfo(info) {
+  // 返回原始关键词，不做编码。编码在 getAllCombos 的 URL 填充点统一完成。
+  const first = info.split('\n').find(l => l.trim() && !l.startsWith('【')) || info;
+  return first.replace(/【.*?】/g,'').trim().slice(0,40);
+}
+
+// ════════════════════════════════════════════════════════
+// 提示词获取
+// ════════════════════════════════════════════════════════
+function getCurrentPlatPrompt(pid) {
+  const el = document.getElementById('pt_'+pid);
+  if (el && el.value.trim()) return el.value.trim();
+  return DEFAULT_PROMPTS.platforms[pid] || DEFAULT_PROMPTS.platforms.aliex;
+}
+function getCurrentAnalyzePrompt() {
+  const el = document.getElementById('ptAnalyze');
+  if (el && el.value.trim()) return el.value.trim();
+  return DEFAULT_PROMPTS.analyze;
+}
+function parseTitles(raw, n) {
+  // 若响应包含"---"分隔符，只解析最后一节的纯标题列表
+  const parts = raw.split(/\n-{3,}\n/);
+  const section = parts.length > 1 ? parts[parts.length - 1] : raw;
+  return section.split('\n')
+    .map(l => l.trim().replace(/^[\d\.\-\*\#\、\）\)】「」]+\s*/,'').replace(/\*+/g,'').trim())
+    .filter(l => {
+      if (l.length <= 3) return false;
+      if (/[：:]\s*$/.test(l)) return false;  // 以冒号结尾的引导句/标题行
+      if (/^(以下|根据|基于|第[一二三四五]步|Step\s*\d|以上|注[：:]|说明[：:])/.test(l)) return false; // 解释性开头
+      return true;
+    })
+    .slice(0, n);
+}
+
+// ════════════════════════════════════════════════════════
+// 渲染结果
+// ════════════════════════════════════════════════════════
+function renderResults() {
+  const tbody = document.getElementById('resTbody');
+  tbody.innerHTML = '';
+  if (currentResults.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="no-result">暂无结果</td></tr>';
+    return;
+  }
+  // 合并同 cc+pid 的 A/B
+  const merged = {};
+  currentResults.forEach(r => {
+    const key = r.spu+'_'+r.cc+'_'+r.pid;
+    if (!merged[key]) merged[key] = {...r, bySource:{}};
+    merged[key].bySource[r.source] = r.titles;
+  });
+
+  Object.values(merged).forEach(row => {
+    const hasA = !!row.bySource.A;
+    const hasB = !!row.bySource.B;
+    const srcLabel = hasA&&hasB?'A+B':hasA?'A':'B';
+    const srcClass = hasA&&hasB?'src-ab':hasA?'src-a':'src-b';
+
+    let titlesHtml = '';
+    ['A','B'].forEach(src => {
+      const titles = row.bySource[src];
+      if (!titles) return;
+      if (src==='A' && (hasA && hasB)) {
+        titlesHtml += `<div style="font-size:9px;color:var(--blue-d);font-weight:700;padding:3px 0 1px">▲ 方案A（SEO生成）</div>`;
+      }
+      if (src==='B' && hasA) {
+        titlesHtml += `<div style="font-size:9px;color:var(--vio);font-weight:700;padding:3px 0 1px;margin-top:4px;border-top:1px solid var(--bdr)">▼ 方案B（竞品改写）</div>`;
+      }
+      titles.forEach((t, i) => {
+        const cpId = `cp_${row.cc}_${row.pid}_${src}_${i}`;
+        titlesHtml += `<div class="title-item">
+          <span class="title-txt">${escHtml(t)}</span>
+          <button class="btn-cp" id="${cpId}" onclick="copyTitle('${cpId}','${escAttr(t)}')">复制</button>
+        </div>`;
+      });
+    });
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-mono">${escHtml(row.spu)}</td>
+      <td class="td-info">${escHtml(row.info.slice(0,100))}${row.info.length>100?'…':''}</td>
+      <td style="white-space:nowrap;font-size:11px">${escHtml(row.ccName)}</td>
+      <td class="td-plat" style="white-space:nowrap">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${row.platColor||'#999'};margin-right:4px;vertical-align:middle"></span>
+        <span style="font-size:11px">${escHtml(row.platName)}</span>
+      </td>
+      <td>${titlesHtml}</td>
+      <td><span class="src-badge ${srcClass}">${srcLabel}</span></td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('step4').classList.remove('hid');
+  document.getElementById('exportBtn').style.display = '';
+  document.getElementById('resultCount').textContent = `共 ${Object.keys(merged).length} 行`;
+}
+
+function copyTitle(btnId, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.textContent = '✓'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent='复制'; btn.classList.remove('ok'); }, 1800);
+  }).catch(() => alert('复制失败，请手动选取'));
+}
+
+function showWarn(msg) {
+  const w = document.getElementById('genWarn');
+  w.textContent = '❌ ' + msg; w.className = 'warn';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+// ════════════════════════════════════════════════════════
+// 导出 XLSX
+// ════════════════════════════════════════════════════════
+async function exportXLSX() {
+  if (currentResults.length === 0) return alert('暂无结果可导出');
+  const spu = document.getElementById('pSpu').value.trim() || 'batch';
+  const date = new Date().toISOString().slice(0,10);
+
+  // 构建行数据
+  const rows = [['SPU','产品信息','国家','平台','语言','标题','来源']];
+  currentResults.forEach(r => {
+    r.titles.forEach((t, i) => {
+      rows.push([
+        i===0?r.spu:'', i===0?r.info.slice(0,200):'',
+        i===0?r.ccName:'', i===0?r.platName:'',
+        i===0?r.lang:'', t, i===0?('方案'+r.source):''
+      ]);
+    });
+  });
+
+  // 优先 XLSX，失败自动降级 CSV
+  if (window.XLSX) {
+    try {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{wch:12},{wch:30},{wch:12},{wch:14},{wch:16},{wch:60},{wch:8}];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '标题生成结果');
+      const out = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+      const blob = new Blob([out], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `标题生成_${spu}_${date}.xlsx`;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      return;
+    } catch(e) { console.warn('XLSX导出失败，降级CSV:', e); }
+  }
+
+  // CSV 兜底（带 BOM，Excel 正确显示中文）
+  const bom = '\uFEFF';
+  const csv = bom + rows.map(row =>
+    row.map(c => '"' + String(c||'').replace(/"/g,'""') + '"').join(',')
+  ).join('\r\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `标题生成_${spu}_${date}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════════════════════
+// 设置弹窗
+// ════════════════════════════════════════════════════════
+function openSettings() {
+  const el1 = document.getElementById('ptLocalize');
+  const el2 = document.getElementById('ptAnalyze');
+  const el3 = document.getElementById('ptUserMsgA');
+  const el4 = document.getElementById('ptUserMsgB');
+  if (el1 && !el1.value.trim()) el1.value = prompts.localize  || DEFAULT_PROMPTS.localize;
+  if (el2 && !el2.value.trim()) el2.value = prompts.analyze   || DEFAULT_PROMPTS.analyze;
+  if (el3 && !el3.value.trim()) el3.value = prompts.userMsgA  || DEFAULT_PROMPTS.userMsgA;
+  if (el4 && !el4.value.trim()) el4.value = prompts.userMsgB  || DEFAULT_PROMPTS.userMsgB;
+  // 同步三档温度滑竿到最新持久化值并刷新 hint
+  ['localize','analyze','generate'].forEach(applyTempToUI);
+  document.getElementById('settingsMo').classList.remove('hid');
+}
+function closeSettings() {
+  saveSettings();
+  document.getElementById('settingsMo').classList.add('hid');
+}
+document.getElementById('settingsMo').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+
+// ════════════════════════════════════════════════════════
+// 启动
+// ════════════════════════════════════════════════════════
+// Pre-fill default prompts in modal
+document.getElementById('ptLocalize').value  = DEFAULT_PROMPTS.localize;
+document.getElementById('ptAnalyze').value   = DEFAULT_PROMPTS.analyze;
+document.getElementById('ptUserMsgA').value  = DEFAULT_PROMPTS.userMsgA;
+document.getElementById('ptUserMsgB').value  = DEFAULT_PROMPTS.userMsgB;
+renderPlatPromptList();
+loadTemps();
+loadSettings();
+</script>
+</body>
+</html>

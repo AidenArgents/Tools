@@ -1,0 +1,3416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LATAM 拉美海外仓算价</title>
+  <style>
+    :root {
+      --bg: #f0f2f8;
+      --w: #fff;
+      --bd: #e2e5ef;
+      --t: #1c1f2e;
+      --t2: #4a5170;
+      --t3: #9ba3bf;
+      --blue: #3860e8;
+      --blu: #eef1fd;
+      --blb: #c5cffa;
+      --green: #0aab7c;
+      --grb: #e8faf4;
+      --grbd: #9de6cd;
+      --amb: #e07b00;
+      --ambb: #fff5e6;
+      --ambd: #ffd08a;
+      --pur: #6c3fe8;
+      --purb: #f2eeff;
+      --purd: #c9b5f5;
+      --red: #d63030;
+      --r: 10px;
+      --rs: 7px;
+      --sh: 0 1px 3px rgba(0, 0, 0, .06);
+      --sh2: 0 4px 16px rgba(0, 0, 0, .09)
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--t);
+      font-family: system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Inter', sans-serif;
+      font-size: 15px;
+      min-height: 100vh
+    }
+
+    .hdr {
+      background: var(--w);
+      border-bottom: 1px solid var(--bd);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      box-shadow: var(--sh)
+    }
+
+    .logo {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--blue);
+      letter-spacing: -.3px
+    }
+
+    .sep {
+      width: 1px;
+      height: 18px;
+      background: var(--bd)
+    }
+
+    .hsub {
+      font-size: 13px;
+      color: var(--t3)
+    }
+
+    .lay {
+      display: flex;
+      min-height: calc(100vh - 56px);
+      align-items: flex-start
+    }
+
+    .side {
+      width: 210px;
+      flex-shrink: 0;
+      background: var(--w);
+      border-right: 1px solid var(--bd);
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto
+    }
+
+    .slbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      color: var(--t3);
+      text-transform: uppercase;
+      padding: 8px 10px 4px;
+      margin-top: 6px
+    }
+
+    .slbl:first-child {
+      margin-top: 0
+    }
+
+    .pb {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 10px;
+      border-radius: var(--rs);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+      color: var(--t2);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .12s
+    }
+
+    .pb:hover {
+      background: var(--bg);
+      color: var(--t)
+    }
+
+    .pb.on {
+      background: var(--blu);
+      color: var(--blue)
+    }
+
+    .pb.on .pi {
+      background: var(--blue) !important;
+      color: #fff !important
+    }
+
+    .pi {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: .12s
+    }
+
+    .pn {
+      display: flex;
+      flex-direction: column;
+      gap: 1px
+    }
+
+    .pm {
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 600
+    }
+
+    .ps {
+      font-size: 10px;
+      color: var(--t3);
+      font-weight: 400
+    }
+
+    .pb.on .ps {
+      color: color-mix(in srgb, var(--blue) 55%, transparent)
+    }
+
+    .main-content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      min-width: 0;
+      align-items: start
+    }
+
+    @media(max-width:1100px) {
+      .main-content {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .left-col {
+      padding: 18px 16px 40px;
+      min-width: 0
+    }
+
+    .right-col {
+      padding: 18px 18px 40px;
+      border-left: 1px solid var(--bd);
+      position: sticky;
+      top: 56px;
+      height: calc(100vh - 56px);
+      overflow-y: auto;
+      background: var(--bg)
+    }
+
+    @media(max-width:1100px) {
+      .right-col {
+        position: static;
+        height: auto;
+        border-left: none;
+        border-top: 1px solid var(--bd)
+      }
+    }
+
+    .pgt {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+      margin-bottom: 3px
+    }
+
+    .pgs {
+      font-size: 12px;
+      color: var(--t3);
+      margin-bottom: 18px
+    }
+
+    .card {
+      background: var(--w);
+      border: 1px solid var(--bd);
+      border-radius: var(--r);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      box-shadow: var(--sh)
+    }
+
+    .ch {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      color: var(--t3);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 14px
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--blue);
+      flex-shrink: 0
+    }
+
+    .g2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px
+    }
+
+    .g3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 11px
+    }
+
+    .g4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 11px
+    }
+
+    .f {
+      display: flex;
+      flex-direction: column;
+      gap: 5px
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t2)
+    }
+
+    input[type=number],
+    select {
+      height: 38px;
+      padding: 0 12px;
+      border: 1.5px solid var(--bd);
+      border-radius: var(--rs);
+      background: var(--w);
+      color: var(--t);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      outline: none;
+      transition: border-color .12s, box-shadow .12s;
+      width: 100%;
+      -moz-appearance: textfield
+    }
+
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none
+    }
+
+    input[type=number]:focus,
+    select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(56, 96, 232, .1)
+    }
+
+    input[type=number]::placeholder {
+      color: transparent
+    }
+
+    .hr {
+      border: none;
+      border-top: 1px solid var(--bd);
+      margin: 14px 0
+    }
+
+    .tog {
+      display: flex;
+      background: var(--bg);
+      border: 1.5px solid var(--bd);
+      border-radius: var(--rs);
+      padding: 3px;
+      gap: 3px
+    }
+
+    .tb {
+      flex: 1;
+      height: 30px;
+      border: none;
+      border-radius: 5px;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--t2);
+      transition: .12s
+    }
+
+    .tb.on {
+      background: var(--w);
+      color: var(--blue);
+      font-weight: 700;
+      box-shadow: var(--sh)
+    }
+
+    .lsg {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 12px
+    }
+
+    .lsb {
+      padding: 9px 11px;
+      border: 1.5px solid var(--bd);
+      border-radius: var(--rs);
+      cursor: pointer;
+      background: var(--w);
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--t2);
+      font-weight: 500;
+      transition: .12s;
+      text-align: left;
+      line-height: 1.4
+    }
+
+    .lsb:hover {
+      border-color: var(--blue);
+      color: var(--blue)
+    }
+
+    .lsb.on {
+      border-color: var(--blue);
+      background: var(--blu);
+      color: var(--blue)
+    }
+
+    .lsn {
+      font-size: 12px;
+      font-weight: 700
+    }
+
+    .lsr {
+      font-size: 10px;
+      color: var(--t3);
+      margin-top: 2px
+    }
+
+    .lsb.on .lsr {
+      color: color-mix(in srgb, var(--blue) 55%, transparent)
+    }
+
+    .pg {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px
+    }
+
+    .pc {
+      background: var(--bg);
+      border: 1.5px solid var(--bd);
+      border-radius: var(--rs);
+      padding: 8px 11px;
+      transition: .12s
+    }
+
+    .pc:focus-within {
+      border-color: var(--blue)
+    }
+
+    .pc label {
+      font-size: 11px;
+      color: var(--t3);
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 500
+    }
+
+    .pc input {
+      border: none;
+      background: transparent;
+      padding: 0;
+      height: auto;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--blue);
+      width: 100%
+    }
+
+    .pc input:focus {
+      outline: none;
+      box-shadow: none
+    }
+
+    .btn {
+      width: 100%;
+      height: 44px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: var(--rs);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin-top: 4px
+    }
+
+    .btn:hover {
+      background: #2a50d4;
+      box-shadow: var(--sh2);
+      transform: translateY(-1px)
+    }
+
+    .btn:active {
+      transform: translateY(0)
+    }
+
+    .err {
+      display: none;
+      background: #fff5f5;
+      border: 1px solid #ffc5c5;
+      color: var(--red);
+      border-radius: var(--rs);
+      padding: 9px 12px;
+      font-size: 13px;
+      margin-top: 8px
+    }
+
+    .rg {
+      display: grid;
+      gap: 12px
+    }
+
+    .r2 {
+      grid-template-columns: 1fr 1fr
+    }
+
+    .r1 {
+      grid-template-columns: 1fr
+    }
+
+    .rc {
+      border-radius: var(--r);
+      border: 1.5px solid var(--bd);
+      padding: 18px;
+      background: var(--w);
+      box-shadow: var(--sh)
+    }
+
+    .rcg {
+      border-color: var(--grbd);
+      background: linear-gradient(135deg, var(--grb) 0%, #fff 55%)
+    }
+
+    .rca {
+      border-color: var(--ambd);
+      background: linear-gradient(135deg, var(--ambb) 0%, #fff 55%)
+    }
+
+    .rcb {
+      border-color: var(--blb);
+      background: linear-gradient(135deg, var(--blu) 0%, #fff 55%)
+    }
+
+    .rcp {
+      border-color: var(--purd);
+      background: linear-gradient(135deg, var(--purb) 0%, #fff 55%)
+    }
+
+    .rl {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      color: var(--t3);
+      text-transform: uppercase
+    }
+
+    .rs2 {
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 2px;
+      margin-bottom: 12px
+    }
+
+    .rcg .rs2 {
+      color: var(--green)
+    }
+
+    .rca .rs2 {
+      color: var(--amb)
+    }
+
+    .rcb .rs2 {
+      color: var(--blue)
+    }
+
+    .rcp .rs2 {
+      color: var(--pur)
+    }
+
+    .rpr {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1
+    }
+
+    .rcg .rpr {
+      color: var(--green)
+    }
+
+    .rca .rpr {
+      color: var(--amb)
+    }
+
+    .rcb .rpr {
+      color: var(--blue)
+    }
+
+    .rcp .rpr {
+      color: var(--pur)
+    }
+
+    .rcur {
+      font-size: 14px;
+      font-weight: 500;
+      margin-right: 3px;
+      opacity: .65
+    }
+
+    .rbg {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-top: 8px;
+      letter-spacing: .04em
+    }
+
+    .rcg .rbg {
+      background: var(--grb);
+      color: var(--green)
+    }
+
+    .rca .rbg {
+      background: var(--ambb);
+      color: var(--amb)
+    }
+
+    .rcb .rbg {
+      background: var(--blu);
+      color: var(--blue)
+    }
+
+    .rcp .rbg {
+      background: var(--purb);
+      color: var(--pur)
+    }
+
+    .rbk {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--bd);
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .rr {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--t2);
+      font-weight: 500
+    }
+
+    .rr.bld {
+      font-weight: 700;
+      color: var(--t);
+      padding-top: 6px;
+      border-top: 1px dashed var(--bd);
+      margin-top: 3px;
+      font-size: 13px
+    }
+
+    .left-col .card {
+      padding: 14px 16px;
+      margin-bottom: 11px
+    }
+
+    .hidden {
+      display: none !important
+    }
+
+    .price-copy-btn {
+      background: var(--bg);
+      border: 1.5px solid var(--bd);
+      border-radius: var(--rs);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none
+    }
+
+    .price-copy-btn:hover {
+      border-color: var(--blue);
+      background: var(--blu)
+    }
+
+    .pcl {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--t3);
+      text-transform: uppercase;
+      margin-bottom: 4px
+    }
+
+    .pcv {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -.5px
+    }
+
+    .r2 .pcv {
+      font-size: 16px
+    }
+
+    .r2 .rpr {
+      font-size: 22px
+    }
+
+    .pcv.rcg {
+      color: var(--green)
+    }
+
+    .pcv.rca {
+      color: var(--amb)
+    }
+
+    .pcv.rcb {
+      color: var(--blue)
+    }
+
+    .pcv.rcp {
+      color: var(--pur)
+    }
+
+    .mode-btn {
+      height: 32px;
+      padding: 0 16px;
+      border-radius: var(--rs);
+      border: 1.5px solid var(--bd);
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--t2);
+      cursor: pointer;
+      transition: .12s
+    }
+
+    .mode-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue)
+    }
+
+    .mode-btn.on {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff
+    }
+
+    /* batch mode */
+    .batch-wrap {
+      flex: 1;
+      padding: 22px 28px 40px;
+      display: none;
+      overflow-y: auto;
+      height: calc(100vh - 56px)
+    }
+
+    .btbl-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--bd);
+      border-radius: var(--r);
+      background: var(--w);
+      box-shadow: var(--sh)
+    }
+
+    .btbl {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 13px;
+      white-space: nowrap
+    }
+
+    .btbl th {
+      background: var(--bg);
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--t3);
+      border-bottom: 2px solid var(--bd);
+      white-space: nowrap
+    }
+
+    .btbl td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--bd);
+      vertical-align: middle
+    }
+
+    .btbl tr:last-child td {
+      border-bottom: none
+    }
+
+    .btbl tr:hover td {
+      background: #f8f9ff
+    }
+
+    .btbl input {
+      width: 80px;
+      height: 30px;
+      padding: 0 8px;
+      border: 1.5px solid var(--bd);
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t);
+      background: var(--w);
+      outline: none
+    }
+
+    .btbl input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px rgba(56, 96, 232, .1)
+    }
+
+    .btbl input.w-sku {
+      width: 110px
+    }
+
+    .btbl input.w-sm {
+      width: 64px
+    }
+
+    .btbl select {
+      height: 30px;
+      padding: 0 6px;
+      border: 1.5px solid var(--bd);
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--t);
+      background: var(--w);
+      outline: none;
+      cursor: pointer;
+      width: 180px
+    }
+
+    .btbl select:focus {
+      border-color: var(--blue)
+    }
+
+    .btbl td.res {
+      font-weight: 600;
+      font-size: 12px
+    }
+
+    .btbl td.res-br {
+      color: var(--green)
+    }
+
+    .btbl td.res-mx {
+      color: var(--blue)
+    }
+
+    .col-copy-btn {
+      margin-top: 3px;
+      height: 18px;
+      padding: 0 6px;
+      border: 1px solid var(--bd);
+      background: var(--w);
+      color: var(--t3);
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-block;
+      line-height: 18px
+    }
+
+    .col-copy-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blu)
+    }
+
+    .btbl .del-btn {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--t3);
+      font-size: 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .btbl .del-btn:hover {
+      background: #fff0f0;
+      color: var(--red)
+    }
+
+    .batch-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap
+    }
+
+    .batch-note {
+      font-size: 12px;
+      color: var(--t3);
+      margin-left: auto
+    }
+
+    .res-header {
+      background: linear-gradient(135deg, var(--grb), var(--blu)) !important;
+      color: var(--t) !important
+    }
+
+    .price-copy-btn {
+      background: var(--bg);
+      border: 1.5px solid var(--bd);
+      border-radius: var(--rs);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none
+    }
+
+    .price-copy-btn:hover {
+      border-color: var(--blue);
+      background: var(--blu)
+    }
+
+    .pcl {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      color: var(--t3);
+      text-transform: uppercase;
+      margin-bottom: 4px
+    }
+
+    .pcv {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -.5px
+    }
+
+    .r2 .pcv {
+      font-size: 16px
+    }
+
+    .r2 .rpr {
+      font-size: 22px
+    }
+
+    /* 设置Modal */
+    .s-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center
+    }
+
+    .s-box {
+      background: var(--w);
+      border-radius: var(--r);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .18);
+      width: 760px;
+      max-width: 95vw;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column
+    }
+
+    .s-hdr {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--bd);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0
+    }
+
+    .s-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--bd);
+      padding: 0 24px;
+      flex-shrink: 0
+    }
+
+    .s-body {
+      overflow-y: auto;
+      padding: 20px 24px 24px;
+      flex: 1
+    }
+
+    .stab {
+      height: 36px;
+      padding: 0 14px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: .12s
+    }
+
+    .stab.on {
+      color: var(--blue);
+      border-bottom-color: var(--blue)
+    }
+
+    .stab:hover {
+      color: var(--t)
+    }
+
+    .srow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 8px
+    }
+
+    .spc2 {
+      background: var(--bg);
+      border: 1.5px solid var(--bd);
+      border-radius: var(--rs);
+      padding: 8px 11px
+    }
+
+    .spc2:focus-within {
+      border-color: var(--blue)
+    }
+
+    .spc2 label {
+      font-size: 10px;
+      color: var(--t3);
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 500
+    }
+
+    .spc2 input {
+      border: none;
+      background: transparent;
+      padding: 0;
+      height: auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--blue);
+      width: 100%;
+      outline: none
+    }
+
+    .slg-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: var(--rs);
+      margin-bottom: 6px
+    }
+
+    .slg-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t);
+      min-width: 200px
+    }
+
+    .slg-inputs {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      flex-wrap: wrap
+    }
+
+    .slg-f {
+      display: flex;
+      flex-direction: column;
+      gap: 2px
+    }
+
+    .slg-f label {
+      font-size: 10px;
+      color: var(--t3);
+      font-weight: 500
+    }
+
+    .slg-f input {
+      height: 28px;
+      padding: 0 8px;
+      border: 1.5px solid var(--bd);
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t);
+      background: var(--w);
+      outline: none;
+      width: 90px
+    }
+
+    .slg-f input:focus {
+      border-color: var(--blue)
+    }
+
+    .ssec {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      color: var(--t3);
+      text-transform: uppercase;
+      margin: 14px 0 8px
+    }
+
+    .s-btn {
+      height: 32px;
+      padding: 0 16px;
+      border-radius: var(--rs);
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .s-btn-ghost {
+      height: 32px;
+      padding: 0 14px;
+      border-radius: var(--rs);
+      border: 1.5px solid var(--bd);
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t2);
+      cursor: pointer
+    }
+
+    .s-close {
+      height: 32px;
+      width: 32px;
+      border-radius: var(--rs);
+      border: 1.5px solid var(--bd);
+      background: transparent;
+      font-size: 18px;
+      color: var(--t3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+  </style>
+</head>
+
+<body>
+  <header class="hdr">
+    <div class="logo">LATAM 算价</div>
+    <div class="sep"></div>
+    <div class="hsub">拉美海外仓定价工具</div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="mode-btn on" id="mode-single" onclick="setMode('single')">单品算价</button>
+      <button class="mode-btn" id="mode-batch" onclick="setMode('batch')">批量算价</button>
+      <button class="mode-btn" onclick="openSettings()" style="display:flex;align-items:center;gap:5px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="12" cy="12" r="3" />
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        参数设置
+      </button>
+    </div>
+  </header>
+  <!-- 参数设置 Modal -->
+  <div class="s-overlay" id="s-overlay" onclick="if(event.target===this)closeSettings()">
+    <div class="s-box">
+      <div class="s-hdr">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800">参数设置</div>
+        <div style="font-size:12px;color:var(--t3)">修改后点击保存，单品/批量均生效</div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button class="s-btn-ghost" onclick="resetSettings()">重置默认</button>
+          <button class="s-btn" style="background:var(--blue);color:#fff" onclick="saveAndDownload()">保存并下载</button>
+          <button class="s-close" onclick="closeSettings()">×</button>
+        </div>
+      </div>
+      <div class="s-tabs" id="s-tabs"></div>
+      <div class="s-body" id="s-body"></div>
+    </div>
+  </div>
+
+  <div class="lay">
+    <nav class="side">
+      <div class="slbl">墨西哥 · México</div>
+      <button class="pb" id="btn-MX-TT" onclick="go('MX','TT')">
+        <div class="pi" style="background:#ffe8d6;color:#c94000">TT</div>
+        <div class="pn">
+          <div class="pm">TikTok Shop</div>
+          <div class="ps">墨西哥抖音</div>
+        </div>
+      </button>
+      <button class="pb" id="btn-MX-ML" onclick="go('MX','ML')">
+        <div class="pi" style="background:#fff3b0;color:#9a7100">ML</div>
+        <div class="pn">
+          <div class="pm">Mercado Libre</div>
+          <div class="ps">墨西哥美客多</div>
+        </div>
+      </button>
+      <button class="pb" id="btn-MX-AE" onclick="go('MX','AE')">
+        <div class="pi" style="background:#fff0d6;color:#b06000">AE</div>
+        <div class="pn">
+          <div class="pm">AliExpress</div>
+          <div class="ps">墨西哥速卖通</div>
+        </div>
+      </button>
+      <div class="slbl">巴西 · Brasil</div>
+      <button class="pb on" id="btn-BR-TT" onclick="go('BR','TT')">
+        <div class="pi" style="background:#ffe8d6;color:#c94000">TT</div>
+        <div class="pn">
+          <div class="pm">TikTok Shop</div>
+          <div class="ps">巴西抖音</div>
+        </div>
+      </button>
+      <button class="pb" id="btn-BR-ML" onclick="go('BR','ML')">
+        <div class="pi" style="background:#fff3b0;color:#9a7100">ML</div>
+        <div class="pn">
+          <div class="pm">Mercado Livre</div>
+          <div class="ps">巴西美客多</div>
+        </div>
+      </button>
+      <button class="pb" id="btn-BR-Shopee" onclick="go('BR','Shopee')">
+        <div class="pi" style="background:#ffe4e1;color:#b81800">SP</div>
+        <div class="pn">
+          <div class="pm">Shopee</div>
+          <div class="ps">巴西虾皮</div>
+        </div>
+      </button>
+      <button class="pb" id="btn-BR-Temu" onclick="go('BR','Temu')">
+        <div class="pi" style="background:#ffe9d2;color:#e06000">TM</div>
+        <div class="pn">
+          <div class="pm">Temu</div>
+          <div class="ps">巴西Temu</div>
+        </div>
+      </button>
+    </nav>
+    <div class="main-content">
+      <div class="left-col">
+        <div class="pgt" id="pgt">巴西 · TikTok Shop</div>
+        <div class="pgs" id="pgs">TikTok Shop 巴西站</div>
+        <div class="card">
+          <div class="card"
+            style="background: linear-gradient(135deg, #f0fdf4 0%, #fff 100%); border: 1.5px solid #86efac; padding: 14px 16px;">
+            <div class="ch" style="color: #059669; margin-bottom: 12px;">
+              <span
+                style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #059669; flex-shrink: 0; margin-right: 7px;"></span>
+              ERP产品查询
+              <div class="tog" id="fill-mode-tog"
+                style="margin-left:auto;width:220px;flex-shrink:0;text-transform:none;letter-spacing:0">
+                <button class="tb on" id="fill-all-btn" style="white-space:nowrap"
+                  onclick="setFillMode('all')">全部填充</button>
+                <button class="tb" id="fill-cost-btn" style="white-space:nowrap"
+                  onclick="setFillMode('cost')">只填充成本</button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+              <input type="text" id="skuQueryInput" placeholder="输入SKU，如：FUN5350C"
+                style="flex: 1; height: 36px; padding: 0 12px; border: 1.5px solid #d1fae5; border-radius: 6px; background: white; color: #059669; font-weight: 600;">
+              <button onclick="querySKUFromERP()"
+                style="padding: 0 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s; height: 36px;">
+                查询
+              </button>
+            </div>
+
+            <div style="display:flex; gap:12px; align-items:flex-start">
+              <div style="flex:1; min-width:0">
+                <div id="skuQueryStatus" style="font-size: 12px; color: #059669; display: none; padding: 6px 8px;">
+                  ⏳ 正在查询...
+                </div>
+                <div id="skuQueryError" style="font-size: 12px; color: #dc2626; display: none; padding: 6px 8px;">
+                </div>
+                <div id="skuQuerySuccess" style="font-size: 12px; color: #059669; display: none; padding: 6px 8px;">
+                  ✓ <span id="skuQueryResult"></span>
+                </div>
+              </div>
+              <div style="width:230px; flex-shrink:0; padding:8px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px">
+                <div style="font-size:12px;color:#1d4ed8;font-weight:700;margin-bottom:5px;white-space:nowrap">🌏 总监仓成本</div>
+                <select id="directorSelect" onchange="onDirectorChange()"
+                  style="width:100%;height:32px;padding:0 8px;border:1.5px solid #bfdbfe;border-radius:6px;background:white;color:#1d4ed8;font-weight:600;font-size:12px">
+                  <option value="">默认（王云仓优先）</option>
+                </select>
+                <div style="color:#94a3b8;font-size:10px;margin-top:5px;line-height:1.4">默认"自动"按权限取：组员查找自己的总监仓，管理层多权限可手动指定一个，记住上次</div>
+              </div>
+            </div>
+          </div>
+          <div class="ch">
+            <div class="dot"></div>商品信息
+          </div>
+          <div class="g4" style="margin-bottom:11px">
+            <div class="f"><label>商品成本 (￥)</label><input type="number" id="cost" step="0.01" min="0"
+                style="background:#f0fdf8;border-color:#b2f2e0"></div>
+            <div class="f"><label id="weight-label">重量 (g)</label><input type="number" id="weight" step="1" min="0"
+                style="background:#f0fdf8;border-color:#b2f2e0"></div>
+            <div class="f"><label>个数 / 套</label><input type="number" id="qty" value="1" min="1" step="1"
+                style="background:#fffbf0;border-color:#ffd08a"></div>
+            <div class="f"><label>内含件数</label><input type="number" id="dqty" value="1" min="1" step="1"
+                style="background:#fefce8;border-color:#fde047"></div>
+          </div>
+          <div class="hr"></div>
+          <div id="lswrap">
+            <div class="ch" style="margin-bottom:10px">
+              <div class="dot" style="background:var(--green)"></div>头程物流商
+            </div>
+            <div class="lsg" id="lsg"></div>
+          </div>
+          <div class="g2" style="margin-bottom:11px">
+            <div class="f">
+              <label>计费方式</label>
+              <div class="tog"><button class="tb on" id="tvol" onclick="setM('vol')">体积 ($/m³)</button><button
+                  class="tb" id="tkg" onclick="setM('kg')">重量 ($/kg)</button></div>
+            </div>
+            <div class="f" id="fm3"><label>头程运费 ($/m³)</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="number" id="frtm3" step="1" style="flex:1">
+                <div id="usd-rate-wrap" style="display:none;flex-shrink:0;width:110px">
+                  <input type="number" id="usd-rate" value="6.75" step="0.01" style="width:100%" title="美金汇率">
+                  <div style="font-size:10px;color:var(--t3);margin-top:2px;text-align:center">$/￥ 汇率</div>
+                </div>
+              </div>
+            </div>
+            <div class="f hidden" id="fkg"><label id="frtkg-label">头程运费 ($/kg)</label><input type="number" id="frtkg"
+                step="0.001"></div>
+          </div>
+          <div class="g4" id="vdims">
+            <div class="f"><label>长 (cm)</label><input type="number" id="diml" step="0.1"
+                style="background:#f0fdf8;border-color:#b2f2e0"></div>
+            <div class="f"><label>宽 (cm)</label><input type="number" id="dimw" step="0.1"
+                style="background:#f0fdf8;border-color:#b2f2e0"></div>
+            <div class="f"><label>高 (cm)</label><input type="number" id="dimh" step="0.1"
+                style="background:#f0fdf8;border-color:#b2f2e0"></div>
+            <div class="f"><label>箱规 (件/箱)</label><input type="number" id="bqty" value="1" min="1"
+                style="background:#fffbf0;border-color:#ffd08a"></div>
+          </div>
+          <div class="hr"></div>
+          <div class="g3">
+            <div class="f"><label id="svc-label">仓库服务费 (￥/件)</label><input type="number" id="svcfee" step="0.001"></div>
+            <div class="f" id="frep"><label>声誉等级</label><select id="rep">
+                <option value="green">绿色或无声誉</option>
+                <option value="yellow">黄色</option>
+                <option value="orange">橙色或红色</option>
+              </select></div>
+            <div class="f hidden" id="frepmx"><label>声誉等级</label><select id="repmx">
+                <option value="yellow">黄色或无声誉</option>
+                <option value="green">绿色</option>
+                <option value="orange">橙色或红色</option>
+              </select></div>
+          </div>
+        </div>
+      </div>
+      <div class="right-col" id="right-col">
+        <div class="pgt" id="pgt-r"></div>
+        <div class="card">
+          <div class="ch">
+            <div class="dot" style="background:var(--green)"></div>平台费率 <span
+              style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">可修改</span>
+          </div>
+          <div class="pg" id="pgrid"></div>
+          <div class="hr"></div>
+          <div class="g3">
+            <div class="f"><label>折扣比例 (%)</label><input type="number" id="disc" value="60" step="1" min="1" max="99">
+            </div>
+            <div class="f"></div>
+            <div class="f" style="justify-content:flex-end"><button class="btn" onclick="calc()"><svg width="15"
+                  height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>计算定价</button></div>
+          </div>
+          <div class="err" id="errbox"></div>
+        </div>
+        <div id="reswrap" class="hidden">
+          <div class="rg" id="resgrid"></div>
+        </div>
+        <div class="card" id="ad-card" style="border:1.5px solid #f9a825;background:#fffdf5;margin:18px 0">
+          <div class="ch"><div class="dot" style="background:#f97316"></div>广告费 <span style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">填 ACoS 或 ROAS 任一，自动换算 · 不进定价，只从毛利里扣 · 广告按每单计，与「个数/件」无关</span></div>
+          <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+            <div class="f" style="flex:1 1 120px"><label>广告占比 ACoS (%)</label><input type="number" id="ad-rate" step="0.1" min="0" placeholder="如 5 或 80" oninput="onAdInput('rate')"></div>
+            <div style="display:flex;align-items:center;height:40px;font-size:20px;font-weight:700;color:#f97316" title="ACoS 与 ROAS 互为倒数，自动换算">⇄</div>
+            <div class="f" style="flex:1 1 120px"><label>投入产出比 ROAS</label><input type="number" id="ad-roi" step="0.01" min="0" placeholder="如 20 或 1.25" oninput="onAdInput('roi')"></div>
+            <div style="flex:1.4 1 180px;align-self:stretch;display:flex;align-items:center"><div style="font-size:11px;color:var(--t3);line-height:1.6;border-left:2.5px solid #f9a825;padding-left:10px">单均广告费 <b style="color:#e07b00">CPA</b> = 售价 × ACoS<br>价格随卡片不同，<b style="color:var(--t2)">见上下各卡明细</b></div></div>
+          </div>
+        </div>
+        <!-- 反推利润 -->
+        <div class="card" id="rev-card">
+          <div class="ch">
+            <div class="dot" style="background:var(--pur)"></div>反推利润 <span
+              style="font-size:10px;color:var(--t3);font-weight:400;margin-left:4px">填入实际售价 → 计算真实盈利</span>
+          </div>
+          <div class="g3" style="margin-bottom:10px">
+            <div class="f">
+              <label>单价 (<span id="rev-cu">R$</span>)</label>
+              <input type="number" id="rev-price" step="0.01" min="0" placeholder="单个售价" oninput="syncRevTotal()">
+            </div>
+            <div class="f">
+              <label>总价 (<span id="rev-cu3">R$</span>)</label>
+              <input type="number" id="rev-total" step="0.01" min="0" placeholder="订单总价" oninput="syncRevUnit()">
+            </div>
+            <div class="f">
+              <label>额外收入如尾程 (<span id="rev-cu2">R$</span>)</label>
+              <input type="number" id="rev-extra" step="0.01" value="0">
+            </div>
+          </div>
+          <button class="btn" onclick="calcReverse()" style="background:var(--pur);margin-top:0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            反推计算
+          </button>
+          <div id="rev-result" class="hidden" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 批量模式 -->
+    <div class="batch-wrap" id="batch-wrap">
+
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700;margin-bottom:4px">批量算价
+      </div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:14px">每行填写一个产品，选择物流商，一键计算所有平台定价</div>
+      <div class="batch-toolbar">
+        <button class="btn" style="width:auto;height:36px;padding:0 16px;margin-top:0" onclick="addBatchRow()">＋
+          添加行</button>
+        <button class="btn" style="width:auto;height:36px;padding:0 16px;margin-top:0;background:#7c3aed"
+          onclick="openBatchSKUInput()">≡ 批量输入SKU</button>
+        <button class="btn" style="width:auto;height:36px;padding:0 16px;margin-top:0;background:var(--green)"
+          onclick="runBatch()">▶ 批量计算</button>
+        <button class="btn" style="width:auto;height:36px;padding:0 16px;margin-top:0;background:#6c8eef"
+          onclick="copyFirstRowToAll()">复制首行配置↓</button>
+        <button class="btn" style="width:auto;height:36px;padding:0 16px;margin-top:0;background:var(--amb)"
+          onclick="exportBatch()">↓ 导出 Excel</button>
+        <button class="btn" style="width:auto;height:36px;padding:0 16px;margin-top:0;background:#555"
+          onclick="downloadTemplate()">↓ 下载模板</button>
+        <label class="btn"
+          style="width:auto;height:36px;padding:0 16px;margin-top:0;background:var(--pur);cursor:pointer">
+          ↑ 上传文件 <input type="file" id="batch-upload" accept=".csv,.xlsx,.xls" style="display:none"
+            onchange="handleBatchUpload(event)">
+        </label>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <span style="font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap">填充:</span>
+          <div class="tog" id="b-fill-mode-tog" style="width:220px;text-transform:none;letter-spacing:0">
+            <button class="tb on" id="b-fill-all-btn" style="white-space:nowrap"
+              onclick="setFillMode('all')">全部填充</button>
+            <button class="tb" id="b-fill-cost-btn" style="white-space:nowrap"
+              onclick="setFillMode('cost')">只填充成本</button>
+          </div>
+        </div>
+        <span id="b-fill-stat" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--t2);white-space:nowrap;margin-left:4px"></span>
+        <button id="b-fill-retry" style="display:none;height:26px;padding:0 10px;border:none;border-radius:6px;background:#dc2626;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer" onclick="fillRetryFailed()">↻ 重试失败</button>
+        <button id="b-fill-jump" style="display:none;height:26px;padding:0 10px;border:1.5px solid #f59e0b;border-radius:6px;background:#fffbeb;color:#b45309;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer" onclick="fillJumpNext()">⌖ 问题行</button>
+        <span id="batch-note" style="font-size:12px;color:var(--t3);margin-left:8px"></span>
+      </div>
+      <div class="btbl-wrap">
+        <table class="btbl" id="btbl">
+          <thead>
+            <tr>
+              <th>国家<br><button class="col-copy-btn" onclick="copyCol('country')">复制↓</button></th>
+              <th>SKU / 名称</th>
+              <th>成本(￥)<br><button class="col-copy-btn" onclick="copyCol('cost')">复制↓</button></th>
+              <th>重量(g)<br><button class="col-copy-btn" onclick="copyCol('wt')">复制↓</button></th>
+              <th>长(cm)<br><button class="col-copy-btn" onclick="copyCol('l')">复制↓</button></th>
+              <th>宽(cm)<br><button class="col-copy-btn" onclick="copyCol('w')">复制↓</button></th>
+              <th>高(cm)<br><button class="col-copy-btn" onclick="copyCol('h')">复制↓</button></th>
+              <th>箱规<br><button class="col-copy-btn" onclick="copyCol('bq')">复制↓</button></th>
+              <th>个数<br><button class="col-copy-btn" onclick="copyCol('qty')">复制↓</button></th>
+              <th>内含件数<br><button class="col-copy-btn" onclick="copyCol('dqty')">复制↓</button></th>
+              <th>物流商<br><button class="col-copy-btn" onclick="copyCol('lg')">复制↓</button></th>
+              <th>计费<br><button class="col-copy-btn" onclick="copyCol('m')">复制↓</button></th>
+              <th>利润率(%)<br><button class="col-copy-btn" onclick="copyCol('pr')">复制↓</button></th>
+              <th>折扣(%)<br><button class="col-copy-btn" onclick="copyCol('disc')">复制↓</button></th>
+              <th style="background:#e8faf4;color:#0aab7c">BR·TT</th>
+              <th style="background:#e8faf4;color:#0aab7c">BR·ML不包邮</th>
+              <th style="background:#e8faf4;color:#0aab7c">BR·ML包邮</th>
+              <th style="background:#e8faf4;color:#0aab7c">BR·Shopee</th>
+              <th style="background:#e8faf4;color:#0aab7c">BR·Temu</th>
+              <th style="background:#eef1fd;color:#3860e8">MX·TT</th>
+              <th style="background:#eef1fd;color:#3860e8">MX·ML包邮</th>
+              <th style="background:#eef1fd;color:#3860e8">MX·ML不包邮</th>
+              <th style="background:#eef1fd;color:#3860e8">MX·AE线下</th>
+              <th style="background:#eef1fd;color:#3860e8">MX·AE平台</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="btbl-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- 批量输入SKU Modal -->
+  <div id="batch-sku-modal"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:210;align-items:center;justify-content:center">
+    <div
+      style="background:#fff;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.18);padding:22px 24px;width:420px;max-width:92vw">
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px">批量输入SKU
+      </div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:12px">空格 / 逗号 / 回车 分割均可，每个SKU自动添加一行并触发ERP查询</div>
+      <textarea id="batch-sku-input" placeholder="FUN5350C FUN5351A&#10;PRO123, PRO456&#10;ABC789"
+        style="width:100%;height:130px;padding:9px 11px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:'Inter',sans-serif;font-size:13px;resize:vertical;outline:none;color:var(--t);line-height:1.6"
+        onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--bd)'"></textarea>
+      <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+        <button onclick="document.getElementById('batch-sku-modal').style.display='none'"
+          style="height:34px;padding:0 16px;border-radius:var(--rs);border:1.5px solid var(--bd);background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer">取消</button>
+        <button onclick="submitBatchSKUs()"
+          style="height:34px;padding:0 18px;border-radius:var(--rs);border:none;background:var(--blue);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">添加行并查询</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+        const MLBR_W = [0, .3, .5, 1, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150];
+    const MLBR_P = [0, 19, 49, 79, 100, 120, 150, 200];
+    const MLBR = {
+green: [
+        [5.65, 6.85, 8.15, 12.95, 14.95, 16.95, 19.05, 21.65],
+        [5.95, 6.95, 8.25, 13.85, 16.15, 18.15, 20.45, 23.25],
+        [6.05, 7.15, 8.45, 14.45, 16.85, 19.05, 21.35, 24.45],
+        [6.15, 7.35, 8.65, 14.75, 17.15, 19.45, 21.75, 25.45],
+        [6.25, 7.45, 8.75, 15.05, 17.65, 19.85, 22.25, 25.55],
+        [6.35, 8.65, 9.15, 16.45, 19.15, 21.65, 24.35, 27.05],
+        [6.45, 8.75, 9.75, 17.85, 20.75, 23.35, 26.35, 29.25],
+        [6.55, 8.85, 10.25, 19.75, 22.85, 26.05, 29.25, 32.45],
+        [6.65, 8.95, 10.35, 25.95, 29.15, 33.35, 36.45, 40.85],
+        [6.75, 9.05, 10.45, 27.55, 31.65, 36.75, 40.85, 45.25],
+        [6.85, 9.25, 10.55, 29.45, 34.35, 39.25, 44.15, 49.35],
+        [6.95, 9.35, 10.65, 30.25, 35.25, 40.35, 45.35, 50.75],
+        [7.05, 9.45, 10.85, 38.25, 45.05, 51.95, 58.75, 65.85],
+        [7.05, 9.65, 11.05, 41.65, 48.55, 55.45, 62.35, 69.35],
+        [7.15, 10.05, 11.45, 42.55, 49.75, 56.85, 63.85, 70.95],
+        [7.25, 10.25, 11.65, 45.55, 52.95, 60.55, 68.15, 75.65],
+        [7.35, 10.45, 11.85, 48.95, 56.55, 64.05, 71.35, 79.35],
+        [7.45, 10.65, 12.05, 55.15, 64.35, 73.55, 82.75, 91.95],
+        [7.65, 11.05, 12.25, 64.55, 75.75, 85.45, 96.25, 106.85],
+        [7.75, 11.25, 12.45, 66.45, 76.05, 86.25, 97.15, 107.85],
+        [7.85, 11.45, 12.65, 68.35, 79.65, 89.75, 100.05, 107.95],
+        [7.95, 11.65, 12.85, 70.95, 81.85, 92.85, 103.45, 111.65],
+        [8.05, 11.85, 13.05, 75.55, 87.25, 99.05, 110.25, 119.05],
+        [8.15, 12.05, 13.25, 80.95, 93.75, 105.95, 118.05, 127.45],
+        [8.25, 12.25, 13.45, 84.65, 97.95, 110.75, 123.35, 133.15],
+        [8.35, 12.45, 13.65, 94.05, 108.35, 122.95, 136.95, 147.85],
+        [8.45, 12.65, 13.85, 107.45, 124.85, 140.45, 156.45, 168.85],
+        [8.55, 12.85, 14.05, 120.15, 138.95, 156.95, 174.85, 188.85],
+        [8.65, 12.85, 14.25, 127.45, 147.05, 166.55, 185.55, 200.35],
+        [8.75, 12.85, 14.45, 167.05, 193.35, 218.45, 243.45, 262.85]
+      ],
+yellow: [
+        [19.0, 79.0, 79.0, 0.0, 19.0, 49.0, 79.0, 100.0],
+        [120.0, 150.0, 200.0, 6.46, 7.49, 8.86, 14.82, 17.22],
+        [19.74, 22.14, 25.14, 6.8, 7.6, 8.97, 15.9, 18.54],
+        [21.18, 23.82, 27.06, 6.91, 7.71, 9.09, 16.62, 19.38],
+        [22.14, 24.9, 28.38, 7.03, 7.83, 9.2, 16.98, 19.74],
+        [22.62, 25.38, 29.58, 7.14, 7.94, 9.31, 17.34, 20.22],
+        [23.1, 25.98, 29.58, 7.26, 9.09, 9.77, 18.9, 22.02],
+        [25.26, 28.38, 31.5, 7.37, 9.31, 10.23, 20.46, 23.82],
+        [27.18, 30.66, 34.02, 7.49, 9.54, 11.14, 22.14, 25.86],
+        [29.58, 33.3, 36.9, 7.6, 9.77, 11.37, 30.54, 34.26],
+        [39.18, 42.9, 47.7, 7.71, 10.0, 11.6, 32.46, 37.26],
+        [43.26, 48.06, 52.86, 7.83, 10.23, 11.83, 34.62, 40.38],
+        [46.14, 51.9, 57.66, 7.94, 10.46, 12.06, 35.58, 41.46],
+        [47.46, 53.34, 59.22, 8.06, 10.91, 12.51, 49.5, 57.66],
+        [65.94, 74.1, 82.38, 8.17, 11.37, 12.97, 50.58, 59.1],
+        [67.5, 75.9, 84.3, 8.29, 11.6, 13.2, 54.06, 62.94],
+        [71.94, 80.94, 89.94, 8.4, 11.83, 13.43, 58.26, 67.26],
+        [76.26, 84.9, 94.38, 8.51, 12.06, 13.66, 65.7, 76.62],
+        [87.54, 98.46, 109.38, 8.74, 12.51, 13.89, 76.86, 90.06],
+        [101.7, 114.42, 127.14, 8.86, 12.74, 14.11, 79.14, 90.54],
+        [102.66, 115.5, 128.34, 8.97, 12.97, 14.34, 81.3, 94.74],
+        [106.74, 118.98, 128.46, 9.09, 13.2, 14.57, 84.3, 97.26],
+        [110.46, 123.06, 132.9, 9.2, 13.43, 14.8, 89.94, 103.74],
+        [117.78, 131.22, 141.78, 9.31, 13.66, 15.03, 96.3, 111.54],
+        [126.06, 140.58, 151.86, 9.43, 13.89, 15.26, 100.74, 116.46],
+        [131.82, 146.94, 158.7, 9.54, 14.11, 15.49, 111.9, 128.94],
+        [146.46, 163.26, 176.34, 9.66, 14.34, 15.71, 127.86, 148.74],
+        [167.46, 186.66, 201.54, 9.77, 14.57, 15.94, 143.1, 165.66],
+        [187.26, 208.74, 225.54, 9.89, 14.57, 16.17, 151.86, 175.38],
+        [198.78, 221.58, 239.34, 10.0, 14.57, 16.4, 199.38, 230.94]
+      ],
+orange: [
+        [19.0, 79.0, 79.0, 0.0, 19.0, 49.0, 79.0, 100.0],
+        [120.0, 150.0, 200.0, 8.07, 9.36, 11.07, 24.7, 28.7],
+        [32.9, 36.9, 41.9, 8.5, 9.5, 11.21, 26.5, 30.9],
+        [35.3, 39.7, 45.1, 8.64, 9.64, 11.36, 27.7, 32.3],
+        [36.9, 41.5, 47.3, 8.79, 9.79, 11.5, 28.3, 32.9],
+        [37.7, 42.3, 49.3, 8.93, 9.93, 11.64, 28.9, 33.7],
+        [38.5, 43.3, 49.3, 9.07, 11.36, 12.21, 31.5, 36.7],
+        [42.1, 47.3, 52.5, 9.21, 11.64, 12.79, 34.1, 39.7],
+        [45.3, 51.1, 56.7, 9.36, 11.93, 13.93, 36.9, 43.1],
+        [49.3, 55.5, 61.5, 9.5, 12.21, 14.21, 50.9, 57.1],
+        [65.3, 71.5, 79.5, 9.64, 12.5, 14.5, 54.1, 62.1],
+        [72.1, 80.1, 88.1, 9.79, 12.79, 14.79, 57.7, 67.3],
+        [76.9, 86.5, 96.1, 9.93, 13.07, 15.07, 59.3, 69.1],
+        [79.1, 88.9, 98.7, 10.07, 13.64, 15.64, 82.5, 96.1],
+        [109.9, 123.5, 137.3, 10.21, 14.21, 16.21, 84.3, 98.5],
+        [112.5, 126.5, 140.5, 10.36, 14.5, 16.5, 90.1, 104.9],
+        [119.9, 134.9, 149.9, 10.5, 14.79, 16.79, 97.1, 112.1],
+        [127.1, 141.5, 157.3, 10.64, 15.07, 17.07, 109.5, 127.7],
+        [145.9, 164.1, 182.3, 10.93, 15.64, 17.36, 128.1, 150.1],
+        [169.5, 190.7, 211.9, 11.07, 15.93, 17.64, 131.9, 150.9],
+        [171.1, 192.5, 213.9, 11.21, 16.21, 17.93, 135.5, 157.9],
+        [177.9, 198.3, 214.1, 11.36, 16.5, 18.21, 140.5, 162.1],
+        [184.1, 205.1, 221.5, 11.5, 16.79, 18.5, 149.9, 172.9],
+        [196.3, 218.7, 236.3, 11.64, 17.07, 18.79, 160.5, 185.9],
+        [210.1, 234.3, 253.1, 11.79, 17.36, 19.07, 167.9, 194.1],
+        [219.7, 244.9, 264.5, 11.93, 17.64, 19.36, 186.5, 214.9],
+        [244.1, 272.1, 293.9, 12.07, 17.93, 19.64, 213.1, 247.9],
+        [279.1, 311.1, 335.9, 12.21, 18.21, 19.93, 238.5, 276.1],
+        [312.1, 347.9, 375.9, 12.36, 18.21, 20.21, 253.1, 292.3],
+        [331.3, 369.3, 398.9, 12.5, 18.21, 20.5, 332.3, 384.9]
+      ]
+    };
+
+    const MLMX_W = [0, .3, .5, 1, 2, 3, 4, 5, 7, 9, 12, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350];
+    const MLMX_B = [131, 140, 149, 169, 190, 206, 220, 245, 279, 323, 380, 445, 563, 698, 903, 1014, 1041, 1084, 1219, 1406, 1593, 2115, 2637, 3159, 3681, 4203, 4725, 5246, 5770, 6292, 6292];
+    function lkMLBR(wk, pr, rep) { const d = MLBR[rep === 'yellow' ? 'yellow' : rep === 'orange' ? 'orange' : 'green']; let wi = 0, pi = 0; for (let i = 0; i < MLBR_W.length; i++) { if (wk >= MLBR_W[i]) wi = i; else break; } for (let i = 0; i < MLBR_P.length; i++) { if (pr >= MLBR_P[i]) pi = i; else break; } return d[wi][pi]; }
+    function lkMLMXBase(wk) { let wi = 0; for (let i = 0; i < MLMX_W.length; i++) { if (wk >= MLMX_W[i]) wi = i; else break; } return MLMX_B[wi]; }
+    function lkAEMXP(wk) {
+      const g = wk * 1000;
+      if (g > 30000) throw new Error('AE平台物流-包邮：单件重量 ' + g.toFixed(0) + 'g 超过 30kg 上限');
+      if (g <= 250) return 36.30;
+      if (g <= 500) return 36.70;
+      if (g <= 750) return 38.60;
+      if (g <= 1000) return 39.00;
+      if (g <= 1250) return 40.80;
+      if (g <= 1500) return 41.00;
+      if (g <= 1750) return 43.80;
+      if (g <= 2000) return 44.40;
+      if (g <= 3000) return 50.60;
+      if (g <= 4000) return 60.20;
+      if (g <= 5000) return 66.40;
+      if (g <= 10000) return 134.70;
+      if (g <= 20000) return 239.20;
+      return 388.50;
+    }
+    const LG_DEFAULT = {
+      "BR": [
+        { id: 'hy1', name: '和域-普货', rate1: 850, rate2: 850, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy2', name: '和域-家居整理器', rate1: 900, rate2: 900, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy3', name: '和域-运动户外与旅行', rate1: 900, rate2: 900, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy4', name: '和域-时尚配饰', rate1: 1000, rate2: 1000, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy5', name: '和域-手机与电脑配饰', rate1: 1000, rate2: 1000, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy6', name: '和域-灯具', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy7', name: '和域-家用电器（USD）', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy8', name: '和域-电气设备', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy9', name: '和域-带遥控类', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy10', name: '和域-穿戴', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy11', name: '和域-宠物美容&玩具', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy12', name: '和域-卫浴洁具', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy13', name: '和域-工具与家居装修', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy14', name: '和域-非认证设备类', rate1: 1200, rate2: 1200, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy15', name: '和域-带插座类', rate1: 1300, rate2: 1300, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy16', name: '和域-音频', rate1: 1300, rate2: 1300, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy17', name: '和域-成人玩具', rate1: 1300, rate2: 1300, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy18', name: '和域-文具类', rate1: 1300, rate2: 1300, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy19', name: '和域-手机与电脑配件', rate1: 1300, rate2: 1300, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy20', name: '和域-蓝牙类', rate1: 1350, rate2: 1350, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy21', name: '和域-爱好与收藏', rate1: 1350, rate2: 1350, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy22', name: '和域-家居家纺', rate1: 1400, rate2: 1400, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy23', name: '和域-非认证带电类', rate1: 1400, rate2: 1400, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy24', name: '和域-汽车摩托车与配件', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy25', name: '和域-带电池类（非家电）', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy26', name: '和域-家用电器（带插头）', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy27', name: '和域-电气设备·高端', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy28', name: '和域-带遥控类·投影', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy29', name: '和域-TV产品', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy30', name: '和域-美容仪器', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy31', name: '和域-母婴用品', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy32', name: '和域-服装配件', rate1: 1500, rate2: 1500, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy33', name: '和域-波频波段类', rate1: 1600, rate2: 1600, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy34', name: '和域-锂电类', rate1: 1600, rate2: 1600, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy35', name: '和域-文具类·笔类', rate1: 1700, rate2: 1700, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy36', name: '和域-5G/4G/3G类', rate1: 1800, rate2: 1800, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy37', name: '和域-健康用品', rate1: 1800, rate2: 1800, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy38', name: '和域-服装内衣', rate1: 1800, rate2: 1800, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy39', name: '和域-医疗器械', rate1: 2000, rate2: 2000, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy40', name: '和域-彩妆', rate1: 2000, rate2: 2000, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy41', name: '和域-家居护理用品', rate1: 2000, rate2: 2000, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy42', name: '和域-电子设备类', rate1: 2100, rate2: 2100, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy43', name: '和域-电子设备类·笔电', rate1: 2100, rate2: 2100, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy44', name: '和域-美容&美妆', rate1: 2100, rate2: 2100, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy45', name: '和域-眼镜类', rate1: 2100, rate2: 2100, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy46', name: '和域-美容&美妆·香水', rate1: 2300, rate2: 2300, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy47', name: '和域-保健品', rate1: 2300, rate2: 2300, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'hy48', name: '和域-服装成衣', rate1: 2600, rate2: 2600, svc: 3.75, svcExtra: 1.25625, usd: true, cbmKg: 300 },
+        { id: 'at1', name: '安兔-普货', rate1: 800, rate2: 800, svc: 5.775, svcExtra: 5.375, usd: true, cbmKg: 180 },
+        { id: 'at2', name: '安兔-带电', rate1: 1600, rate2: 1600, svc: 5.775, svcExtra: 5.375, usd: true, cbmKg: 180 },
+        { id: 'cl1', name: '3CLIQUES-一类普货', rate1: 1200, rate2: 1100, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+        { id: 'cl2', name: '3CLIQUES-二类带电/带电路板', rate1: 1500, rate2: 1350, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+        { id: 'cl3', name: '3CLIQUES-三类内置电池/仪器', rate1: 1550, rate2: 1500, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+        { id: 'cl4', name: '3CLIQUES-四类大灯', rate1: 1650, rate2: 1600, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+        { id: 'cl5', name: '3CLIQUES-五类食品/纺织品', rate1: 1850, rate2: 1750, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+        { id: 'cl6', name: '3CLIQUES-六类成衣', rate1: 3200, rate2: 3150, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+        { id: 'cl7', name: '3CLIQUES-七类高货值/仪器', rate1: 3250, rate2: 3100, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+        { id: 'cl8', name: '3CLIQUES-非仿品眼镜', rate1: 3200, rate2: 3150, svc: 10.338, svcExtra: 0, usd: true, cbmKg: 400 },
+      ],
+      "MX": [
+        { id: 'mx1', name: '美墨海派-限时达-普货 (A)', rate1: 4100, rate2: 4050, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '塑料制品(塑料杯,塑料瓶,塑料盘等),行李箱,手提箱,公文包,箱包,普通拉杆箱,日用百货产品(材质为塑料的,橡胶等),厨房用去油布(非纺织品材质),手机壳,保护膜,数据线,配件(镜架)(眼镜镜片是玻璃制品需要跌落证明),手表配件(壳.盖子.表带)(带蓝牙LOGO字样需要注册并授权),人造PU卷材,复合皮革,硅胶制品,塑料制工艺品,PVC,汽车配件及其它配件类(不含纺织品、不锈钢材质),硅胶垫,不锈钢套锅,收纳架,筛网,橡胶制品,化纤假发等。未列明产品请单询。' },
+        { id: 'mx7', name: '美墨海派-限时达-普货一类 (A1)', rate1: 3600, rate2: 3550, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '纸巾盒，开瓶器，安全带，安全按钮，安全卡扣，手机贴膜，杯刷，白板擦，充电器，宠物围栏，数字摆件，(塑料材质)收纳架，搅拌勺，底座充电器，数据线，保鲜盒，熟食杯，钥匙扣(塑料，装饰挂件类)，马桶刷，壁挂支架，编发工具，塑料理发梳，窗户膜、窗贴，水桶，水盆，塑料桶，收纳盒套装，塑料浮架套装。未列明产品请单询。' },
+        { id: 'mx2', name: '美墨海派-限时达-带电 (B)', rate1: 4200, rate2: 4150, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '家用和商用的电器,灯具,LED灯,骑行灯,加湿器,监控摄像头,小型风扇,除螨仪,推发剪,电饼铛,吹风机，厨房用品,果汁机,玩具,充电器,收音机,包装机,食品机,压榨机,电砖,车灯。未列明产品请单询。' },
+        { id: 'mx3', name: '美墨海派-限时达-特货一类（含木制品，固体化妆品）', rate1: 4600, rate2: 4550, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '木制品 / 成人用品 / 口红 / 眉笔，化妆品类不含液体膏体类。未列明产品请单询。' },
+        { id: 'mx4', name: '美墨海派-限时达-特货二类（含液体膏体，包括这些材质的化妆品）', rate1: 4750, rate2: 4700, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '化妆品、日用百货类中含液体/膏状类：牙膏，洗发水、护发素、沐浴露、洗面奶、化妆品(如口红、粉底、面霜、防晒霜、润唇膏等)；洗手液、免洗消毒凝胶，洗洁精、厨房去油污剂，地板清洁剂、玻璃清洁剂；消毒液(如84消毒液)。未列明产品请单询。' },
+        { id: 'mx5', name: '美墨海派-限时达-纺织品 (E)', rate1: 4500, rate2: 4450, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '纺织品类(原材料以及成品衣物或其他纺织品),手套,皮革(PU),鞋子，服装辅料,台布,纺织手套,纺织帽子,布匹,服装,牛仔裤,窗帘,帷幔和踢脚板,记忆棉枕头等。未列明产品请单询。' },
+        { id: 'mx6', name: '美墨海派-限时达-高价值 (H)', rate1: 5250, rate2: 5200, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '手机、平板、笔记本，手环、手表、蓝牙音箱、蓝牙耳机、投影仪(家用、便携式)、音箱(智能音箱、蓝牙音箱、Soundbar)。未列明产品请单询。' },
+        { id: 'mx_eco_1', name: '美墨海派-经济线-普货', rate1: 3600, rate2: 3550, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '塑料制品(塑料杯,塑料瓶,塑料盘等),行李箱,普通拉杆箱,日用百货产品（材质为塑料的,橡胶等),厨房用去油布(非纺织品材质),手机壳,保护膜,数据线,配件(镜架)(眼镜镜片是玻璃制品需要跌落证明),手表配件(壳.盖子.表带)(带蓝牙LOGO字样需要注册并授权),人造PU卷材,,复合皮革,硅胶制品,塑料制工艺品,PVC,汽车配件及其它配件类(不含纺织品材质),硅胶垫,不锈钢套锅,收纳架,筛网,橡胶制品,化纤假发等 未列明产品请单询' },
+        { id: 'mx_eco_2', name: '美墨海派-经济线-普货一类', rate1: 3000, rate2: 2950, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '纸巾盒，开瓶器，安全带，安全按钮，安全卡扣，手机贴膜，杯刷，白板擦，充电器，宠物围栏，数字摆件，（塑料材质）收纳架，搅拌勺，底座充电器，数据线，保鲜盒，熟食杯，钥匙扣（塑料，装饰挂件类），马桶刷，壁挂支架，编发工具，塑料理发梳，窗户膜、窗贴，水桶，水盆，塑料桶，收纳盒套装，塑料浮架套装  未列明产品请单询' },
+        { id: 'mx_eco_3', name: '美墨海派-经济线-带电', rate1: 3700, rate2: 3650, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '家用和商用的电器,灯具,LED灯,骑行灯,加湿器,监控摄像头,小型风扇,推发剪,电饼铛,吹风机，厨房用品,果汁机,玩具,充电器,收音机,包装机,食品机,压榨机,电砖,车灯；未列明产品请单询' },
+        { id: 'mx_eco_4', name: '美墨海派-经济线-纺织品', rate1: 4050, rate2: 4000, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '纺织品类(原材料以及成品衣物或其他纺织品),手套,皮革（PU）,鞋子，服装辅料,台布,纺织手套,纺织帽子,布匹,服装,牛仔裤,窗帘,帷幔和踢脚板,记忆棉枕头等 未列明产品请单询' },
+        { id: 'mx_eco_5', name: '美墨海派-经济线-特货一类', rate1: 4050, rate2: 4000, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '木制品/成人用品/口红/眉笔，化妆品类不含液体膏体类  未列明产品请单询' },
+        { id: 'mx_eco_6', name: '美墨海派-经济线-特货二类', rate1: 4450, rate2: 4400, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '化妆品、日用百货类中含液体/膏状类：牙膏，洗发水、护发素、沐浴露、洗面奶、化妆品（如口红、粉底、面霜、防晒霜、润唇膏等） 洗手液、免洗消毒凝胶，洗洁精、厨房去油污剂，地板清洁剂、玻璃清洁剂  消毒液（如84消毒液） 未列明产品请单询' },
+        { id: 'mx_eco_7', name: '美墨海派-经济线-特货三类', rate1: 5050, rate2: 5000, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '保健品、香水、 未列明产品请单询' },
+        { id: 'mx_eco_9', name: '美墨海派-经济线-高价值', rate1: 4550, rate2: 4500, svc: 7.12, svcExtra: 4.72, cbmKg: 500,
+          tip: '手机、平板、笔记本，手环、手表、蓝牙音箱、蓝牙耳机、投影仪（家用、便携式）、音箱（智能音箱、蓝牙音箱、Soundbar） 未列明产品请单询' },
+      ]
+    };
+    let LG = JSON.parse(JSON.stringify(LG_DEFAULT));
+    let curSvcExtra = 0;
+    function totalSvc(svc, svcExtra, n) {
+      return svc + (svcExtra || 0) * Math.max(n - 1, 0);
+    }
+    const C_DEFAULT = {
+      'BR-TT': {
+        t: '巴西 · TikTok Shop', s: 'TikTok Shop 巴西站', cur: 'R$', rep: 'none',
+        p: [['利润率(%)', 'profit', 20], ['汇率(￥/R$)', 'rate', 1.25], ['佣金(%)(售价低于50R$)', 'comm1', 10], ['佣金(%)(售价等于高于50R$)', 'comm2', 6], ['退款率(%)', 'refund', 4.82], ['汇损(%)', 'fxloss', 2.5], ['达人(%)', 'inf', 10], ['平台包邮(%)', 'shipSub', 6], ['订单处理费(售价低于50R$)', 'orderFee1', 4], ['订单处理费(售价等于高于50R$)', 'orderFee2', 6], ['税费(%)', 'tax', 4]],
+        m: [{ id: 'P', l: 'TT定价', sc: 'TikTok Shop 定价', cl: 'rcb', bg: 'TikTok Shop · 巴西站', fn: 'br_tt' }]
+      },
+      'BR-ML': {
+        t: '巴西 · Mercado Livre', s: '美客多巴西站 · 声誉影响价格区间×重量段查运费套入迭代计算', cur: 'R$', rep: 'BR',
+        p: [['利润率(%)', 'profit', 30], ['汇率(￥/R$)', 'rate', 1.25], ['佣金(%)', 'comm', 17.5], ['退款率(%)', 'refund', 5.73], ['汇损(%)', 'fxloss', 2.5], ['达人(%)', 'inf', 0], ['平台包邮(%)', 'shipSub', 0], ['订单处理费', 'orderFee', 0], ['税费(%)', 'tax', 4]],
+        m: [{ id: 'U', l: '有活动·不包邮', sc: '79以下不包邮定价', cl: 'rca', bg: '活动期间 · 客户享受免邮', fn: 'br_ml_u' }, { id: 'V', l: '无活动·包邮', sc: '包邮物流定价', cl: 'rcg', bg: '无活动 · 包邮物流(≥R$79)', fn: 'br_ml_v' }]
+      },
+      'BR-Shopee': {
+        t: '巴西 · Shopee', s: 'Shopee 巴西站', cur: 'R$', rep: 'none',
+        p: [['利润率(%)', 'profit', 20], ['汇率(￥/R$)', 'rate', 1.25], ['佣金(%)', 'comm', 20], ['退款率(%)', 'refund', 4.82], ['汇损(%)', 'fxloss', 2.5], ['达人(%)', 'inf', 0], ['平台包邮(%)', 'shipSub', 0], ['订单处理费', 'orderFee', 4], ['税费(%)', 'tax', 4]],
+        m: [{ id: 'P', l: 'Shopee定价', sc: 'Shopee 巴西站定价', cl: 'rcb', bg: 'Shopee · 巴西站', fn: 'none' }]
+      },
+      'BR-Temu': {
+        t: '巴西 · Temu', s: 'Temu 托管 · 巴西站', cur: 'R$', rep: 'none',
+        p: [['利润率(%)', 'profit', 20], ['汇率(￥/R$)', 'rate', 1.25], ['佣金(%)', 'comm', 0], ['退款率(%)', 'refund', 4.82], ['汇损(%)', 'fxloss', 2.5], ['达人(%)', 'inf', 0], ['平台包邮(%)', 'shipSub', 0], ['订单处理费', 'orderFee', 0], ['税费(%)', 'tax', 4]],
+        m: [{ id: 'P', l: 'Temu定价', sc: 'Temu 巴西站定价', cl: 'rcp', bg: 'Temu · 巴西站', fn: 'br_temu' }]
+      },
+      'MX-TT': {
+        t: '墨西哥 · TikTok Shop', s: 'TikTok Shop 墨西哥站', cur: 'MXN', rep: 'none',
+        p: [['利润率(%)', 'profit', 20], ['汇率(￥/MXN)', 'rate', 0.37], ['佣金(%)', 'comm', 6], ['退款率(%)', 'refund', 5.68], ['汇损(%)', 'fxloss', 2.5], ['达人(%)', 'inf', 10], ['平台包邮(%)', 'shipSub', 8], ['订单处理费', 'orderFee', 6], ['税费(%)', 'tax', 11.04]],
+        m: [{ id: 'P', l: 'TT定价', sc: 'TikTok Shop 定价', cl: 'rcb', bg: 'TikTok Shop · 墨西哥站', fn: 'mx_tt' }]
+      },
+      'MX-ML': {
+        t: '墨西哥 · Mercado Libre', s: '美客多墨西哥站 · 声誉影响价格区间×重量段查运费', cur: 'MXN', rep: 'MX',
+        p: [['利润率(%)', 'profit', 30], ['汇率(￥/MXN)', 'rate', 0.37], ['佣金(%)', 'comm', 15], ['退款率(%)', 'refund', 5.68], ['汇损(%)', 'fxloss', 2.5], ['达人(%)', 'inf', 0], ['平台包邮(%)', 'shipSub', 0], ['订单处理费', 'orderFee', 0], ['税费(%)', 'tax', 11.04]],
+        m: [{ id: 'U', l: '包邮定价', sc: '墨西哥ML包邮定价', cl: 'rcg', bg: '包邮 · 按声誉折扣查运费', fn: 'mx_ml_u' }, { id: 'V', l: '不包邮定价', sc: '墨西哥ML不包邮定价', cl: 'rca', bg: '不包邮 · 客户按价格区间付运费', fn: 'mx_ml_v' }]
+      },
+      'MX-AE': {
+        t: '墨西哥 · AliExpress', s: 'AliExpress 托管 · 墨西哥站 Zone3', cur: 'MXN', rep: 'none',
+        p: [['利润率(%)', 'profit', 20], ['汇率(￥/MXN)', 'rate', 0.37], ['佣金(%)', 'comm', 0], ['退款率(%)', 'refund', 5.68], ['汇损(%)', 'fxloss', 2.5], ['达人(%)', 'inf', 0], ['大客户佣金(%)', 'vip', 3], ['订单处理费', 'orderFee', 0], ['税费(%)', 'tax', 2]],
+        m: [{ id: 'P', l: '平台物流', sc: 'AE-平台物流定价-包邮', cl: 'rca', bg: 'AE托管 · 含尾程物流费 · 按重量自动计入尾程(MXN)', fn: 'mx_ae' }, { id: 'Q', l: '平台物流', sc: 'AE-平台物流定价-不包邮', cl: 'rcg', bg: 'AE托管 · 无尾程物流费 · 线上填价格自己查表分开填写', fn: 'mx_ae_p' }]
+      }
+    };
+    let C = JSON.parse(JSON.stringify(C_DEFAULT));
+    let cur = 'BR-TT';
+    function gv(id) { return parseFloat(document.getElementById(id).value) || 0; }
+    function getParams() { const cfg = C[cur]; const p = {}; cfg.p.forEach(([, k]) => { p[k] = gv('p-' + k); }); return p; }
+    function getDed(p) { return (['profit', 'comm', 'refund', 'fxloss', 'inf', 'shipSub', 'tax', 'vip'].reduce((s, k) => s + (p[k] || 0), 0)) / 100; }
+    // 广告费率（占售价%）。不进 getDed/分母，不影响定价，只在结果里从毛利扣减。
+    function getAd(){ return parseFloat(document.getElementById('ad-rate')?.value)||0; }
+    function onAdInput(src){
+      const rateEl=document.getElementById('ad-rate'), roiEl=document.getElementById('ad-roi');
+      if(src==='rate'){ const v=parseFloat(rateEl.value); roiEl.value=(v>0&&isFinite(v))?+(100/v).toFixed(3):''; }
+      else { const v=parseFloat(roiEl.value); rateEl.value=(v>0&&isFinite(v))?+(100/v).toFixed(2):''; }
+      if(!document.getElementById('reswrap').classList.contains('hidden')){ try{calc();}catch(e){} }
+      const rp=document.getElementById('rev-price'); if(rp&&rp.value){ try{calcReverse();}catch(e){} }
+    }
+    function getHF() {
+      const isVol = document.getElementById('tvol').classList.contains('on');
+      const wk = gv('weight') / 1000;
+      const isUsd = document.getElementById('usd-rate-wrap').style.display !== 'none';
+      const usdRate = isUsd ? (gv('usd-rate') || 6.75) : 1;
+      if (isVol) { const m3 = gv('frtm3') * usdRate; const l = gv('diml'), w = gv('dimw'), h = gv('dimh'), bq = gv('bqty') || 1; return m3 / 1000000 * l * w * h / bq; }
+      return wk * gv('frtkg') * usdRate;
+    }
+    function solveMXSimple(cost, frt, svc, svcExtra, qty, p, dqty = 1) { const n = Math.max(qty, 1), r = p.rate, d = getDed(p); return Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + (p.orderFee || 0) * r * n) / ((1 - d) * r) * 100) / 100; }
+    function solveMXAE(cost, frt, svc, svcExtra, qty, p, wk, dqty = 1) { const n = Math.max(qty, 1), r = p.rate, d = getDed(p); return Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + (p.orderFee || 0) * r * n + lkAEMXP(wk * n) * r * (1 - d)) / ((1 - d) * r) * 100) / 100; }
+    function solveMXAEP(cost, frt, svc, svcExtra, qty, p, dqty = 1) { const n = Math.max(qty, 1), r = p.rate, d = getDed(p); return Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + (p.orderFee || 0) * r * n) / ((1 - d) * r) * 100) / 100; }
+    function solveMXMLU(cost, frt, svc, svcExtra, qty, p, rep, wk, dqty = 1) {
+      const n = Math.max(qty, 1), r = p.rate, d = getDed(p), ofe = (p.orderFee || 0) * r * n; let pr = 10;
+      for (let i = 0; i < 300; i++) { const cust = pr < 99 ? 25 : pr <= 149 ? 30 : pr <= 299 ? 37 : 0; let keep = 0; if (rep === 'green') keep = pr >= 499 ? .5 : pr >= 299 ? .6 : .3; else if (rep === 'yellow') keep = pr >= 299 ? .4 : .2; const mlf = lkMLMXBase(wk * n) * (1 - keep); const np = Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + ofe + cust * r + mlf * r) / ((1 - d) * r) * 100) / 100; if (Math.abs(np - pr) < .001) { pr = np; break; } pr = np; }
+      return Math.round(pr * 100) / 100;
+    }
+    function solveMXMLV(cost, frt, svc, svcExtra, qty, p, wk, dqty = 1) {
+      const n = Math.max(qty, 1), r = p.rate, d = getDed(p), ofe = (p.orderFee || 0) * r * n; let pr = 10;
+      for (let i = 0; i < 300; i++) { const cust = pr < 99 ? 25 : pr <= 149 ? 30 : pr <= 299 ? 37 : 0; const np = Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + ofe + cust * r) / ((1 - d) * r) * 100) / 100; if (Math.abs(np - pr) < .001) { pr = np; break; } pr = np; }
+      return Math.round(pr * 100) / 100;
+    }
+    function solveBRSimple(cost, frt, svc, svcExtra, qty, p, dqty = 1) { const n = Math.max(qty, 1), r = p.rate, d = getDed(p); return Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + (p.orderFee || 0) * r * n) / ((1 - d) * r) * 100) / 100; }
+    function solveBRMLU(cost, frt, svc, svcExtra, qty, p, rep, wk, dqty = 1) {
+      const n = Math.max(qty, 1), r = p.rate, d = getDed(p), ofe = (p.orderFee || 0) * r * n; let pr = 10;
+      for (let i = 0; i < 300; i++) { const np = Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + ofe + lkMLBR(wk * n, pr, rep) * r) / ((1 - d) * r) * 100) / 100; if (Math.abs(np - pr) < .001) { pr = np; break; } pr = np; }
+      return Math.round(pr * 100) / 100;
+    }
+    function solveBRMLV(cost, frt, svc, svcExtra, qty, p, rep, wk, dqty = 1) {
+      const n = Math.max(qty, 1), r = p.rate, d = getDed(p), ofe = (p.orderFee || 0) * r * n; let pr = 10;
+      for (let i = 0; i < 300; i++) { const np = Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + ofe + lkMLBR(wk * n, Math.max(pr, 79), rep) * r) / ((1 - d) * r) * 100) / 100; if (Math.abs(np - pr) < .001) { pr = np; break; } pr = np; }
+      return Math.round(pr * 100) / 100;
+    }
+    function solveBRTT(cost, frt, svc, svcExtra, qty, p, dqty = 1) {
+      const n = Math.max(qty, 1), r = p.rate;
+      let pr = 10;
+      for (let i = 0; i < 300; i++) {
+        let currentP = { ...p };
+        currentP.comm = pr < 50 ? (p.comm1 ?? 10) : (p.comm2 ?? 6);
+        currentP.orderFee = pr < 50 ? (p.orderFee1 ?? 4) : (p.orderFee2 ?? 6);
+        let d = getDed(currentP);
+        const ofe = (currentP.orderFee || 0) * r * n;
+        const np = Math.round((n * (cost + frt) + totalSvc(svc, svcExtra, n * dqty) + ofe) / ((1 - d) * r) * 100) / 100;
+        if (Math.abs(np - pr) < .001) { pr = np; break; }
+        pr = np;
+      }
+      return Math.round(pr * 100) / 100;
+    }
+    function doSolve(fn, cost, frt, svc, svcExtra, qty, p, rep, wk, dqty = 1) {
+      if (fn === 'br_tt') return solveBRTT(cost, frt, svc, svcExtra, qty, p, dqty);
+      if (fn === 'mx_tt' || fn === 'none_mx') return solveMXSimple(cost, frt, svc, svcExtra, qty, p, dqty);
+      if (fn === 'mx_ae') return solveMXAE(cost, frt, svc, svcExtra, qty, p, wk, dqty);
+      if (fn === 'mx_ae_p') return solveMXAEP(cost, frt, svc, svcExtra, qty, p, dqty);
+      if (fn === 'mx_ml_u') return solveMXMLU(cost, frt, svc, svcExtra, qty, p, rep, wk, dqty);
+      if (fn === 'mx_ml_v') return solveMXMLV(cost, frt, svc, svcExtra, qty, p, wk, dqty);
+      if (fn === 'br_ml_u') return solveBRMLU(cost, frt, svc, svcExtra, qty, p, rep, wk, dqty);
+      if (fn === 'br_ml_v') return solveBRMLV(cost, frt, svc, svcExtra, qty, p, rep, wk, dqty);
+      if (fn === 'br_temu') return solveBRSimple(cost, frt, svc, svcExtra, qty, p, dqty);
+      return solveBRSimple(cost, frt, svc, svcExtra, qty, p, dqty);
+    }
+    function f2(v) { return v.toFixed(2); }
+    function fmtPrice(v, cur) { if (cur === 'R$') return v.toFixed(2).replace('.', ','); return v.toFixed(2); }
+    function fmtAmt(v, cur) { return fmtPrice(v, cur); }
+    function copyText(text, el) { navigator.clipboard.writeText(text).catch(() => { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }); if (el) { const orig = el.textContent; el.textContent = '已复制 ✓'; setTimeout(() => el.textContent = orig, 1500); } }
+    function calcVol() { const l = gv('diml'), w = gv('dimw'), h = gv('dimh'), bq = gv('bqty') || 1; return l * w * h / bq / 1000000; }
+    /** 美客多尾程：体积重(kg)=单件cm³/6000，计费重=实重与体积重取大（BR/MX共用） */
+    function mlChargeWk(actualKg, l, w, h, bq) { const volKg = (l || 0) * (w || 0) * (h || 0) / (bq || 1) / 6000; return Math.max(actualKg || 0, volKg); }
+    function calc() {
+      const eb = document.getElementById('errbox'); eb.style.display = 'none';
+      const costStr = document.getElementById('cost')?.value;
+      if (costStr === '' || costStr === undefined) { eb.textContent = '请填写商品成本'; eb.style.display = 'block'; return; }
+      const cost = parseFloat(costStr) || 0;
+      const wk = gv('weight') / 1000, qty = Math.max(parseInt(document.getElementById('qty').value) || 1, 1), dqty = Math.max(parseInt(document.getElementById('dqty').value) || 1, 1);
+      const mlWk = mlChargeWk(wk, gv('diml'), gv('dimw'), gv('dimh'), gv('bqty'));
+      const disc = (gv('disc') || 60) / 100, frt = getHF(), svc = gv('svcfee'), svcExtra = curSvcExtra, p = getParams();
+      const cfg = C[cur], rep = cfg.rep === 'MX' ? document.getElementById('repmx').value : document.getElementById('rep').value;
+      const res = [];
+      try {
+        cfg.m.forEach(m => {
+          const solveWk = (m.fn === 'br_ml_u' || m.fn === 'br_ml_v' || m.fn === 'mx_ml_u') ? mlWk : wk;
+          const pr = doSolve(m.fn, cost, frt, svc, svcExtra, qty, p, rep, solveWk, dqty);
+          
+          let currentP = { ...p };
+          if (m.fn === 'br_tt') {
+            currentP.comm = pr < 50 ? (p.comm1 ?? 10) : (p.comm2 ?? 6);
+            currentP.orderFee = pr < 50 ? (p.orderFee1 ?? 4) : (p.orderFee2 ?? 6);
+          }
+
+          const r = currentP.rate;
+          let mlf = 0, tailFrtL = 0, custFrt = 0;
+          const svcTotal = totalSvc(svc, svcExtra, qty * dqty);
+          const svcFirst = svc, svcNext = svcExtra;
+          if (m.fn === 'br_ml_u') mlf = lkMLBR(mlWk * qty, pr, rep);
+          if (m.fn === 'br_ml_v') mlf = lkMLBR(mlWk * qty, Math.max(pr, 79), rep);
+          if (m.fn === 'mx_ml_u') { let keep = 0; if (rep === 'green') keep = pr >= 499 ? .5 : pr >= 299 ? .6 : .3; else if (rep === 'yellow') keep = pr >= 299 ? .4 : .2; mlf = lkMLMXBase(mlWk * qty) * (1 - keep); custFrt = pr < 99 ? 25 : pr <= 149 ? 30 : pr <= 299 ? 37 : 0; }
+          if (m.fn === 'mx_ml_v') custFrt = pr < 99 ? 25 : pr <= 149 ? 30 : pr <= 299 ? 37 : 0;
+          if (m.fn === 'mx_ae') tailFrtL = lkAEMXP(wk * qty);
+          const origPrice = Math.round(pr / (1 - disc) * 100) / 100;
+          res.push({ m, pr, origPrice, disc, mlf, tailFrtL, custFrt, svcTotal, svcFirst, svcNext, frt, p: currentP, cost, r, wk, mlWk, qty });
+        });
+      } catch (err) {
+        eb.textContent = err.message;
+        eb.style.display = 'block';
+        return;
+      }
+      renderR(res, cfg);
+      document.getElementById('reswrap').classList.remove('hidden');
+    }
+    function renderR(res, cfg) {
+      const g = document.getElementById('resgrid');
+      const count = res.length;
+      g.className = 'rg ' + (count === 1 ? 'r1' : 'r2'); g.innerHTML = '';
+      const isVol = document.getElementById('tvol').classList.contains('on');
+      const volM3 = calcVol(), wkG = gv('weight');
+      const qty = Math.max(parseInt(document.getElementById('qty')?.value) || 1, 1);
+      res.forEach(({ m, pr, origPrice, mlf, tailFrtL, custFrt, svcTotal, svcFirst, svcNext, frt, p, cost, r, wk, mlWk, qty }) => {
+        const cu = cfg.cur;
+        const div = document.createElement('div'); div.className = 'rc ' + m.cl;
+        const frtL = frt / r, svcL = svcTotal / r;
+        const svcHint = qty > 1 ? `<span style="font-size:10px;color:var(--t3);margin-left:4px">首单￥${svcFirst}+续单￥${svcNext}×${qty - 1}</span>` : ``;
+        const baseL = Math.max(0, pr - tailFrtL);
+        const commL = baseL * (p.comm || 0) / 100, refundL = baseL * (p.refund || 0) / 100, fxlossL = baseL * (p.fxloss || 0) / 100;
+        const infL = baseL * (p.inf || 0) / 100, shipSubL = baseL * (p.shipSub || 0) / 100, taxL = baseL * (p.tax || 0) / 100;
+        const vipL = baseL * (p.vip || 0) / 100, profitL = baseL * (p.profit || 0) / 100, orderFeeL = p.orderFee || 0;
+        const totalOrderFeeL = orderFeeL * qty;
+        const totalCostL = cost * qty / r;
+        const totalCustFrtL = custFrt;
+        const totalTailL = tailFrtL;
+        const totalMlfL = mlf;
+        const fa = v => fmtAmt(v, cu);
+        const cn = v => `<span style="color:var(--t3);font-size:10px;margin-left:5px">￥${(v * r).toFixed(2)}</span>`;
+        const dimStr = isVol ? `<span style="color:var(--t3);font-size:10px;margin-left:5px">${(volM3 * 1000000).toFixed(1)}cm³=${volM3.toFixed(5)}m³/件</span>` : `<span style="color:var(--t3);font-size:10px;margin-left:5px">${wkG.toFixed(0)}g=${(wkG / 1000).toFixed(3)}kg/件</span>`;
+        const prFmt = fmtPrice(pr, cu), origFmt = fmtPrice(origPrice, cu);
+        const adRate = getAd(), adL = pr * adRate / 100, profitAfterL = profitL - adL;
+
+        const pf = v => parseFloat(parseFloat(v).toFixed(2));
+        const pb = v => `<span style="font-size:10px;font-weight:700;color:var(--blue);background:var(--blu);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle">${pf(v)}%</span>`;
+        const pbEff = amt => (m.fn === 'mx_ae' && pr > 0) ? `<span style="font-size:10px;color:var(--t3);margin-left:4px">(实际 ${(amt / pr * 100).toFixed(2)}%)</span>` : '';
+        const spv = v => pr > 0 ? pb(v / pr * 100) : '';
+        const spvq = v => pr > 0 ? pb(v * qty / pr * 100) : '';
+        const PC = { frt: '#3860e8', svc: '#0aab7c', tail: '#4db6ac', mlf: '#7986cb', cost: '#78909c', comm: '#6c3fe8', inf: '#0097c4', ship: '#00a896', ord: '#e07b00', tax: '#ff7043', vip: '#8d6e63', fxloss: '#e8604a', refund: '#d63030', profit: '#7cb342', custFrt: '#90a4ae', ad: '#f97316' };
+        const dot = c => `<i style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${c};margin-right:4px;flex-shrink:0;vertical-align:middle"></i>`;
+        const costL = cost * qty / r;
+        const sz = 165;
+        const _n = Math.max(qty, 1);
+        const usedVol = mlWk > wk + 1e-9;
+        const volNote = (mlf > 0 && usedVol) ? `<span style="font-size:10px;font-weight:600;color:${PC.mlf};margin-left:5px;vertical-align:middle">按体积重 ${mlWk.toFixed(2)}kg/件</span>` : '';
+
+        // 计算各个项的整单价值，用于饼图
+        const slices = [
+          { val: frtL * _n, color: PC.frt, label: '头程运费' },
+          { val: svcL, color: PC.svc, label: '仓库服务费' },
+          { val: tailFrtL, color: PC.tail, label: '尾程运费' },
+          { val: mlf, color: PC.mlf, label: '平台运费' },
+          { val: totalCostL, color: PC.cost, label: '产品成本' },
+          { val: commL, color: PC.comm, label: '佣金' },
+          { val: infL, color: PC.inf, label: '达人佣金' },
+          { val: shipSubL, color: PC.ship, label: '平台包邮' },
+          { val: totalOrderFeeL, color: PC.ord, label: '订单处理费' },
+          { val: taxL, color: PC.tax, label: '税费' },
+          { val: vipL, color: PC.vip, label: '大客户佣金' },
+          { val: fxlossL, color: PC.fxloss, label: '汇损' },
+          { val: refundL, color: PC.refund, label: '退款' },
+          { val: totalCustFrtL, color: PC.custFrt, label: '客户运费' },
+          { val: adRate>0?profitAfterL:profitL, color: PC.profit, label: adRate>0?'广告后毛利':'目标利润' },
+          { val: adRate>0?adL:0, color: PC.ad, label: '广告费' },
+        ];
+
+        const _pie = makePie(slices, sz, adRate>0?pr:0);
+        const pieHtml = _pie.svg;
+
+        const feeRows = `
+      <div class="rr" data-pie-key="头程运费"><span>${dot(PC.frt)}头程运费(每件)${dimStr}${spv(frtL * _n)}</span><span>${cu} ${fa(frtL)}${cn(frtL)}</span></div>
+      ${svcL > 0 ? `<div class="rr" data-pie-key="仓库服务费"><span>${dot(PC.svc)}仓库服务费(整单)${svcHint}${spv(svcL)}</span><span>${cu} ${fa(svcL)}${cn(svcL)}</span></div>` : ''}
+      ${tailFrtL > 0 ? `<div class="rr" data-pie-key="尾程运费"><span>${dot(PC.tail)}尾程运费(AE)${spv(tailFrtL)}</span><span>${cu} ${fa(tailFrtL)}${cn(tailFrtL)}</span></div>` : ''}
+      ${mlf > 0 ? `<div class="rr" data-pie-key="平台运费"><span>${dot(PC.mlf)}平台运费（卖家付）${spv(mlf)}${volNote}</span><span>${cu} ${fa(mlf)}${cn(mlf)}</span></div>` : ''}
+      ${custFrt > 0 ? `<div class="rr" data-pie-key="客户运费"><span>${dot(PC.custFrt)}客户运费（平台收）${spv(custFrt)}</span><span>${cu} ${fa(custFrt)}</span></div>` : ''}
+      ${costL > 0 ? `<div class="rr" data-pie-key="产品成本"><span>${dot(PC.cost)}产品成本(整单)${spv(costL)}</span><span>${cu} ${fa(costL)}${cn(costL)}</span></div>` : ''}
+      ${orderFeeL > 0 ? `<div class="rr" data-pie-key="订单处理费"><span>${dot(PC.ord)}订单处理费${spv(totalOrderFeeL)}</span><span>${cu} ${fa(totalOrderFeeL)}</span></div>` : ''}
+      ${commL > 0 ? `<div class="rr" data-pie-key="佣金"><span>${dot(PC.comm)}佣金预估${pb(p.comm)}${pbEff(commL)}</span><span>${cu} ${fa(commL)}${cn(commL)}</span></div>` : ''}
+      ${infL > 0 ? `<div class="rr" data-pie-key="达人佣金"><span>${dot(PC.inf)}达人佣金预估${pb(p.inf)}${pbEff(infL)}</span><span>${cu} ${fa(infL)}${cn(infL)}</span></div>` : ''}
+      ${shipSubL > 0 ? `<div class="rr" data-pie-key="平台包邮"><span>${dot(PC.ship)}平台包邮手续费${pb(p.shipSub)}${pbEff(shipSubL)}</span><span>${cu} ${fa(shipSubL)}${cn(shipSubL)}</span></div>` : ''}
+      ${taxL > 0 ? `<div class="rr" data-pie-key="税费"><span>${dot(PC.tax)}税费预估${pb(p.tax)}${pbEff(taxL)}${m.fn === 'mx_ae' ? '<span style="font-size:10px;color:var(--t3);margin-left:4px">(尾程已包含税费)</span>' : ''}</span><span>${cu} ${fa(taxL)}${cn(taxL)}</span></div>` : ''}
+      ${vipL > 0 ? `<div class="rr" data-pie-key="大客户佣金"><span>${dot(PC.vip)}大客户佣金${pb(p.vip)}${pbEff(vipL)}</span><span>${cu} ${fa(vipL)}${cn(vipL)}</span></div>` : ''}
+      ${fxlossL > 0 ? `<div class="rr" data-pie-key="汇损"><span>${dot(PC.fxloss)}汇损预估${pb(p.fxloss)}${pbEff(fxlossL)}</span><span>${cu} ${fa(fxlossL)}${cn(fxlossL)}</span></div>` : ''}
+      ${refundL > 0 ? `<div class="rr" data-pie-key="退款"><span>${dot(PC.refund)}退款预估${pb(p.refund)}${pbEff(refundL)}</span><span>${cu} ${fa(refundL)}${cn(refundL)}</span></div>` : ''}
+      ${profitL > 0 ? `<div class="rr" data-pie-key="${adRate>0?'广告后毛利':'目标利润'}"><span>${dot(PC.profit)}目标利润${adRate>0?'(广告前)':''}${pb(p.profit)}${pbEff(profitL)}</span><span>${cu} ${fa(profitL)}${cn(profitL)}</span></div>` : ''}
+      ${adRate>0 ? `<div class="rr" data-pie-key="广告费"><span>${dot(PC.ad)}广告费 CPA${pb(adRate)}</span><span style="color:var(--red)">-${cu} ${fa(adL)}<span style="color:var(--red);font-size:10px;margin-left:5px">-￥${(adL*r).toFixed(2)}</span></span></div>` : ''}
+      ${adRate>0 ? `<div class="rr bld"><span>${dot(PC.profit)}广告后毛利${pr>0?pb(profitAfterL/pr*100):''}</span><span style="color:${profitAfterL>=0?'var(--green)':'var(--red)'}">${profitAfterL<0?'-':''}${cu} ${fa(Math.abs(profitAfterL))}<span style="color:${profitAfterL<0?'var(--red)':'var(--t3)'};font-size:10px;margin-left:5px">${profitAfterL<0?'-':''}￥${(Math.abs(profitAfterL)*r).toFixed(2)}</span></span></div>` : ''}
+      <div class="rr bld"><span>售价(整单)</span><span>${cu} ${prFmt}${cn(pr)}</span></div>`;
+
+        const pieScope = count === 1
+          ? `<div data-pie-scope style="display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:6px;padding-right:14px;border-right:1px solid var(--bd);min-width:0">${feeRows}</div>
+          ${pieHtml ? `<div style="display:flex;align-items:center;justify-content:center;position:relative;z-index:2">${pieHtml}</div>` : ''}
+         </div>`
+          : `<div data-pie-scope style="display:block;width:100%">
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:0">${feeRows}</div>
+          ${pieHtml ? `<div style="display:flex;justify-content:center;width:100%;padding-top:14px;border-top:1px solid var(--bd);margin-top:10px">${pieHtml}</div>` : ''}
+         </div>`;
+
+        div.innerHTML = `
+    <div class="rl">${m.l}</div><div class="rs2">${m.sc}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="price-copy-btn" onclick="copyText('${pr.toFixed(2)}',this.querySelector('.pcl'))">
+        <div class="pcl">折扣售价 · 点击复制</div><div class="pcv ${m.cl}">${cu} ${prFmt}</div>
+      </div>
+      <div class="price-copy-btn" onclick="copyText('${origPrice.toFixed(2)}',this.querySelector('.pcl'))">
+        <div class="pcl">划线原价 · 点击复制</div><div class="pcv ${m.cl}">${cu} ${origFmt}</div>
+      </div>
+    </div>
+    <div class="rbg" style="margin-bottom:12px">${m.bg}${(m.fn === 'br_ml_u' || m.fn === 'br_ml_v') && pr >= 79 ? ' · 已包邮' : ''}</div>
+    <div class="rbk">${pieScope}</div>`;
+        g.appendChild(div);
+      });
+    }
+    function go(country, plat) {
+      const prevCountry = cur.split('-')[0];
+      cur = country + '-' + plat;
+      localStorage.setItem('latam_cur', cur);
+      document.querySelectorAll('.pb').forEach(b => b.classList.remove('on'));
+      document.getElementById('btn-' + cur).classList.add('on');
+      const cfg = C[cur];
+      document.getElementById('pgt').textContent = cfg.t;
+      document.getElementById('pgs').textContent = cfg.s;
+      document.getElementById('frep').classList.toggle('hidden', cfg.rep !== 'BR');
+      document.getElementById('frepmx').classList.toggle('hidden', cfg.rep !== 'MX');
+      const needsWeight = ['BR-ML', 'MX-ML', 'MX-AE'].includes(cur);
+      document.getElementById('weight-label').textContent = needsWeight ? '重量 (g)（此平台算价必填，涉及尾程/运费计算）' : '重量 (g)';
+      const svcLbl = document.getElementById('svc-label');
+      svcLbl.textContent = '仓库服务费 (￥/件)';
+      renderP(cfg);
+      if (country === prevCountry) { renderLG(country, true); } else { renderLG(country, false); }
+      document.getElementById('reswrap').classList.add('hidden');
+      document.getElementById('rev-result').classList.add('hidden');
+      const _cu = cfg.cur;
+      document.getElementById('rev-cu').textContent = _cu;
+      document.getElementById('rev-cu2').textContent = _cu;
+      document.getElementById('rev-cu3').textContent = _cu;
+      const _rp = document.getElementById('rev-price');
+      if (_rp && _rp.value) calcReverse();
+    }
+    function renderP(cfg) {
+      const g = document.getElementById('pgrid'); g.innerHTML = '';
+      cfg.p.forEach(([l, k, def]) => { const c = document.createElement('div'); c.className = 'pc'; c.innerHTML = `<label>${l}</label><input type="number" id="p-${k}" value="${def}" step="0.01">`; g.appendChild(c); });
+    }
+    function renderLG(country, preserve = false) {
+      const lg = LG[country] || []; const wrap = document.getElementById('lswrap'); const g = document.getElementById('lsg');
+      if (!lg.length) { wrap.classList.add('hidden'); return; }
+      wrap.classList.remove('hidden');
+      const prevOnBtn = document.querySelector('.lsb.on');
+      const prevId = prevOnBtn ? prevOnBtn.id.replace('lg-', '') : null;
+      const tierWrap = document.getElementById('tier-wrap');
+      if (tierWrap) tierWrap.remove();
+      if (country === 'BR' || country === 'MX') {
+        const tw = document.createElement('div'); tw.id = 'tier-wrap'; tw.style.cssText = 'margin-bottom:10px';
+        const labels = country === 'MX' ? ['1–5 CBM', '5–10 CBM'] : ['1–4.99 CBM', '5+ CBM'];
+        tw.innerHTML = `<div class="ch" style="margin-bottom:8px"><div class="dot" style="background:var(--amb)"></div>体积段</div><div class="tog" style="max-width:280px"><button class="tb on" id="tier1" onclick="setTier(1)">${labels[0]}</button><button class="tb" id="tier2" onclick="setTier(2)">${labels[1]}</button></div>`;
+        document.getElementById('lswrap').insertBefore(tw, g);
+      }
+      g.innerHTML = '';
+      let defaultLG = lg[0];
+      lg.forEach((l, i) => {
+        const shouldSelect = preserve && prevId === l.id;
+        if (shouldSelect) defaultLG = l;
+        const b = document.createElement('button'); b.className = 'lsb' + (shouldSelect || (!preserve && i === 0) ? ' on' : ''); b.id = 'lg-' + l.id;
+        const rate = l.rate || (l.rate1); const rStr = l.usd ? `$${rate}/m³` : `￥${rate}/m³`;
+        if (l.tip) b.title = l.tip;
+        b.innerHTML = `<div class="lsn">${l.name}${l.tip ? ' <span style="font-size:10px;color:var(--t3);font-weight:400">ⓘ</span>' : ''}</div><div class="lsr">${rStr} · 首单￥${l.svc} / 续单￥${l.svcExtra ?? l.svc}</div>`;
+        b.onclick = () => { document.querySelectorAll('.lsb').forEach(x => x.classList.remove('on')); b.classList.add('on'); applyLG(l); };
+        g.appendChild(b);
+      });
+      if (!preserve) applyLG(defaultLG);
+      else { document.getElementById('svcfee').value = defaultLG.svc; curSvcExtra = defaultLG.svcExtra ?? defaultLG.svc; }
+    }
+    function setTier(t) {
+      document.getElementById('tier1').classList.toggle('on', t === 1);
+      document.getElementById('tier2').classList.toggle('on', t === 2);
+      const country = cur.split('-')[0]; const lgList = LG[country] || [];
+      lgList.forEach(l => { const btn = document.getElementById('lg-' + l.id); if (!btn) return; const rate = t === 1 ? (l.rate || l.rate1) : l.rate2; btn.querySelector('.lsr').textContent = `${l.usd ? '$' : '￥'}${rate}/m³ · 首单￥${l.svc} / 续单￥${l.svcExtra ?? l.svc}`; });
+      const onBtn = document.querySelector('.lsb.on'); if (!onBtn) return;
+      const id = onBtn.id.replace('lg-', ''); const lg = lgList.find(x => x.id === id); if (!lg) return;
+      const rate = t === 1 ? (lg.rate || lg.rate1) : lg.rate2;
+      document.getElementById('frtm3').value = rate;
+      if (lg.cbmKg) document.getElementById('frtkg').value = (rate / lg.cbmKg).toFixed(4);
+    }
+    function applyLG(l) {
+      const t2 = document.getElementById('tier2'); const tier = t2 && t2.classList.contains('on') ? 2 : 1;
+      const rate = l.rate || (tier === 1 ? l.rate1 : l.rate2);
+      document.getElementById('frtm3').value = rate;
+      document.getElementById('svcfee').value = l.svc;
+      curSvcExtra = l.svcExtra ?? l.svc;
+      if (l.cbmKg) document.getElementById('frtkg').value = (rate / l.cbmKg).toFixed(4);
+      document.getElementById('usd-rate-wrap').style.display = l.usd ? 'block' : 'none';
+      const sym = l.usd ? '$' : '￥';
+      const fm3Lbl = document.getElementById('fm3').querySelector('label');
+      if (fm3Lbl) fm3Lbl.childNodes[0].textContent = `头程运费 (${sym}/m³) `;
+      const kgLbl = document.getElementById('frtkg-label'); if (kgLbl) kgLbl.textContent = `头程运费 (${sym}/kg)`;
+      const btn = document.getElementById('lg-' + l.id);
+      if (btn) btn.querySelector('.lsr').textContent = `${sym}${rate}/m³ · 首单￥${l.svc} / 续单￥${l.svcExtra ?? l.svc}`;
+    }
+    function setM(m) {
+      document.getElementById('tvol').classList.toggle('on', m === 'vol');
+      document.getElementById('tkg').classList.toggle('on', m === 'kg');
+      document.getElementById('fm3').classList.toggle('hidden', m !== 'vol');
+      document.getElementById('fkg').classList.toggle('hidden', m !== 'kg');
+      document.getElementById('vdims').classList.toggle('hidden', m !== 'vol');
+    }
+    // 恢复上次选中的平台和模式
+    (function () {
+      const saved = localStorage.getItem('latam_cur');
+      const init = (saved && C_DEFAULT[saved]) ? saved : 'BR-TT';
+      const [c, ...rest] = init.split('-');
+      go(c, rest.join('-'));
+      let lastMode = 'single';
+      try { const m = localStorage.getItem('latam_last_mode'); if (m === 'single' || m === 'batch') lastMode = m; } catch (e) { }
+      setMode(lastMode);
+    })();
+    document.addEventListener('keydown', e => { if (e.key === 'Enter' && document.getElementById('mode-single').classList.contains('on')) calc(); });
+
+    // ── 参数设置 Modal ──
+    const LATAM_COUNTRIES = { BR: '巴西', MX: '墨西哥' };
+    const LATAM_PLATS = { BR: ['TT', 'ML', 'Shopee', 'Temu'], MX: ['TT', 'ML', 'AE'] };
+    let sCurTab = 'BR';
+
+    function openSettings() {
+      document.getElementById('s-overlay').style.display = 'flex';
+      renderSTabs(); renderSBody(sCurTab);
+    }
+    function closeSettings() { document.getElementById('s-overlay').style.display = 'none'; }
+
+    function flushSTab() {
+      if (sCurTab === 'freight') {
+        ['BR', 'MX'].forEach(country => {
+          (LG[country] || []).forEach(l => {
+            const r1 = document.getElementById('sf-' + country + '-' + l.id + '-rate1');
+            const r2 = document.getElementById('sf-' + country + '-' + l.id + '-rate2');
+            const ck = document.getElementById('sf-' + country + '-' + l.id + '-cbmKg');
+            const sv = document.getElementById('sf-' + country + '-' + l.id + '-svc');
+            const se = document.getElementById('sf-' + country + '-' + l.id + '-svcExtra');
+            if (r1) l.rate1 = parseFloat(r1.value) || l.rate1;
+            if (r2) l.rate2 = parseFloat(r2.value) || l.rate2;
+            if (ck) l.cbmKg = parseFloat(ck.value) || l.cbmKg;
+            if (sv) l.svc = parseFloat(sv.value) || l.svc;
+            if (se) l.svcExtra = parseFloat(se.value);
+          });
+        });
+      } else {
+        (LATAM_PLATS[sCurTab] || []).forEach(plat => {
+          const key = sCurTab + '-' + plat; if (!C[key]) return;
+          C[key].p.forEach((arr, i) => {
+            const el = document.getElementById('sp-' + key + '-' + arr[1]);
+            if (el) C[key].p[i][2] = parseFloat(el.value) || 0;
+          });
+        });
+      }
+    }
+    function renderSTabs() {
+      const bar = document.getElementById('s-tabs'); bar.innerHTML = '';
+      ['BR', 'MX', 'freight'].forEach(tab => {
+        const label = tab === 'freight' ? '头程运费' : LATAM_COUNTRIES[tab];
+        const b = document.createElement('button');
+        b.className = 'stab' + (tab === sCurTab ? ' on' : '');
+        b.textContent = label;
+        b.onclick = () => { flushSTab(); sCurTab = tab; renderSTabs(); renderSBody(tab); };
+        bar.appendChild(b);
+      });
+    }
+
+    function renderSBody(tab) {
+      const body = document.getElementById('s-body'); body.innerHTML = '';
+      if (tab === 'freight') {
+        // 巴西物流商
+        const hBR = document.createElement('div'); hBR.className = 'ssec'; hBR.textContent = '巴西 BR · 美金报价'; body.appendChild(hBR);
+        (LG.BR || []).forEach(l => {
+          const row = document.createElement('div'); row.className = 'slg-row';
+          row.innerHTML = `<div class="slg-name">${l.name}</div>
+        <div class="slg-inputs">
+          <div class="slg-f"><label>1-4.99CBM ($/m³)</label><input type="number" id="sf-BR-${l.id}-rate1" value="${l.rate1}" step="1"></div>
+          <div class="slg-f"><label>5+CBM ($/m³)</label><input type="number" id="sf-BR-${l.id}-rate2" value="${l.rate2}" step="1"></div>
+          <div class="slg-f"><label>1CBM=?KG</label><input type="number" id="sf-BR-${l.id}-cbmKg" value="${l.cbmKg}" step="1"></div>
+          <div class="slg-f"><label>首单服务费(￥)</label><input type="number" id="sf-BR-${l.id}-svc" value="${l.svc}" step="0.001"></div>
+          <div class="slg-f"><label>续单服务费(￥)</label><input type="number" id="sf-BR-${l.id}-svcExtra" value="${l.svcExtra ?? l.svc}" step="0.001"></div>
+        </div>`;
+          body.appendChild(row);
+        });
+        // 墨西哥物流商
+        const hMX = document.createElement('div'); hMX.className = 'ssec'; hMX.textContent = '墨西哥 MX · 人民币报价'; body.appendChild(hMX);
+        (LG.MX || []).forEach(l => {
+          const row = document.createElement('div'); row.className = 'slg-row';
+          row.innerHTML = `<div class="slg-name">${l.name}</div>
+        <div class="slg-inputs">
+          <div class="slg-f"><label>1-5CBM (￥/m³)</label><input type="number" id="sf-MX-${l.id}-rate1" value="${l.rate1}" step="1"></div>
+          <div class="slg-f"><label>5-10CBM (￥/m³)</label><input type="number" id="sf-MX-${l.id}-rate2" value="${l.rate2}" step="1"></div>
+          <div class="slg-f"><label>1CBM=?KG</label><input type="number" id="sf-MX-${l.id}-cbmKg" value="${l.cbmKg}" step="1"></div>
+          <div class="slg-f"><label>首单服务费(￥)</label><input type="number" id="sf-MX-${l.id}-svc" value="${l.svc}" step="0.001"></div>
+          <div class="slg-f"><label>续单服务费(￥)</label><input type="number" id="sf-MX-${l.id}-svcExtra" value="${l.svcExtra ?? l.svc}" step="0.001"></div>
+        </div>`;
+          body.appendChild(row);
+        });
+        return;
+      }
+      // 平台费率 tab
+      const plats = LATAM_PLATS[tab] || [];
+      plats.forEach(plat => {
+        const key = tab + '-' + plat;
+        const cfg = C[key]; if (!cfg) return;
+        const h = document.createElement('div'); h.className = 'ssec'; h.textContent = cfg.t; body.appendChild(h);
+        const grid = document.createElement('div'); grid.className = 'srow';
+        cfg.p.forEach(([l, pk]) => {
+          const cell = document.createElement('div'); cell.className = 'spc2';
+          cell.innerHTML = `<label>${l}</label><input type="number" id="sp-${key}-${pk}" value="${cfg.p.find(a => a[1] === pk)[2]}" step="0.01">`;
+          grid.appendChild(cell);
+        });
+        body.appendChild(grid);
+      });
+    }
+
+    function saveSettings() {
+      // 保存平台费率
+      Object.keys(LATAM_PLATS).forEach(country => {
+        (LATAM_PLATS[country] || []).forEach(plat => {
+          const key = country + '-' + plat; if (!C[key]) return;
+          C[key].p.forEach((arr, i) => {
+            const el = document.getElementById('sp-' + key + '-' + arr[1]);
+            if (el) C[key].p[i][2] = parseFloat(el.value) || 0;
+          });
+        });
+      });
+      // 保存物流商运费
+      Object.keys(LATAM_PLATS).forEach(country => {
+        (LG[country] || []).forEach(l => {
+          const r1 = document.getElementById('sf-' + country + '-' + l.id + '-rate1');
+          const r2 = document.getElementById('sf-' + country + '-' + l.id + '-rate2');
+          const ck = document.getElementById('sf-' + country + '-' + l.id + '-cbmKg');
+          const sv = document.getElementById('sf-' + country + '-' + l.id + '-svc');
+          const se = document.getElementById('sf-' + country + '-' + l.id + '-svcExtra');
+          if (r1) l.rate1 = parseFloat(r1.value) || l.rate1;
+          if (r2) l.rate2 = parseFloat(r2.value) || l.rate2;
+          if (ck) l.cbmKg = parseFloat(ck.value) || l.cbmKg;
+          if (sv) l.svc = parseFloat(sv.value) || l.svc;
+          if (se) l.svcExtra = parseFloat(se.value);
+        });
+      });
+      // 刷新当前单品页
+      const country = cur.split('-')[0];
+      renderP(C[cur]);
+      renderLG(country, false);
+      closeSettings();
+    }
+
+    function resetSettings() {
+      C = JSON.parse(JSON.stringify(C_DEFAULT));
+      LG = JSON.parse(JSON.stringify(LG_DEFAULT));
+      renderSTabs(); renderSBody(sCurTab);
+    }
+
+    function saveAndDownload() {
+      saveSettings();
+      const docClone = document.documentElement.cloneNode(true);
+      const overlayClone = docClone.querySelector('#s-overlay');
+      if (overlayClone) overlayClone.removeAttribute('style');
+      docClone.querySelectorAll('[data-erp-bound]').forEach(el => el.removeAttribute('data-erp-bound'));
+      const pgridClone = docClone.querySelector('#pgrid'); if (pgridClone) pgridClone.innerHTML = '';
+      const lsgClone = docClone.querySelector('#lsg'); if (lsgClone) lsgClone.innerHTML = '';
+      const html = '<!DOCTYPE html>\n' + docClone.outerHTML;
+      const newC = JSON.stringify(C, null, 2);
+      const newLG = JSON.stringify(LG, null, 2);
+      const newHtml = html
+        .replace(
+          /const LG_DEFAULT = \{[\s\S]*?let LG = JSON\.parse\(JSON\.stringify\(LG_DEFAULT\)\);/,
+          `const LG_DEFAULT = ${newLG};\nlet LG = JSON.parse(JSON.stringify(LG_DEFAULT));`
+        )
+        .replace(
+          /const C_DEFAULT = \{[\s\S]*?let C = JSON\.parse\(JSON\.stringify\(C_DEFAULT\)\);/,
+          `const C_DEFAULT = ${newC};\nlet C = JSON.parse(JSON.stringify(C_DEFAULT));`
+        );
+      const blob = new Blob([newHtml], { type: 'text/html;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'LATAM算价工具.html';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // ── 模式切换 ──
+    function setMode(m) {
+      try { localStorage.setItem('latam_last_mode', m); } catch (e) { }
+      document.getElementById('mode-single').classList.toggle('on', m === 'single');
+      document.getElementById('mode-batch').classList.toggle('on', m === 'batch');
+      document.querySelector('.main-content').style.display = m === 'single' ? '' : 'none';
+      document.querySelector('.side').style.display = m === 'single' ? '' : 'none';
+      const bw = document.getElementById('batch-wrap');
+      bw.style.display = m === 'batch' ? 'flex' : 'none';
+      if (m === 'batch') bw.style.flexDirection = 'column';
+    }
+
+    // 批量参数面板：读取所有平台参数，显示为可编辑的格子（按平台分组）
+    function renderBatchParams() {
+      const container = document.getElementById('batch-params-container');
+      if (!container) return;
+      // 收集所有平台的参数，去重合并（同key只显示一次，值从单品DOM读取）
+      const allKeys = new Map(); // key -> {label, val}
+      Object.values(C).forEach(cfg => {
+        cfg.p.forEach(([l, k]) => {
+          if (!allKeys.has(k)) {
+            const el = document.getElementById('p-' + k);
+            allKeys.set(k, { label: l, val: el ? el.value : '' });
+          }
+        });
+      });
+      let html = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+      allKeys.forEach(({ label, val }, k) => {
+        html += `<div class="pc" style="min-width:110px;flex:1">
+      <label>${label}</label>
+      <input type="number" id="bp-${k}" value="${val}" step="0.01"
+        oninput="syncSingleParam('${k}',this.value)">
+    </div>`;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // 批量参数改动同步回单品DOM
+    function syncSingleParam(k, v) {
+      const el = document.getElementById('p-' + k);
+      if (el) el.value = v;
+    }
+
+    // 读批量参数（优先读批量面板，没有则读单品DOM）
+    function getBatchParam(k) {
+      const bp = document.getElementById('bp-' + k);
+      if (bp) return parseFloat(bp.value) || 0;
+      const sp = document.getElementById('p-' + k);
+      return sp ? parseFloat(sp.value) || 0 : 0;
+    }
+
+    // ── 批量：物流商选项（按国家过滤）──
+
+    // ── 批量：添加行 ──
+    let batchRowId = 0;
+    function buildLGOptsForCountry(country) {
+      const list = LG[country] || [];
+      return list.map(l => `<option value="${country}|${l.id}">${l.name}</option>`).join('');
+    }
+    function addBatchRow(data = {}) {
+      const id = ++batchRowId;
+      const initCountry = data.country || (function(){try{return localStorage.getItem('latam_batch_ctry')||'BR'}catch(e){return 'BR'}})();
+      const lgOpts = buildLGOptsForCountry(initCountry);
+      const tr = document.createElement('tr'); tr.id = 'br-' + id;
+      tr.innerHTML = `
+    <td><select id="b${id}-country" style="width:76px" onchange="onCountryChange(${id})">
+      <option value="BR"${initCountry === 'BR' ? ' selected' : ''}>巴西</option>
+      <option value="MX"${initCountry === 'MX' ? ' selected' : ''}>墨西哥</option>
+    </select></td>
+    <td><input class="w-sku" id="b${id}-sku" value="${data.sku || ''}" placeholder="SKU"></td>
+    <td><input class="w-sm" id="b${id}-cost" value="${data.cost || ''}" placeholder="成本"></td>
+    <td><input class="w-sm" id="b${id}-wt" value="${data.wt || ''}" placeholder="重量"></td>
+    <td><input class="w-sm" id="b${id}-l" value="${data.l || ''}" placeholder="长"></td>
+    <td><input class="w-sm" id="b${id}-w" value="${data.w || ''}" placeholder="宽"></td>
+    <td><input class="w-sm" id="b${id}-h" value="${data.h || ''}" placeholder="高"></td>
+    <td><input style="width:50px" id="b${id}-bq" value="${data.bq || 1}" placeholder="箱规"></td>
+    <td><input style="width:50px" id="b${id}-qty" value="${data.qty || 1}" placeholder="个数"></td>
+    <td><input style="width:50px" id="b${id}-dqty" value="${data.dqty || 1}" placeholder="件数"></td>
+    <td><select id="b${id}-lg" style="width:180px">${lgOpts}</select></td>
+    <td><select id="b${id}-m" style="width:70px"><option value="vol">体积</option><option value="kg">重量</option></select></td>
+    <td><input style="width:60px" id="b${id}-pr" value="${data.profit || ''}" placeholder="默认"></td>
+    <td><input style="width:54px" id="b${id}-disc" value="${data.disc || 60}" placeholder="60"></td>
+    <td id="b${id}-br-tt" class="res">—</td>
+    <td id="b${id}-br-mlu" class="res">—</td>
+    <td id="b${id}-br-mlv" class="res">—</td>
+    <td id="b${id}-br-sp" class="res">—</td>
+    <td id="b${id}-br-temu" class="res">—</td>
+    <td id="b${id}-mx-tt" class="res">—</td>
+    <td id="b${id}-mx-mlu" class="res">—</td>
+    <td id="b${id}-mx-mlv" class="res">—</td>
+    <td id="b${id}-mx-ae" class="res">—</td>
+    <td id="b${id}-mx-aep" class="res">—</td>
+    <td><button class="del-btn" onclick="document.getElementById('br-${id}').remove();updateRowCols(${id})">×</button></td>`;
+      if (data.mVal) tr.querySelector(`#b${id}-m`).value = data.mVal;
+      if (data.lgVal) {
+        // lgVal 格式 "BR|hy1"，提取id部分匹配
+        const lgSel = tr.querySelector(`#b${id}-lg`);
+        const opt = [...lgSel.options].find(o => o.value === data.lgVal);
+        if (opt) lgSel.value = data.lgVal;
+      }
+      document.getElementById('btbl-body').appendChild(tr);
+      updateRowCols(id);
+    }
+
+    // 国家切换：更新物流商选项
+    function onCountryChange(id) {
+      const country = document.getElementById('b' + id + '-country').value;
+      try{localStorage.setItem('latam_batch_ctry',country)}catch(e){}
+      const lgSel = document.getElementById('b' + id + '-lg');
+      lgSel.innerHTML = buildLGOptsForCountry(country);
+      if (lgSel.options.length) lgSel.value = lgSel.options[0].value;
+      updateRowCols(id);
+    }
+
+    // ── 批量：核心计算 ──
+    function batchCalcRow(id) {
+      const costStr = document.getElementById('b' + id + '-cost')?.value;
+      if (costStr === '' || costStr === undefined) return;
+      const cost = parseFloat(costStr) || 0;
+      const gv2 = k => parseFloat(document.getElementById('b' + id + '-' + k).value) || 0;
+      const wk = gv2('wt') / 1000, qty = Math.max(parseInt(document.getElementById('b' + id + '-qty').value) || 1, 1);
+      const l = gv2('l'), w = gv2('w'), h = gv2('h'), bq = parseInt(document.getElementById('b' + id + '-bq').value) || 1;
+      const dq = parseInt(document.getElementById('b' + id + '-dqty').value) || 1;
+      const mlWk = mlChargeWk(wk, l, w, h, bq);
+      const isVol = document.getElementById('b' + id + '-m').value === 'vol';
+      const lgVal = document.getElementById('b' + id + '-lg').value;
+      if (!lgVal) return;
+      const [lgCountry, lgId] = lgVal.split('|');
+      const lgObj = (LG[lgCountry] || []).find(x => x.id === lgId); if (!lgObj) return;
+      const usdRate = lgObj.usd ? (parseFloat(document.getElementById('usd-rate')?.value) || 6.75) : 1;
+      const _prVal = document.getElementById('b' + id + '-pr').value;
+      const profitOverride = _prVal !== '' ? parseFloat(_prVal) : null;
+      const disc = (parseFloat(document.getElementById('b' + id + '-disc')?.value) || 60) / 100;
+      // 头程运费（美金报价乘汇率）
+      let frt;
+      if (isVol) { frt = lgObj.rate1 * usdRate / 1000000 * l * w * h / bq; }
+      else { frt = wk * (lgObj.rate1 / lgObj.cbmKg) * usdRate; }
+      const svc = lgObj.svc, svcExtra = lgObj.svcExtra ?? lgObj.svc;
+      // 读各平台参数：直接从C配置默认值，利润率可被行内覆盖
+      function makeP(platKey) {
+        const cfg = C[platKey]; const p = {};
+        cfg.p.forEach(([, k, def]) => { p[k] = def; });
+        if (profitOverride !== null) p.profit = profitOverride;
+        return p;
+      }
+      const brTT = solveBRTT(cost, frt, svc, svcExtra, qty, makeP('BR-TT'), dq);
+      const brMLU = solveBRMLU(cost, frt, svc, svcExtra, qty, makeP('BR-ML'), 'green', mlWk, dq);
+      const brMLV = solveBRMLV(cost, frt, svc, svcExtra, qty, makeP('BR-ML'), 'green', mlWk, dq);
+      const brSP = solveBRSimple(cost, frt, svc, svcExtra, qty, makeP('BR-Shopee'), dq);
+      const brTemu = solveBRSimple(cost, frt, svc, svcExtra, qty, makeP('BR-Temu'), dq);
+      const mxTT = solveMXSimple(cost, frt, svc, svcExtra, qty, makeP('MX-TT'), dq);
+      const mxMLU = solveMXMLU(cost, frt, svc, svcExtra, qty, makeP('MX-ML'), 'yellow', mlWk, dq);
+      const mxMLV = solveMXMLV(cost, frt, svc, svcExtra, qty, makeP('MX-ML'), wk, dq);
+      const mxAE = solveMXAE(cost, frt, svc, svcExtra, qty, makeP('MX-AE'), wk, dq);
+      const mxAEP = solveMXAEP(cost, frt, svc, svcExtra, qty, makeP('MX-AE'), dq);
+      const country = document.getElementById('b' + id + '-country')?.value || 'BR';
+      const fmt = (v, cur) => cur === 'R$' ? v.toFixed(2).replace('.', ',') : v.toFixed(2);
+      // 只写入本国的结果，另一国清空
+      if (country === 'BR') {
+        document.getElementById('b' + id + '-br-tt').textContent = 'R$ ' + fmt(brTT, 'R$');
+        document.getElementById('b' + id + '-br-mlu').textContent = 'R$ ' + fmt(brMLU, 'R$');
+        document.getElementById('b' + id + '-br-mlv').textContent = 'R$ ' + fmt(brMLV, 'R$');
+        document.getElementById('b' + id + '-br-sp').textContent = 'R$ ' + fmt(brSP, 'R$');
+        document.getElementById('b' + id + '-br-temu').textContent = 'R$ ' + fmt(brTemu, 'R$');
+        document.getElementById('b' + id + '-mx-tt').textContent = '';
+        document.getElementById('b' + id + '-mx-mlu').textContent = '';
+        document.getElementById('b' + id + '-mx-mlv').textContent = '';
+        document.getElementById('b' + id + '-mx-ae').textContent = '';
+        document.getElementById('b' + id + '-mx-aep').textContent = '';
+      } else {
+        document.getElementById('b' + id + '-br-tt').textContent = '';
+        document.getElementById('b' + id + '-br-mlu').textContent = '';
+        document.getElementById('b' + id + '-br-mlv').textContent = '';
+        document.getElementById('b' + id + '-br-sp').textContent = '';
+        document.getElementById('b' + id + '-br-temu').textContent = '';
+        document.getElementById('b' + id + '-mx-tt').textContent = 'MXN ' + fmt(mxTT, 'MXN');
+        document.getElementById('b' + id + '-mx-mlu').textContent = 'MXN ' + fmt(mxMLU, 'MXN');
+        document.getElementById('b' + id + '-mx-mlv').textContent = 'MXN ' + fmt(mxMLV, 'MXN');
+        document.getElementById('b' + id + '-mx-ae').textContent = 'MXN ' + fmt(mxAE, 'MXN');
+        document.getElementById('b' + id + '-mx-aep').textContent = 'MXN ' + fmt(mxAEP, 'MXN');
+      }
+      updateRowCols(id);
+    }
+
+    function runBatch() {
+      const rows = document.getElementById('btbl-body').querySelectorAll('tr');
+      rows.forEach(tr => { const id = tr.id.replace('br-', ''); batchCalcRow(id); });
+      document.getElementById('batch-note').textContent = `已计算 ${rows.length} 行`;
+    }
+
+    // ── 国家选择：切换物流商选项时同步调用 ──
+    function updateRowCols(id) {
+      // td内容由batchCalcRow写入时已按国家清空，这里无需额外处理
+    }
+
+    // ── 单列复制：把第一行指定列的值复制到所有其他行 ──
+    function copyCol(field) {
+      const rows = document.getElementById('btbl-body').querySelectorAll('tr');
+      if (rows.length < 2) return;
+      const firstId = rows[0].id.replace('br-', '');
+      const firstEl = document.getElementById('b' + firstId + '-' + field);
+      if (!firstEl) return;
+      const val = firstEl.value;
+      for (let i = 1; i < rows.length; i++) {
+        const id = rows[i].id.replace('br-', '');
+        const el = document.getElementById('b' + id + '-' + field);
+        if (!el) continue;
+        if (field === 'country') {
+          el.value = val;
+          onCountryChange(id);
+        } else if (field === 'lg') {
+          // 先确保目标行的物流选项与来源行国家一致
+          const srcCountry = document.getElementById('b' + firstId + '-country').value;
+          const tgtCountry = document.getElementById('b' + id + '-country').value;
+          if (srcCountry !== tgtCountry) {
+            document.getElementById('b' + id + '-country').value = srcCountry;
+            onCountryChange(id);
+          }
+          el.value = val;
+          // 如果值仍不存在于选项中，回退到第一个
+          if (el.value !== val && el.options.length) el.value = el.options[0].value;
+        } else {
+          el.value = val;
+        }
+      }
+      const note = document.getElementById('batch-note');
+      note.textContent = `「${field}」已复制到其余 ${rows.length - 1} 行 ✓`;
+      setTimeout(() => note.textContent = '', 2000);
+    }
+    function copyFirstRowToAll() {
+      const rows = document.getElementById('btbl-body').querySelectorAll('tr');
+      if (rows.length < 2) { alert('至少需要2行'); return; }
+      const firstId = rows[0].id.replace('br-', '');
+      const fields = ['cost', 'wt', 'l', 'w', 'h', 'bq', 'qty', 'lg', 'm', 'pr', 'disc'];
+      const vals = {};
+      fields.forEach(f => { const el = document.getElementById('b' + firstId + '-' + f); if (el) vals[f] = el.value; });
+      for (let i = 1; i < rows.length; i++) {
+        const id = rows[i].id.replace('br-', '');
+        fields.forEach(f => { const el = document.getElementById('b' + id + '-' + f); if (el) el.value = vals[f]; });
+      }
+      const note = document.getElementById('batch-note');
+      note.textContent = `已将第1行全部数据复制到其余 ${rows.length - 1} 行 ✓（SKU除外）`;
+      setTimeout(() => note.textContent = '', 3000);
+    }
+    function downloadTemplate() {
+      const headers = ['国家(BR/MX)', 'SKU/名称', '成本(￥)', '重量(g)', '长(cm)', '宽(cm)', '高(cm)', '箱规', '个数', '物流商ID', '计费方式(vol/kg)', '利润率(%)', '折扣(%)'];
+      const ex1 = ['BR', '示例-巴西产品', 11.8, 260, 84.5, 43, 19.5, 50, 1, 'BR|hy2', 'vol', '', 60];
+      const ex2 = ['MX', '示例-墨西哥产品', 20, 300, 10, 10, 10, 1, 1, 'MX|mx1', 'vol', '', 60];
+      const note = ['# 国家: BR=巴西 MX=墨西哥   物流商ID: BR|hy1~hy48 BR|at1~at2 BR|cl1~cl8 MX|mx1~mx7   计费: vol=体积 kg=重量'];
+      const ws = XLSX.utils.aoa_to_sheet([headers, ex1, ex2, note]);
+      ws['!cols'] = [{ wch: 10 }, { wch: 16 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 6 }, { wch: 6 }, { wch: 22 }, { wch: 14 }, { wch: 10 }, { wch: 8 }];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '批量算价模板');
+      XLSX.writeFile(wb, 'LATAM算价_批量模板.xlsx');
+    }
+
+    // ── 上传 CSV 或 xlsx ──
+    function handleBatchUpload(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      const isXlsx = file.name.match(/\.xlsx?$/i);
+      reader.onload = ev => {
+        let rows = [];
+        if (isXlsx) {
+          const wb = XLSX.read(ev.target.result, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        } else {
+          const text = ev.target.result;
+          rows = text.split('\n').map(l => l.split(',').map(c => c.replace(/^["']|["']$/g, '').trim()));
+        }
+        const dataRows = rows.slice(1).filter(r => r.length > 1 && r[0] && !String(r[0]).startsWith('#'));
+        if (!dataRows.length) { document.getElementById('batch-note').textContent = '文件无有效数据'; return; }
+        document.getElementById('btbl-body').innerHTML = ''; batchRowId = 0;
+        dataRows.forEach(cols => {
+          if (!cols[2]) return; // 成本在第3列(index 2)
+          const country = String(cols[0] || 'BR').toUpperCase() === 'MX' ? 'MX' : 'BR';
+          addBatchRow({
+            country,
+            sku: cols[1] || '', cost: cols[2] || '', wt: cols[3] || '',
+            l: cols[4] || '', w: cols[5] || '', h: cols[6] || '',
+            bq: cols[7] || 1, qty: cols[8] || 1, dqty: cols[9] || 1,
+            lgVal: cols[10] || '', mVal: cols[11] || 'vol',
+            profit: cols[12] || '', disc: cols[13] || 60
+          });
+        });
+        document.getElementById('batch-note').textContent = `已载入 ${dataRows.length} 行`;
+      };
+      if (isXlsx) reader.readAsArrayBuffer(file);
+      else reader.readAsText(file, 'utf-8');
+      e.target.value = '';
+    }
+
+    // ── 导出 Excel (xlsx) ──
+    function exportBatch() {
+      const rows = document.getElementById('btbl-body').querySelectorAll('tr');
+      if (!rows.length) { alert('没有数据'); return; }
+      const headers = ['国家', 'SKU/名称', '成本(￥)', '重量(g)', '长', '宽', '高', '箱规', '个数', '内含件数', '物流商', '计费', '利润率', '折扣(%)', 'BR·TT(R$)', 'BR·ML不包邮(R$)', 'BR·ML包邮(R$)', 'BR·Shopee(R$)', 'BR·Temu(R$)', 'MX·TT(MXN)', 'MX·ML包邮(MXN)', 'MX·ML不包邮(MXN)', 'MX·AE线下(MXN)', 'MX·AE平台(MXN)'];
+      const data = [headers];
+      rows.forEach(tr => {
+        const id = tr.id.replace('br-', '');
+        const gv2 = k => (document.getElementById('b' + id + '-' + k)?.value || '');
+        const res = k => document.getElementById('b' + id + '-' + k)?.textContent?.replace('R$ ', '').replace('MXN ', '').replace('—', '') || '';
+        const lgSel = document.getElementById('b' + id + '-lg');
+        const lgName = lgSel?.options[lgSel.selectedIndex]?.text || '';
+        data.push([gv2('country'), gv2('sku'), gv2('cost'), gv2('wt'), gv2('l'), gv2('w'), gv2('h'), gv2('bq'), gv2('qty'), gv2('dqty'), lgName, document.getElementById('b' + id + '-m')?.value || '', gv2('pr'), gv2('disc'), res('br-tt'), res('br-mlu'), res('br-mlv'), res('br-sp'), res('br-temu'), res('mx-tt'), res('mx-mlu'), res('mx-mlv'), res('mx-ae'), res('mx-aep')]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = headers.map((_, i) => ({ wch: i < 12 ? 12 : 10 }));
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '批量算价结果');
+      XLSX.writeFile(wb, 'LATAM算价_批量结果.xlsx');
+    }
+
+    // 初始化一行
+    addBatchRow();
+    // 只初始化1行
+
+    // ============ 反推利润 ============
+    function syncRevTotal() {
+      const qty = Math.max(parseInt(document.getElementById('qty').value) || 1, 1);
+      const unit = parseFloat(document.getElementById('rev-price').value);
+      document.getElementById('rev-total').value = isNaN(unit) || unit <= 0 ? '' : (unit * qty).toFixed(2);
+    }
+    function syncRevUnit() {
+      const qty = Math.max(parseInt(document.getElementById('qty').value) || 1, 1);
+      const total = parseFloat(document.getElementById('rev-total').value);
+      document.getElementById('rev-price').value = isNaN(total) || total <= 0 ? '' : (total / qty).toFixed(2);
+    }
+
+    function calcReverse() {
+      const prEl = document.getElementById('rev-price');
+      const el = document.getElementById('rev-result');
+      if (!prEl || !prEl.value) { el.classList.add('hidden'); return; }
+      const pr = parseFloat(prEl.value) || 0;
+      const extra = parseFloat(document.getElementById('rev-extra').value) || 0;
+      if (pr <= 0) { el.classList.add('hidden'); return; }
+
+      const cost = gv('cost');
+      const wk = gv('weight') / 1000;
+      const mlWk = mlChargeWk(wk, gv('diml'), gv('dimw'), gv('dimh'), gv('bqty'));
+      const qty = Math.max(parseInt(document.getElementById('qty').value) || 1, 1);
+      const frt = getHF();
+      const svc = gv('svcfee');
+      const p = getParams();
+      const r = p.rate;
+      const cfg = C[cur];
+      const cu = cfg.cur;
+      const rep = cfg.rep === 'MX' ? document.getElementById('repmx').value : document.getElementById('rep').value;
+      const count = cfg.m.length;
+
+      const fa2 = v => Math.abs(v).toFixed(2);
+      const fmtL = v => fmtAmt(Math.abs(v), cu);
+      const sec = t => `<div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">${t}</div>`;
+      const pf2 = v => parseFloat(parseFloat(v).toFixed(2));
+      const pb2 = v => `<span style="font-size:10px;font-weight:700;color:var(--blue);background:var(--blu);padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle">${pf2(v)}%</span>`;
+      const pbEff2 = (amt, fn, revL) => (fn === 'mx_ae' && revL > 0) ? `<span style="font-size:10px;color:var(--t3);margin-left:4px">(实际 ${(amt / revL * 100).toFixed(2)}%)</span>` : '';
+      const RC = { frt: '#3860e8', svc: '#0aab7c', tail: '#4db6ac', mlf: '#7986cb', cost: '#78909c', comm: '#6c3fe8', inf: '#0097c4', ship: '#00a896', ord: '#e07b00', tax: '#ff7043', vip: '#8d6e63', fxloss: '#e8604a', refund: '#d63030', profit: '#7cb342', custFrt: '#90a4ae', ad: '#f97316' };
+      const dot2 = c => `<i style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${c};margin-right:4px;flex-shrink:0;vertical-align:middle"></i>`;
+      const rowK = (label, val, isRed, key) => {
+        const cny = `<span style="color:var(--t3);font-size:10px;margin-left:4px">≈￥${(Math.abs(val) * r).toFixed(2)}</span>`;
+        return `<div class="rr"${key ? ` data-pie-key="${key}"` : ''}><span>${label}</span><span style="color:${isRed ? 'var(--red)' : 'inherit'}">${isRed ? '-' : ''}${cu} ${fmtL(val)}${cny}</span></div>`;
+      };
+      const volTagR = mlWk > wk + 1e-9 ? `<span style="font-size:10px;font-weight:600;color:${RC.mlf};margin-left:5px;vertical-align:middle">按体积重 ${mlWk.toFixed(2)}kg/件</span>` : '';
+
+      let cards;
+      try {
+        cards = cfg.m.map(m => {
+        const fn = m.fn;
+        
+        let currentP = { ...p };
+        if (fn === 'br_tt') {
+          currentP.comm = pr < 50 ? (p.comm1 ?? 10) : (p.comm2 ?? 6);
+          currentP.orderFee = pr < 50 ? (p.orderFee1 ?? 4) : (p.orderFee2 ?? 6);
+        }
+
+        let mlfL = 0, tail_cny = 0, custFrt_L = 0;
+        const svcExtra = curSvcExtra;
+
+        if (fn === 'br_ml_u') mlfL = lkMLBR(mlWk, pr, rep);
+        if (fn === 'br_ml_v') mlfL = lkMLBR(mlWk, Math.max(pr, 79), rep);
+        if (fn === 'mx_ml_u') {
+          let keep = 0;
+          if (rep === 'green') keep = pr >= 499 ? .5 : pr >= 299 ? .6 : .3;
+          else if (rep === 'yellow') keep = pr >= 299 ? .4 : .2;
+          mlfL = lkMLMXBase(mlWk) * (1 - keep);
+        }
+        if (fn === 'mx_ml_u' || fn === 'mx_ml_v') custFrt_L = pr < 99 ? 25 : pr <= 149 ? 30 : pr <= 299 ? 37 : 0;
+        if (fn === 'mx_ae') tail_cny = lkAEMXP(wk * qty) * r;
+
+        // ① 订单收入（本地货币）
+        const revenue_L = pr * qty;
+
+        // ② 平台扣项（本地货币）—— mx_ae 包邮：尾程为平台直扣，%-扣项基数为 (revenue − 尾程)
+        const baseL = Math.max(0, pr * qty - tail_cny / r);
+        const comm_L = baseL * (currentP.comm || 0) / 100;
+        const shipSub_L = baseL * (currentP.shipSub || 0) / 100;
+        const inf_L = baseL * (currentP.inf || 0) / 100;
+        const tax_L = baseL * (currentP.tax || 0) / 100;
+        const vip_L = baseL * (currentP.vip || 0) / 100;
+        const ofe_L = (currentP.orderFee || 0) * qty;
+
+        const remaining_L = baseL - comm_L - shipSub_L - inf_L - tax_L - vip_L - ofe_L;
+        const remaining_cny = remaining_L * r;
+
+        // ③ 公司扣项（CNY）
+        const fxloss_cny = remaining_cny * (currentP.fxloss || 0) / 100;
+        const refund_cny = baseL * r * (currentP.refund || 0) / 100;
+
+        // ④ 产品与物流成本（CNY）
+        const cost_cny = cost * qty;
+        const frt_cny = frt * qty;
+        const svc_cny = totalSvc(svc, svcExtra, qty * (gv('dqty') || 1));
+        const mlf_cny = mlfL * r;
+        const tail_c = tail_cny;
+        const custFrt_cny = custFrt_L * r;
+
+        // 注：tail_c 不再从利润里减，因为已在 baseL 阶段从 revenue 剔除（非 mx_ae 时 tail_c=0，对其他平台无影响）
+        const profit_cny = remaining_cny - fxloss_cny - refund_cny - cost_cny - frt_cny - svc_cny - mlf_cny - custFrt_cny;
+        const op_margin = (revenue_L * r) > 0 ? profit_cny / (revenue_L * r) : 0;
+        const real_cny = (revenue_L + extra * qty) * r;
+        const real_margin = real_cny > 0 ? profit_cny / real_cny : 0;
+
+        // 广告费：按营收×占比，从利润里扣（不影响上面的成本结构）
+        const adRate = getAd();
+        const ad_cny = revenue_L * r * adRate / 100, cpa_L = pr * adRate / 100;
+        const profitAfter_cny = profit_cny - ad_cny;
+        const op_margin_after = (revenue_L * r) > 0 ? profitAfter_cny / (revenue_L * r) : 0;
+        const bottom_cny = adRate > 0 ? profitAfter_cny : profit_cny;
+
+        const pos = profit_cny >= 0;
+        const pc = pos ? 'var(--green)' : 'var(--red)';
+        const mc = op_margin >= 0.1 ? 'var(--green)' : op_margin >= 0 ? 'var(--amb)' : 'var(--red)';
+        const posB = bottom_cny >= 0;
+        const pcB = posB ? 'var(--green)' : 'var(--red)';
+
+        const sz = 165;
+        const _pieRev = makePie([
+          { val: frt_cny, color: RC.frt, label: '头程运费' },
+          { val: svc_cny, color: RC.svc, label: '仓库服务费' },
+          { val: tail_c, color: RC.tail, label: '尾程运费' },
+          { val: mlf_cny, color: RC.mlf, label: '平台运费' },
+          { val: cost_cny, color: RC.cost, label: '产品成本' },
+          { val: comm_L * r, color: RC.comm, label: '佣金' },
+          { val: inf_L * r, color: RC.inf, label: '达人佣金' },
+          { val: shipSub_L * r, color: RC.ship, label: '平台包邮' },
+          { val: ofe_L * r, color: RC.ord, label: '订单处理费' },
+          { val: tax_L * r, color: RC.tax, label: '税费' },
+          { val: vip_L * r, color: RC.vip, label: '大客户佣金' },
+          { val: fxloss_cny, color: RC.fxloss, label: '汇损' },
+          { val: refund_cny, color: RC.refund, label: '退款' },
+          { val: custFrt_cny, color: RC.custFrt, label: '客户运费' },
+          { val: adRate>0?profitAfter_cny:Math.max(0, profit_cny), color: RC.profit, label: adRate>0?'广告后毛利':'利润' },
+          { val: adRate>0?ad_cny:0, color: RC.ad, label: '广告费' },
+        ], sz, adRate>0?revenue_L*r:0);
+        const pieHtml = _pieRev.svg;
+
+        const breakdown = `
+      ${sec('① 订单收入')}
+      <div class="rr"><span>售价 × ${qty}</span><span>${cu} ${fmtL(revenue_L)}</span></div>
+      ${sec('② 平台扣项')}
+      ${comm_L ? rowK(`${dot2(RC.comm)}佣金${pb2(currentP.comm)}${pbEff2(comm_L, fn, revenue_L)}`, comm_L, true, '佣金') : ''}
+      ${shipSub_L ? rowK(`${dot2(RC.ship)}平台包邮${pb2(currentP.shipSub)}${pbEff2(shipSub_L, fn, revenue_L)}`, shipSub_L, true, '平台包邮') : ''}
+      ${inf_L ? rowK(`${dot2(RC.inf)}达人佣金${pb2(currentP.inf)}${pbEff2(inf_L, fn, revenue_L)}`, inf_L, true, '达人佣金') : ''}
+      ${tax_L ? rowK(`${dot2(RC.tax)}税费${pb2(currentP.tax)}${pbEff2(tax_L, fn, revenue_L)}${fn === 'mx_ae' ? '<span style="font-size:10px;color:var(--t3);margin-left:4px">(尾程已包含税费)</span>' : ''}`, tax_L, true, '税费') : ''}
+      ${vip_L ? rowK(`${dot2(RC.vip)}大客户佣金${pb2(currentP.vip)}${pbEff2(vip_L, fn, revenue_L)}`, vip_L, true, '大客户佣金') : ''}
+      ${ofe_L ? rowK(`${dot2(RC.ord)}订单处理费${revenue_L > 0 ? pb2(ofe_L / revenue_L * 100) : ''}`, ofe_L, true, '订单处理费') : ''}
+      ${mlfL ? rowK(`${dot2(RC.mlf)}平台运费(ML)${revenue_L > 0 ? pb2(mlfL / revenue_L * 100) : ''}${volTagR}`, mlfL, true, '平台运费') : ''}
+      ${custFrt_L ? rowK(`${dot2(RC.custFrt)}客户运费（平台收）${revenue_L > 0 ? pb2(custFrt_L / revenue_L * 100) : ''}`, custFrt_L, true, '客户运费') : ''}
+      ${tail_c ? rowK(`${dot2(RC.tail)}尾程运费(AE)${revenue_L > 0 ? pb2(tail_c / (revenue_L * r) * 100) : ''}`, tail_c / r, true, '尾程运费') : ''}
+      <div class="rr" style="padding-top:5px;border-top:1px dashed var(--bd)">
+        <span>到手收入</span><span>${cu} ${fmtL(remaining_L)} <span style="color:var(--t3);font-size:10px">≈￥${remaining_cny.toFixed(2)}</span></span>
+      </div>
+      ${sec('③ 公司扣项')}
+      <div class="rr" data-pie-key="汇损"><span>${dot2(RC.fxloss)}汇损${pb2(currentP.fxloss)}${pbEff2(fxloss_cny / r, fn, revenue_L)}</span><span style="color:var(--red)">-￥ ${fa2(fxloss_cny)}</span></div>
+      <div class="rr" data-pie-key="退款"><span>${dot2(RC.refund)}退款预估${pb2(currentP.refund)}${pbEff2(refund_cny / r, fn, revenue_L)}</span><span style="color:var(--red)">-￥ ${fa2(refund_cny)}</span></div>
+      ${sec('④ 产品与物流成本')}
+      ${frt_cny ? `<div class="rr" data-pie-key="头程运费"><span>${dot2(RC.frt)}头程运费${revenue_L > 0 ? pb2(frt_cny / (revenue_L * r) * 100) : ''}</span><span style="color:var(--red)">-￥ ${fa2(frt_cny)}</span></div>` : ''}
+      ${svc_cny ? `<div class="rr" data-pie-key="仓库服务费"><span>${dot2(RC.svc)}仓库服务费(整单)${revenue_L > 0 ? pb2(svc_cny / (revenue_L * r) * 100) : ''}</span><span style="color:var(--red)">-￥ ${fa2(svc_cny)}</span></div>` : ''}
+      ${cost_cny ? `<div class="rr" data-pie-key="产品成本"><span>${dot2(RC.cost)}产品成本${revenue_L > 0 ? pb2(cost_cny / (revenue_L * r) * 100) : ''}</span><span style="color:var(--red)">-￥ ${fa2(cost_cny)}</span></div>` : ''}
+      <div class="rr bld" data-pie-key="利润"><span>${dot2(RC.profit)}利润${adRate>0?'(广告前)':''}</span><span style="color:${pc}">￥ ${pos ? '' : '-'}${fa2(profit_cny)}</span></div>
+      <div class="rr" style="margin-top:4px">
+        <span>运营毛利率${adRate>0?'(广告前)':''}</span>
+        <span style="font-weight:700;color:${mc}">${pf2(op_margin * 100)}%</span>
+      </div>
+      ${extra > 0 ? `<div class="rr"><span>实际毛利率(含额外收入)</span><span style="font-weight:700;color:${mc}">${pf2(real_margin * 100)}%</span></div>` : ''}
+      ${adRate>0?`${sec('⑤ 广告')}
+      <div class="rr" data-pie-key="广告费"><span>${dot2(RC.ad)}广告费 CPA ${cu}${fmtL(cpa_L)}/单${pb2(adRate)}</span><span style="color:var(--red)">-￥ ${fa2(ad_cny)}</span></div>
+      <div class="rr bld" data-pie-key="广告后毛利"><span>${dot2(RC.profit)}广告后毛利</span><span style="color:${pcB}">￥ ${posB?'':'-'}${fa2(profitAfter_cny)}</span></div>
+      <div class="rr"><span>广告后毛利率</span><span style="font-weight:700;color:${op_margin_after>=0.1?'var(--green)':op_margin_after>=0?'var(--amb)':'var(--red)'}">${pf2(op_margin_after * 100)}%</span></div>`:''}`;
+
+        const pieScope = count === 1
+          ? `<div data-pie-scope style="display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:6px;padding-right:14px;border-right:1px solid var(--bd);min-width:0">${breakdown}</div>
+          ${pieHtml ? `<div style="display:flex;align-items:center;justify-content:center;position:relative;z-index:2">${pieHtml}</div>` : ''}
+         </div>`
+          : `<div data-pie-scope style="display:block;width:100%">
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:0">${breakdown}</div>
+          ${pieHtml ? `<div style="display:flex;justify-content:center;width:100%;padding-top:14px;border-top:1px solid var(--bd);margin-top:10px">${pieHtml}</div>` : ''}
+         </div>`;
+
+        return `<div class="rc rcp" style="margin-bottom:0">
+      <div class="rl">${m.l}</div>
+      <div class="rs2" style="color:${pcB}">${posB ? '盈利 ✓' : '亏损 ✗'}</div>
+      <div class="rbk">${pieScope}</div>
+    </div>`;
+        });
+      } catch (err) {
+        const eb = document.getElementById('errbox');
+        eb.textContent = err.message;
+        eb.style.display = 'block';
+        el.classList.add('hidden');
+        return;
+      }
+
+      el.classList.remove('hidden');
+      el.innerHTML = count > 1
+        ? `<div class="rg r2" style="margin-bottom:0">${cards.join('')}</div>`
+        : cards[0];
+    }
+
+    // ============ ERP填充模式 ============
+    let erpFillMode = localStorage.getItem('latam_erp_fill_mode') || 'all';
+
+    function setFillMode(mode) {
+      erpFillMode = mode;
+      localStorage.setItem('latam_erp_fill_mode', mode);
+      ['fill-all-btn', 'b-fill-all-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('on', mode === 'all');
+      });
+      ['fill-cost-btn', 'b-fill-cost-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('on', mode === 'cost');
+      });
+    }
+
+    // 初始化填充模式UI（页面加载后同步按钮状态）
+    (function initFillModeUI() {
+      setFillMode(erpFillMode);
+    })();
+
+    // ============ 批量输入SKU ============
+    function openBatchSKUInput() {
+      const modal = document.getElementById('batch-sku-modal');
+      modal.style.display = 'flex';
+      const ta = document.getElementById('batch-sku-input');
+      ta.value = '';
+      setTimeout(() => ta.focus(), 50);
+    }
+
+    // 点击蒙层关闭
+    document.getElementById('batch-sku-modal').addEventListener('click', function (e) {
+      if (e.target === this) this.style.display = 'none';
+    });
+
+    function submitBatchSKUs() {
+      const text = document.getElementById('batch-sku-input').value.trim();
+      if (!text) return;
+      const skus = text.split(/[\s,\r\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+      if (!skus.length) return;
+      document.getElementById('batch-sku-modal').style.display = 'none';
+      skus.forEach(sku => {
+        addBatchRow({ sku });
+        fillEnqueue(batchRowId, sku); // addBatchRow 已自增，batchRowId 即刚添加的行ID
+      });
+      const note = document.getElementById('batch-note');
+      note.textContent = `已添加 ${skus.length} 行，排队抓取中（并发${FILL_CONC}，防ERP限流掉包）...`;
+      setTimeout(() => note.textContent = '', 6000);
+    }
+
+    // ── iframe 兼容桥接：通过 postMessage 与父页面通信 ──
+    const _inIframe = (function () { try { return window.self !== window.top } catch (e) { return true } })();
+    const _erpCbs = {};
+    if (_inIframe) { window.addEventListener('message', function (e) { if (e.data && e.data._erp) { var c = _erpCbs[e.data._erp]; if (c) c.slice().forEach(function (fn) { fn({ detail: e.data.detail }) }) } }); }
+    function _erpOn(n, fn) { if (_inIframe) { (_erpCbs[n] = _erpCbs[n] || []).push(fn) } else document.addEventListener(n, fn) }
+    function _erpOff(n, fn) { if (_inIframe) { var a = _erpCbs[n]; if (a) { var i = a.indexOf(fn); if (i >= 0) a.splice(i, 1) } } else document.removeEventListener(n, fn) }
+    function _erpEmit(n, d) { if (_inIframe) window.parent.postMessage({ _erp: n, detail: d }, '*'); else document.dispatchEvent(new CustomEvent(n, { detail: d })) }
+
+    // ============ SKU自动查询功能 (新分支：折扣提醒 + 0元容错 完整版) ============
+
+    // 1. 高精度尺寸解析器
+    function parseDimString(str) {
+      if (!str || typeof str !== 'string') return [0, 0, 0];
+      const res = str.split(/x|\*|×|\s+/i).map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+      while (res.length < 3) res.push(0);
+      return res.slice(0, 3);
+    }
+
+    // 2. 单品 UI 错误提示
+    function showSKUError(msg) {
+      document.getElementById('skuQueryStatus').style.display = 'none';
+      document.getElementById('skuQuerySuccess').style.display = 'none';
+      document.getElementById('skuQueryError').style.display = 'block';
+      document.getElementById('skuQueryError').textContent = msg;
+    }
+
+    // 3. 单品查询触发
+    // ★ 总监仓选择(高级权限)：记住上次选的；改了就按新仓重查(单品/绑定都对) ★
+    function getPreferDirector() { const sel = document.getElementById('directorSelect'); if (sel && sel.value) return sel.value; try { const v = localStorage.getItem('latam_prefer_director'); return v === null ? '__base__' : v; } catch (e) { return '__base__'; } }
+    function setPreferDirector(v) { try { localStorage.setItem('latam_prefer_director', v || ''); } catch (e) {} }
+    // 预设总监仓名单(用户给定)——不查SKU也能选；查询发现的新总监仓会自动并入
+    const PRESET_DIRECTORS = ['王云', '许炎', '李彩虹', '徐美梦', '李亮亮', '周小鹏'];
+    // 统一渲染下拉：预设名单 ∪ 历史发现 ∪ 本次查询(带仓名/成本)。rich=本次查询的 options(可选)
+    function populateDirectorSelect(rich) {
+      const sel = document.getElementById('directorSelect');
+      if (!sel) return;
+      let saved = [];
+      try { saved = JSON.parse(localStorage.getItem('latam_director_options') || '[]'); } catch (e) {}
+      if (Array.isArray(rich) && rich.length) {   // 本次查询发现的总监仓并入持久化
+        rich.forEach(o => { if (o.director && !saved.some(s => s.director === o.director)) saved.push({ director: o.director, warehouse: o.warehouse }); });
+        try { localStorage.setItem('latam_director_options', JSON.stringify(saved)); } catch (e) {}
+      }
+      const order = [...PRESET_DIRECTORS];
+      saved.forEach(o => { if (o.director && !order.includes(o.director)) order.push(o.director); });
+      const richMap = {}; (rich || []).forEach(o => { richMap[o.director] = o; });
+      const savedMap = {}; saved.forEach(o => { savedMap[o.director] = o; });
+      let savedPref = null; try { savedPref = localStorage.getItem('latam_prefer_director'); } catch (e) {}
+      // ★ 拉美特例：总监仓数据有bug → 下拉首项"使用SKU成本(基础)"，且【从未选过】时默认走它 ★
+      sel.innerHTML = '<option value="__base__">使用SKU成本（基础）</option>'
+        + '<option value="">自动·按权限取总监仓</option>'
+        + order.map(name => {
+        const r = richMap[name];
+        const label = r ? `${r.warehouse}（￥${r.cost}）` : ((savedMap[name] && savedMap[name].warehouse) || (name + '仓'));
+        return `<option value="${name}">${label}</option>`;
+      }).join('');
+      // savedPref: null=从未设置→默认基础成本; ''=用户显式选了"自动"; 其余=具体总监仓/__base__
+      const prefValid = savedPref === '__base__' || savedPref === '' || (savedPref && order.includes(savedPref));
+      sel.value = prefValid ? savedPref : '__base__';
+    }
+    function loadSavedDirectorOptions() { populateDirectorSelect(); }   // 页面加载先填预设
+    function onDirectorChange() {
+      const sel = document.getElementById('directorSelect');
+      setPreferDirector(sel ? sel.value : '');
+      const sku = document.getElementById('skuQueryInput').value.trim();
+      if (sku) querySKUFromERP();   // 重查，让成本按新总监仓算
+    }
+
+    function querySKUFromERP() {
+      const sku = document.getElementById('skuQueryInput').value.trim(); // 保持大小写敏感
+      if (!sku) { showSKUError('请输入SKU'); return; }
+
+      document.getElementById('skuQueryError').style.display = 'none';
+      document.getElementById('skuQuerySuccess').style.display = 'none';
+      document.getElementById('skuQueryStatus').style.display = 'block';
+      document.getElementById('skuQueryStatus').textContent = '⏳ 正在获取底层数据...';
+
+      _erpEmit('REQUEST_ERP_FETCH', { sku: sku, type: 'single', preferDirector: getPreferDirector() });
+    }
+
+    // ── 批量填充：节流队列 + 状态登记 + 失败重试 + 问题行定位 ──
+    // 一次性全发会被ERP限流掉包，掉包行不标色、混在百行里难找，只能逐行回车重触发——这里统一收口
+    const _bFill = { stat: {}, msg: {}, queue: [], inflight: 0, timers: {}, pumping: false, jumpIdx: -1 };
+    const FILL_CONC = 3;        // 并发上限（绑定SKU后端要串行查多个子件，并发别开大）
+    const FILL_GAP = 250;       // 相邻派发间隔ms
+    const FILL_GUARD = 50000;   // 页面端兜底超时（桥接自身45s必回错，这里只兜postMessage链路断掉）
+
+    function _fillSetBg(rowId, bg, title) {
+      const el = document.getElementById('b' + rowId + '-sku');
+      if (el) { el.style.background = bg; if (title !== undefined) el.title = title; }
+    }
+    function fillEnqueue(rowId, sku) {
+      rowId = String(rowId);
+      if (!sku) return;
+      const i = _bFill.queue.findIndex(j => j.rowId === rowId);
+      if (i >= 0) _bFill.queue.splice(i, 1);
+      _bFill.stat[rowId] = 'queued'; _bFill.msg[rowId] = '排队中…';
+      _fillSetBg(rowId, '#f1f5f9', '排队中…');
+      _bFill.queue.push({ rowId, sku });
+      fillPump();
+    }
+    function fillPump() {
+      if (_bFill.pumping) return;
+      _bFill.pumping = true;
+      (function tick() {
+        while (_bFill.queue.length && !document.getElementById('br-' + _bFill.queue[0].rowId)) {
+          const dead = _bFill.queue.shift(); delete _bFill.stat[dead.rowId]; delete _bFill.msg[dead.rowId];
+        }
+        if (!_bFill.queue.length || _bFill.inflight >= FILL_CONC) { _bFill.pumping = false; fillRenderStat(); return; }
+        const job = _bFill.queue.shift();
+        _bFill.inflight++;
+        _bFill.stat[job.rowId] = 'pending'; _bFill.msg[job.rowId] = '抓取中…';
+        _fillSetBg(job.rowId, '#e0f2fe', '正在抓取...');
+        _erpEmit('REQUEST_ERP_FETCH', { sku: job.sku, type: 'batch', rowId: job.rowId, preferDirector: getPreferDirector() });
+        _bFill.timers[job.rowId] = setTimeout(() => fillSettle(job.rowId, 'fail', '⏱ 50秒无响应：插件可能需重载/页面需刷新(F5)，可点「重试失败」'), FILL_GUARD);
+        fillRenderStat();
+        setTimeout(tick, FILL_GAP);
+      })();
+    }
+    function fillSettle(rowId, stat, msg) {
+      rowId = String(rowId);
+      if (_bFill.timers[rowId]) { clearTimeout(_bFill.timers[rowId]); delete _bFill.timers[rowId]; }
+      const qi = _bFill.queue.findIndex(j => j.rowId === rowId);
+      if (qi >= 0) _bFill.queue.splice(qi, 1);   // 回包即权威：该行还排着队的重试任务作废，防幽灵重发
+      if (_bFill.stat[rowId] === 'pending') _bFill.inflight = Math.max(0, _bFill.inflight - 1);
+      if (!document.getElementById('br-' + rowId)) {
+        delete _bFill.stat[rowId]; delete _bFill.msg[rowId];
+        fillPump(); fillRenderStat(); return;
+      }
+      _bFill.stat[rowId] = stat; _bFill.msg[rowId] = msg || '';
+      if (stat === 'fail') _fillSetBg(rowId, '#fee2e2', msg);   // 超时路径也要红显；响应路径同色覆盖无妨
+      fillPump();
+      fillRenderStat();
+    }
+    function fillRenderStat() {
+      const wrap = document.getElementById('b-fill-stat'), rBtn = document.getElementById('b-fill-retry'), jBtn = document.getElementById('b-fill-jump');
+      if (!wrap) return;
+      Object.keys(_bFill.stat).forEach(rid => {
+        if (!document.getElementById('br-' + rid)) {
+          if (_bFill.stat[rid] === 'pending') _bFill.inflight = Math.max(0, _bFill.inflight - 1);
+          if (_bFill.timers[rid]) { clearTimeout(_bFill.timers[rid]); delete _bFill.timers[rid]; }
+          delete _bFill.stat[rid]; delete _bFill.msg[rid];
+        }
+      });
+      const ids = Object.keys(_bFill.stat);
+      if (!ids.length) { wrap.style.display = 'none'; if (rBtn) rBtn.style.display = 'none'; if (jBtn) jBtn.style.display = 'none'; return; }
+      const n = { queued: 0, pending: 0, ok: 0, warn: 0, manual: 0, fail: 0 };
+      ids.forEach(r => { n[_bFill.stat[r]] = (n[_bFill.stat[r]] || 0) + 1; });
+      const busy = n.queued + n.pending;
+      const seg = [`<b style="color:var(--t)">填充 ${ids.length}</b>`, `<span style="color:#15803d">✅ ${n.ok}</span>`];
+      if (n.warn) seg.push(`<span style="color:#b45309">🏷️ ${n.warn}</span>`);
+      if (n.manual) seg.push(`<span style="color:#b91c1c">⛔ 手补 ${n.manual}</span>`);
+      seg.push(`<span style="color:${n.fail ? '#dc2626' : '#94a3b8'}">❌ 失败 ${n.fail}</span>`);   // 常显：零失败也要看得见，不让人心算
+      if (busy) seg.push(`<span style="color:#0369a1">⏳ ${busy}</span>`);
+      wrap.innerHTML = seg.join(' · ');
+      wrap.style.display = 'inline-flex';
+      // 按钮常驻：没失败时灰显禁用，有失败才亮起可点（藏起来会让人以为功能不存在）
+      if (rBtn) {
+        rBtn.style.display = 'inline-block';
+        rBtn.textContent = `↻ 重试失败 ${n.fail}`;
+        rBtn.disabled = !n.fail;
+        rBtn.style.background = n.fail ? '#dc2626' : '#e2e8f0';
+        rBtn.style.color = n.fail ? '#fff' : '#94a3b8';
+        rBtn.style.cursor = n.fail ? 'pointer' : 'default';
+      }
+      const issues = n.fail + n.manual;
+      if (jBtn) {
+        jBtn.style.display = 'inline-block';
+        jBtn.textContent = `⌖ 问题行 ${issues}`;
+        jBtn.disabled = !issues;
+        jBtn.style.background = issues ? '#fffbeb' : '#f1f5f9';
+        jBtn.style.color = issues ? '#b45309' : '#94a3b8';
+        jBtn.style.borderColor = issues ? '#f59e0b' : '#e2e8f0';
+        jBtn.style.cursor = issues ? 'pointer' : 'default';
+      }
+    }
+    function fillRetryFailed() {
+      const fails = Object.keys(_bFill.stat).filter(r => _bFill.stat[r] === 'fail' && document.getElementById('br-' + r)).sort((a, b) => a - b);
+      fails.forEach(r => {
+        const sku = (document.getElementById('b' + r + '-sku')?.value || '').trim();
+        if (sku) fillEnqueue(r, sku);
+      });
+    }
+    function fillJumpNext() {
+      const bad = Object.keys(_bFill.stat).filter(r => (_bFill.stat[r] === 'fail' || _bFill.stat[r] === 'manual') && document.getElementById('br-' + r)).sort((a, b) => a - b);
+      if (!bad.length) return;
+      _bFill.jumpIdx = (_bFill.jumpIdx + 1) % bad.length;
+      const rid = bad[_bFill.jumpIdx];
+      const tr = document.getElementById('br-' + rid);
+      tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const prevBg = tr.style.background;
+      tr.style.transition = 'background .25s';
+      tr.style.background = '#fde68a';
+      setTimeout(() => { tr.style.background = prevBg; tr.style.transition = ''; }, 1300);
+      const sku = (document.getElementById('b' + rid + '-sku')?.value || '').trim();
+      const note = document.getElementById('batch-note');
+      if (note) note.textContent = `[问题行 ${_bFill.jumpIdx + 1}/${bad.length}] ${sku}：${_bFill.msg[rid] || ''}`;
+    }
+
+    // 4. 批量查询触发
+    function handleBatchInput(e) {
+      if (!e.target || !e.target.classList.contains('w-sku')) return;
+      if (e.type === 'keypress' && e.key !== 'Enter') return;
+
+      const inputEl = e.target;
+      const id = inputEl.id.replace('b', '').replace('-sku', '');
+      const sku = inputEl.value.trim(); // 保持大小写敏感
+      if (!sku) return;
+
+      fillEnqueue(id, sku);
+    }
+
+    // 防重入清理，避免多次注入导致重复执行
+    if (window.erpFetchHandler) {
+      _erpOff('RESPONSE_ERP_FETCH', window.erpFetchHandler);
+    }
+
+    // 5. 全局数据接收与渲染中心
+    window.erpFetchHandler = function (e) {
+      const res = e.detail;
+      const reqData = res.reqData || {};
+      const isBatch = reqData.type === 'batch';
+      const rowId = reqData.rowId;
+      const sku = reqData.sku || (isBatch ? '' : document.getElementById('skuQueryInput').value.trim());
+
+      // UI 状态机
+      function setUIStatus(success, msg, isWarning = false) {
+        const st = isWarning === true ? 'warn' : isWarning;
+        if (isBatch) {
+          const skuEl = document.getElementById(`b${rowId}-sku`);
+          if (skuEl) {
+            skuEl.style.background = !success ? '#fee2e2'
+              : st === 'oversea' ? '#dbeafe'
+              : st === 'warn' ? '#fef08a'
+              : '#f0fdf4';
+            skuEl.title = msg;
+          }
+          // 状态登记：查到但缺数据（绑定缺子件/海外仓缺总监仓成本）=手补，重试无用；其余失败=可重试
+          const settled = success ? (st === 'warn' ? 'warn' : 'ok')
+            : (res.data && (res.data.__bind || res.data.__overseaMiss)) ? 'manual' : 'fail';
+          fillSettle(rowId, settled, msg);
+        } else {
+          if (!success) showSKUError(msg);
+        }
+      }
+      // ★ 状态徽章(巴甫洛夫视觉)：成本状态=固定 图标+颜色；🔗绑定为独立结构维度 ★
+      const _chip = (bg, fg, t) => `<span style="display:inline-block;padding:1px 8px;border-radius:10px;background:${bg};color:${fg};font-weight:700;font-size:12px;vertical-align:middle;margin-right:4px">${t}</span>`;
+      const CHIP = {
+        ok:       t => _chip('#dcfce7', '#15803d', '✅ ' + (t || '正常')),
+        oversea:  t => _chip('#dbeafe', '#1d4ed8', '🌏 ' + t),
+        discount: t => _chip('#ffedd5', '#c2410c', '🏷️ ' + (t || '降本打折')),
+        manual:   t => _chip('#fee2e2', '#b91c1c', '⛔ ' + (t || '手动')),
+        bind:     t => _chip('#ede9fe', '#6d28d9', '🔗 ' + t),
+      };
+
+      if (!res.success) return setUIStatus(false, `❌ 请求失败: ${res.error}`);
+
+      console.log(`【抓取到的纯净数据 - ${sku}】:`, res.data);
+
+      // 数据扁平化提取器
+      function flattenData(obj, result = {}) {
+        if (!obj || typeof obj !== 'object') return result;
+        const keys = ['costPrice', 'discountCostprice', 'cost', 'weight', 'grossweight', 'length', 'width', 'height', 'packSizes2', 'packSizes'];
+        for (const key of keys) {
+          if (key in obj && obj[key] !== null && obj[key] !== "" && result[key] === undefined) {
+            result[key] = obj[key];
+          }
+        }
+        for (let k in obj) { if (typeof obj[k] === 'object') flattenData(obj[k], result); }
+        return result;
+      }
+
+      let item = null;
+      if (res.data && res.data.obj && Array.isArray(res.data.obj.result) && res.data.obj.result.length > 0) {
+        item = res.data.obj.result[0];
+      } else {
+        item = flattenData(res.data);
+      }
+
+      if (item.costPrice === undefined && item.cost === undefined && item.weight === undefined && item.packSizes === undefined) {
+        return setUIStatus(false, '❌ 数据中未找到商品或缺失核心字段');
+      }
+
+      // ★ 核心降本风控与 0 元放行逻辑 ★
+      const originalCost = parseFloat(item.costPrice) || parseFloat(item.cost) || 0;
+      let finalCost = originalCost;
+      let isDiscounted = false;
+
+      if (item.discountCostprice !== undefined && item.discountCostprice !== null && item.discountCostprice !== "") {
+        const discountCost = parseFloat(item.discountCostprice);
+        if (!isNaN(discountCost) && discountCost !== originalCost) {
+          finalCost = discountCost;
+          isDiscounted = true;
+        }
+      }
+
+      const weight = parseFloat(item.weight) || parseFloat(item.grossweight) || 0;
+      let length = 0, width = 0, height = 0;
+      const dimStr = item.packSizes2 || item.packSizes || "";
+      const nums = dimStr.match(/[\d.]+/g);
+      if (nums && nums.length >= 3) {
+        length = parseFloat(nums[0]); width = parseFloat(nums[1]); height = parseFloat(nums[2]);
+      } else {
+        length = parseFloat(item.length) || 0; width = parseFloat(item.width) || 0; height = parseFloat(item.height) || 0;
+      }
+
+      // 智能赋值机制 (允许 val 为 0)
+      const assignVal = (ids, val) => {
+        if (val === null || val === undefined || isNaN(val)) return;
+        ids.forEach(id => {
+          const el = document.getElementById(isBatch ? `b${rowId}-${id.split('dim')[1] || id}` : id);
+          if (el && (!isBatch || val >= 0)) { // 核心修复：val >= 0，完美兼容 0 成本
+            el.value = val;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+      };
+
+      // ★ 海外仓SKU：用引擎选好的"总监仓"成本覆盖 finalCost ★
+      // 拉美特例：选了"使用SKU成本(__base__)"→ 绕开总监仓覆盖，finalCost 保持 SKU基础成本(含降本打折，跟普通SKU一样)
+      const useBaseCost = reqData.preferDirector === '__base__';
+      let overseaTag = null;
+      if (useBaseCost) {
+        overseaTag = { base: true };
+      } else if (res.data && res.data.__oversea) {
+        overseaTag = { wh: res.data.__oversea.warehouse, cost: res.data.__oversea.cost };
+        finalCost = res.data.__oversea.cost; isDiscounted = false;
+        if (!isBatch && res.data.__oversea.options) populateDirectorSelect(res.data.__oversea.options, res.data.__oversea.director);
+      } else if (res.data && res.data.__overseaAny) {
+        overseaTag = { bind: true, cost: res.data.__overseaCostPrice, miss: res.data.__overseaMissing || [] };
+        if (res.data.__overseaCostPrice != null) { finalCost = res.data.__overseaCostPrice; isDiscounted = false; }
+        if (!isBatch && res.data.__overseaOptions) populateDirectorSelect(res.data.__overseaOptions, '');
+      } else if (res.data && res.data.__overseaMiss) {
+        overseaTag = { miss1: true };
+      }
+
+      assignVal(['cost'], finalCost);
+
+      // 物理数据（重量/尺寸）填充逻辑：
+      // 1. 全局 erpFillMode === 'cost' 时不填充
+      // 2. 批量模式下，如果行内已有重量或尺寸数据（来自上传文件），按表格为准，不覆盖
+      const batchHasPhysical = isBatch && (() => {
+        const wv = parseFloat(document.getElementById('b' + rowId + '-wt')?.value);
+        const lv = parseFloat(document.getElementById('b' + rowId + '-l')?.value);
+        return (wv > 0) || (lv > 0);
+      })();
+      const skipPhysical = (erpFillMode === 'cost') || batchHasPhysical;
+      if (!skipPhysical) {
+        assignVal(['wt', 'weight'], weight);
+        assignVal(['l', 'diml'], length);
+        assignVal(['w', 'dimw'], width);
+        assignVal(['h', 'dimh'], height);
+      }
+
+      // UI 渲染输出
+      if (isBatch) {
+        if (overseaTag && overseaTag.wh) setUIStatus(true, `🌏 海外仓·${overseaTag.wh} 成本￥${finalCost}`, 'oversea');
+        else if (overseaTag && overseaTag.miss1) setUIStatus(false, `⛔ 海外仓SKU取不到总监仓成本，暂填通用￥${finalCost}，请手动改`);
+        else if (isDiscounted) setUIStatus(true, `🏷️ 降本·用打折价￥${finalCost}(原价￥${originalCost})${overseaTag && overseaTag.base ? ' · SKU基础成本' : ''}`, 'warn');
+        else if (overseaTag && overseaTag.base) setUIStatus(true, `🧮 SKU基础成本￥${finalCost}（绕开总监仓）`);
+        else setUIStatus(true, `✅ 抓取成功`);
+        if (typeof batchCalcRow === 'function') batchCalcRow(rowId);
+      } else {
+        document.getElementById('skuQueryStatus').style.display = 'none';
+        const successEl = document.getElementById('skuQuerySuccess');
+        successEl.style.display = 'block';
+        successEl.style.color = '';
+        const _info = `重 ${weight}g · 尺寸 ${length}×${width}×${height}`;
+        let _html;
+        if (overseaTag && overseaTag.wh) {
+          _html = CHIP.oversea(`海外仓·${overseaTag.wh}`) + ` 成本 <b style="color:#1d4ed8">￥${finalCost}</b> · ${_info}`;
+        } else if (overseaTag && overseaTag.miss1) {
+          _html = CHIP.manual('海外仓·取不到总监仓成本') + ` 暂填通用 <b>￥${finalCost}</b>，请核对/手动改 · ${_info}`;
+        } else if (isDiscounted) {
+          _html = CHIP.discount(`原价￥${originalCost}`) + ` 用打折价 <b style="color:#c2410c">￥${finalCost}</b>${overseaTag && overseaTag.base ? '（SKU基础成本·绕开总监仓）' : ''} · ${_info}`;
+        } else if (overseaTag && overseaTag.base) {
+          _html = _chip('#e0e7ff', '#3730a3', '🧮 SKU基础成本') + ` 成本 <b style="color:#3730a3">￥${finalCost}</b>（绕开总监仓）· ${_info}`;
+        } else {
+          _html = CHIP.ok() + ` 成本 <b style="color:#15803d">￥${finalCost}</b> · ${_info}`;
+        }
+        document.getElementById('skuQueryResult').innerHTML = _html;
+      }
+
+      // ★ 绑定(捆绑)商品标注 ★ —— 每个子件一行(成本/重/尺寸，对齐单品)；绿=查到 / 红=查不到(对齐单品配色)；🔗蓝色标明这是绑定商品；末尾合计
+      if (res.data && res.data.__bind) {
+        const det = res.data.bindDetail || [];
+        const miss = res.data.bindMissing || [];
+        const C_OK = '#10b981', C_BAD = '#dc2626', C_BIND = '#2563eb'; // 绿=找到 / 红=找不到 / 蓝=绑定标识
+        const sumQty = det.reduce((sum, d) => sum + d.qty, 0);
+        assignVal(['dqty'], sumQty);
+        const volCm3 = Math.round(det.reduce((s, d) => s + (d.found ? d.l * d.w * d.h * d.qty : 0), 0));
+        const ovAnyB = !useBaseCost && !!res.data.__overseaAny;
+        const lineTxt = det.map(d => d.found ? `${d.qty}×${d.sku}(${(!useBaseCost && d.overseaCost != null) ? (d.overseaWh + '成本￥' + d.overseaCost) : (d.disc ? ('打折￥' + d.cost + '原' + d.origCost) : ('成本￥' + d.cost))},${d.wt}g,${d.l}×${d.w}×${d.h})` : `${d.qty}×${d.sku}⚠查不到`).join(' + ');
+        let tip = `${ovAnyB ? '🌏🔗 海外仓绑定' : '🔗 绑定商品'} ${res.data.bindSku}: ${lineTxt} → 拆解${sumQty}件 合计 成本￥${finalCost}·重${weight}g·体积${volCm3}cm³`;
+        if (miss.length) tip += ` ｜⚠️${miss.length}个子件查不到(${miss.join(',')})，需手动补`;
+
+        if (isBatch) {
+          // 批量：绿底=全部查到 / 红底=有子件查不到(对齐单品配色)；常驻🔗蓝标说明这行是绑定商品；明细放 tooltip
+          const skuEl = document.getElementById(`b${rowId}-sku`);
+          if (skuEl) {
+            const bad = miss.length || (ovAnyB && res.data.__overseaCostPrice == null);
+            skuEl.style.background = bad ? '#fee2e2' : (ovAnyB ? '#dbeafe' : '#f0fdf4');
+            skuEl.title = tip;
+            const cell = skuEl.parentElement;
+            if (cell) {
+              let badge = cell.querySelector('.bind-badge');
+              if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'bind-badge';
+                badge.style.cssText = 'margin-left:3px;cursor:help;font-size:12px;vertical-align:middle';
+                cell.appendChild(badge);
+              }
+              badge.textContent = ovAnyB ? '🌏🔗' : '🔗';
+              badge.title = tip;
+              badge.style.color = bad ? '#b91c1c' : (ovAnyB ? '#1d4ed8' : '#6d28d9');
+            }
+            fillSettle(rowId, bad ? 'manual' : 'ok', tip);   // 绑定行二次登记：缺子件成本→手补
+          }
+        } else {
+          // 单品：一个子件一行，格式对齐单品(成本/重/尺寸)，绿=查到红=查不到，末尾合计
+          const successEl = document.getElementById('skuQuerySuccess');
+          if (successEl) {
+            successEl.style.display = 'block';
+            successEl.style.color = '';
+            const C_OVS = '#1d4ed8';
+            const ovAny = !useBaseCost && !!res.data.__overseaAny;
+            const ovCostNull = ovAny && res.data.__overseaCostPrice == null;
+            const isTT = s => /TT(ID|PH|VN|MY|TH|MX|BR)/i.test(s);
+            const rows = det.map(d => {
+              if (!d.found) return `<span style="color:${C_BAD}">　⛔ ${d.sku} ×${d.qty}　查不到（无权限/不在库），手动补</span>`;
+              if (!useBaseCost && d.overseaCost != null) return `<span style="color:${C_OVS}">　🌏 ${d.sku} ×${d.qty}　${d.overseaWh} ￥${d.overseaCost}　·　${d.wt}g · ${d.l}×${d.w}×${d.h}</span>`;
+              if (ovAny && isTT(d.sku)) return `<span style="color:${C_BAD}">　⛔ ${d.sku} ×${d.qty}　海外仓子件无总监仓成本，手动补　(${d.wt}g · ${d.l}×${d.w}×${d.h})</span>`;
+              if (d.disc) return `<span style="color:#c2410c">　🏷️ ${d.sku} ×${d.qty}　打折￥${d.cost}(原￥${d.origCost})　·　${d.wt}g · ${d.l}×${d.w}×${d.h}</span>`;
+              if (!d.cost) return `<span style="color:#b45309">　⚠️ ${d.sku} ×${d.qty}　成本￥0，请核对　·　${d.wt}g · ${d.l}×${d.w}×${d.h}</span>`;
+              return `<span style="color:${C_OK}">　✅ ${d.sku} ×${d.qty}　￥${d.cost}　·　${d.wt}g · ${d.l}×${d.w}×${d.h}</span>`;
+            });
+            const anyFlag = det.some(d => d.found && !d.overseaCost && (d.disc || !d.cost));
+            const headChips = CHIP.bind(`绑定·拆${sumQty}件`) + (ovCostNull ? CHIP.manual('海外仓·缺子件成本') : (ovAny ? CHIP.oversea('海外仓·总监仓成本') : (miss.length ? CHIP.manual() : (anyFlag ? CHIP.discount('含打折/0成本·逐件看') : CHIP.ok()))));
+            const sumColor = (miss.length || ovCostNull) ? C_BAD : (ovAny ? C_OVS : C_OK);
+            const sumTxt = ovCostNull
+              ? `合计 ⛔ 海外仓子件取不到总监仓成本，成本不可得，手动补 · 重 ${weight}g · 体积 ${volCm3}cm³`
+              : `合计 成本 ￥${finalCost} · 重 ${weight}g · 体积 ${volCm3}cm³${miss.length ? '（偏小，缺件手动补）' : ''}`;
+            let html = `<div style="margin-bottom:4px"><span style="font-weight:600;margin-right:6px">${res.data.bindSku}</span>${headChips}</div>`
+              + rows.join('<br>')
+              + `<br><span style="color:${sumColor};font-weight:700">${sumTxt}</span>`;
+            document.getElementById('skuQueryResult').innerHTML = html;
+          }
+        }
+      }
+    };
+    // 绑定全局接收中心
+    _erpOn('RESPONSE_ERP_FETCH', window.erpFetchHandler);
+
+    // 6. 事件绑定初始化
+    function bindERPEvents() {
+      loadSavedDirectorOptions();
+      const input = document.getElementById('skuQueryInput');
+      if (input && !input.dataset.bound) {
+        input.dataset.bound = true;
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') querySKUFromERP(); });
+      }
+      const btblBody = document.getElementById('btbl-body');
+      if (btblBody && !btblBody.dataset.erpBound) {
+        btblBody.dataset.erpBound = true;
+        btblBody.addEventListener('change', handleBatchInput);
+        btblBody.addEventListener('keypress', handleBatchInput);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindERPEvents);
+    } else {
+      bindERPEvents();
+    }
+    // ============ SKU自动查询功能完成 ============
+
+    // =====================================================
+    // 环形饼图生成（SVG）
+    // =====================================================
+    function makePie(items, sz = 84, base = 0) {
+      const valid = items.filter(i => i.val > 0);
+      if (!valid.length) return { svg: '', legend: '' };
+      const total = valid.reduce((s, i) => s + i.val, 0);
+      if (!total) return { svg: '', legend: '' };
+      const pctBase = base > 0 ? base : total; // 标签百分比基准：传入售价时按"占售价%"显示(可超100%)
+      const lp = 66;
+      const W = sz + lp * 2, H = sz + lp * 2;
+      const cx = W / 2, cy = H / 2;
+      const R = sz / 2 - 3, ri = R * 0.5;
+      const ff = n => +n.toFixed(2);
+      let segs = '', lbls = '';
+      if (valid.length === 1) {
+        const pct = 100, lbl = (valid[0].label || '').replace(/'/g, "\\'"), col = valid[0].color;
+        segs = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="${col}" onmouseover="pieHover(event,'${lbl}',${pct},'${col}')" onmouseout="pieOut()" style="cursor:pointer"/><circle cx="${cx}" cy="${cy}" r="${ri}" fill="#fff" style="pointer-events:none"/>`;
+        lbls = `<text x="${cx}" y="${cy - R - 11}" text-anchor="middle" font-size="9.5" fill="${col}" font-weight="700" style="pointer-events:none">${valid[0].label}</text><text x="${cx}" y="${cy - R - 1}" text-anchor="middle" font-size="9" fill="${col}" style="pointer-events:none">100%</text>`;
+      } else {
+        let a = -Math.PI / 2;
+        for (const it of valid) {
+          const sw = it.val / total * Math.PI * 2, a2 = a + sw;
+          const x1 = cx + R * Math.cos(a), y1 = cy + R * Math.sin(a);
+          const x2 = cx + R * Math.cos(a2), y2 = cy + R * Math.sin(a2);
+          const ix1 = cx + ri * Math.cos(a), iy1 = cy + ri * Math.sin(a);
+          const ix2 = cx + ri * Math.cos(a2), iy2 = cy + ri * Math.sin(a2);
+          const lg = sw > Math.PI ? 1 : 0;
+          const pct = +(it.val / pctBase * 100).toFixed(1);
+          const lbl = (it.label || '').replace(/'/g, "\\'");
+          segs += `<path d="M${ff(x1)},${ff(y1)} A${R},${R} 0 ${lg},1 ${ff(x2)},${ff(y2)} L${ff(ix2)},${ff(iy2)} A${ri},${ri} 0 ${lg},0 ${ff(ix1)},${ff(iy1)} Z" fill="${it.color}" stroke="#fff" stroke-width="1.5" onmouseover="pieHover(event,'${lbl}',${pct},'${it.color}')" onmouseout="pieOut()" style="cursor:pointer;transition:opacity .15s"/>`;
+          if (pct >= 1.5) {
+            const midA = (a + a2) / 2;
+            const cm = Math.cos(midA), sm = Math.sin(midA);
+            const isR = cm > 0.08, isL = cm < -0.08;
+            const lx0 = cx + (R + 4) * cm, ly0 = cy + (R + 4) * sm;
+            const lx1 = cx + (R + 13) * cm, ly1 = cy + (R + 13) * sm;
+            const anch = isR ? 'start' : (isL ? 'end' : 'middle');
+            const tx = lx1 + (isR ? 2 : (isL ? -2 : 0));
+            lbls += `<line x1="${ff(lx0)}" y1="${ff(ly0)}" x2="${ff(lx1)}" y2="${ff(ly1)}" stroke="${it.color}" stroke-width="1.1" opacity="0.7"/>`;
+            if (pct >= 6) {
+              lbls += `<text x="${ff(tx)}" y="${ff(ly1 - 2)}" text-anchor="${anch}" font-size="9" fill="${it.color}" font-weight="600" style="pointer-events:none">${it.label}</text>`;
+              lbls += `<text x="${ff(tx)}" y="${ff(ly1 + 9)}" text-anchor="${anch}" font-size="8.5" fill="${it.color}" opacity="0.85" style="pointer-events:none">${pct}%</text>`;
+            } else {
+              lbls += `<text x="${ff(tx)}" y="${ff(ly1 + 4)}" text-anchor="${anch}" font-size="9" fill="${it.color}" font-weight="600" style="pointer-events:none">${pct}%</text>`;
+            }
+          }
+          a = a2;
+        }
+      }
+      return { svg: `<svg viewBox="0 0 ${W} ${H}" style="display:block;max-width:100%;height:auto;flex-shrink:0">${segs}${lbls}</svg>`, legend: '' };
+    }
+    function pieHover(e, label, pct, color) {
+      const tip = document.getElementById('pie-tip');
+      if (!tip) return;
+      tip.innerHTML = `<i style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${color};margin-right:5px;vertical-align:middle;flex-shrink:0"></i>${label}&nbsp;<b>${pct}%</b>`;
+      tip.style.display = 'block';
+      movePieTip(e);
+      const scope = e.target.closest('[data-pie-scope]');
+      const rows = scope ? scope.querySelectorAll('[data-pie-key]') : [];
+      rows.forEach(el => {
+        const match = el.dataset.pieKey === label;
+        el.style.background = match ? 'rgba(56,96,232,.08)' : '';
+        el.style.borderRadius = match ? '5px' : '';
+        el.style.outline = match ? '1px solid rgba(56,96,232,.18)' : '';
+      });
+    }
+    function pieOut() {
+      const tip = document.getElementById('pie-tip');
+      if (tip) tip.style.display = 'none';
+      document.querySelectorAll('[data-pie-key]').forEach(el => {
+        el.style.background = ''; el.style.borderRadius = ''; el.style.outline = '';
+      });
+    }
+    function movePieTip(e) {
+      const tip = document.getElementById('pie-tip');
+      if (!tip || tip.style.display === 'none') return;
+      const tx = e.clientX + 14, ty = e.clientY - 38;
+      tip.style.left = Math.min(tx, window.innerWidth - tip.offsetWidth - 8) + 'px';
+      tip.style.top = Math.max(8, ty) + 'px';
+    }
+    document.addEventListener('mousemove', movePieTip);
+  </script>
+
+  <div id="pie-tip"
+    style="display:none;position:fixed;background:#1c1f2e;color:#fff;font-size:11px;font-weight:500;padding:5px 11px;border-radius:7px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.25)">
+  </div>
+
+</body>
+
+</html>

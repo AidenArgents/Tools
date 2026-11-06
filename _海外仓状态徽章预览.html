@@ -1,0 +1,70 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>海外仓状态徽章预览</title>
+<style>
+  body{font-family:"Microsoft YaHei",system-ui,sans-serif;background:#f8fafc;color:#1e293b;margin:0;padding:24px;font-size:14px}
+  h2{font-size:16px;margin:22px 0 10px;color:#0f172a}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .chip{display:inline-block;padding:1px 8px;border-radius:10px;font-weight:700;font-size:12px;vertical-align:middle;margin-right:4px}
+  .muted{color:#64748b}
+  table{border-collapse:collapse;width:100%;max-width:760px}
+  td,th{border:1px solid #e2e8f0;padding:8px 10px;text-align:left;vertical-align:middle}
+  th{background:#f1f5f9}
+  .cell{display:inline-block;min-width:120px;padding:6px 10px;border-radius:6px;font-weight:600;font-size:12px}
+  .b{font-weight:700}
+</style></head><body>
+<div style="max-width:860px;margin:0 auto">
+<h1 style="font-size:20px">海外仓算价 · 状态徽章系统（巴甫洛夫视觉）</h1>
+<p class="muted">两个正交维度：① <b>成本状态</b>=颜色+图标徽章（绿/蓝/橙/红）；② <b>结构</b>=🔗绑定（紫，独立维度）。运营只需记 5 个信号。</p>
+
+<h2>① 图例（固定，运营条件反射）</h2>
+<table>
+<tr><th>信号</th><th>含义</th><th>运营动作</th></tr>
+<tr><td><span class="chip" style="background:#dcfce7;color:#15803d">✅ 正常</span></td><td>通用成本（productInfoForNewEdtion）</td><td>直接用</td></tr>
+<tr><td><span class="chip" style="background:#dbeafe;color:#1d4ed8">🌏 海外仓</span></td><td>用了<b>总监仓</b>成本（显示哪个仓）</td><td>瞄一眼用的是不是#总监#仓</td></tr>
+<tr><td><span class="chip" style="background:#ffedd5;color:#c2410c">🏷️ 降本打折</span></td><td>用了打折价（显示原价）</td><td>核对打折是否预期</td></tr>
+<tr><td><span class="chip" style="background:#fee2e2;color:#b91c1c">⛔ 手动</span></td><td>取不到成本 / 缺子件 / 未找到</td><td>必须动手补/改</td></tr>
+<tr><td><span class="chip" style="background:#ede9fe;color:#6d28d9">🔗 绑定</span></td><td>拆 N 个子件（结构维度，可与上面叠加）</td><td>看子件明细</td></tr>
+</table>
+
+<h2>② 单品查询 — 各状态实样</h2>
+<div class="card"><span class="chip" style="background:#dbeafe;color:#1d4ed8">🌏 海外仓·TT印尼#总监#仓</span> 成本 <b class="b" style="color:#1d4ed8">￥5.3951</b> · 重 60g · 尺寸 8×3×3</div>
+<div class="card"><span class="chip" style="background:#dcfce7;color:#15803d">✅ 正常</span> 成本 <b class="b" style="color:#15803d">￥5.27</b> · 重 60g · 尺寸 8×3×3</div>
+<div class="card"><span class="chip" style="background:#ffedd5;color:#c2410c">🏷️ 原价￥5.27</span> 用打折价 <b class="b" style="color:#c2410c">￥4.50</b> · 重 60g · 尺寸 8×3×3</div>
+<div class="card"><span class="chip" style="background:#fee2e2;color:#b91c1c">⛔ 海外仓·取不到总监仓成本</span> 暂填通用 <b class="b">￥5.27</b>，请核对/手动改 · 重 60g · 尺寸 8×3×3</div>
+
+<h2>③ 绑定商品 — 各状态实样</h2>
+<div class="card">
+  <div style="margin-bottom:4px"><span class="b" style="margin-right:6px">SETTTID01</span><span class="chip" style="background:#ede9fe;color:#6d28d9">🔗 绑定·拆2件</span><span class="chip" style="background:#dbeafe;color:#1d4ed8">🌏 海外仓·总监仓成本</span></div>
+  <span style="color:#1d4ed8">　🌏 BAH6014ATTID ×1　TT印尼#总监#仓 ￥5.3951　·　60g · 8×3×3</span><br>
+  <span style="color:#1d4ed8">　🌏 BAT8451ATTID ×2　TT印尼#总监#仓 ￥2.40　·　76g · 9×4×4</span><br>
+  <span style="color:#1d4ed8;font-weight:700">合计 成本 ￥10.1951 · 重 212g · 体积 384cm³</span>
+</div>
+<div class="card">
+  <div style="margin-bottom:4px"><span class="b" style="margin-right:6px">SET00321</span><span class="chip" style="background:#ede9fe;color:#6d28d9">🔗 绑定·拆2件</span><span class="chip" style="background:#dcfce7;color:#15803d">✅ 正常</span></div>
+  <span style="color:#15803d">　✅ ABC123 ×1　￥3.10　·　40g · 6×3×2</span><br>
+  <span style="color:#15803d">　✅ DEF456 ×1　￥1.80　·　30g · 5×3×2</span><br>
+  <span style="color:#15803d;font-weight:700">合计 成本 ￥4.90 · 重 70g · 体积 108cm³</span>
+</div>
+<div class="card">
+  <div style="margin-bottom:4px"><span class="b" style="margin-right:6px">SET00322</span><span class="chip" style="background:#ede9fe;color:#6d28d9">🔗 绑定·拆3件</span><span class="chip" style="background:#ffedd5;color:#c2410c">🏷️ 含打折/0成本·逐件看</span><span style="color:#64748b;margin-left:6px">← 普通绑定里混了打折/0成本子件，逐件分色，不再混成一个"正常"</span></div>
+  <span style="color:#15803d">　✅ BAT0202A ×1　￥2.5556　·　43g · 9×4×4</span><br>
+  <span style="color:#c2410c">　🏷️ BAT2732A ×1　打折￥0(原￥2.10)　·　77g · 12×6×4</span><br>
+  <span style="color:#b45309">　⚠️ BAT2758A ×1　成本￥0，请核对　·　130g · 8×7×7</span><br>
+  <span style="color:#c2410c;font-weight:700">合计 成本 ￥2.5556 · 重 250g · 体积 ...cm³</span>
+</div>
+<div class="card">
+  <div style="margin-bottom:4px"><span class="b" style="margin-right:6px">SETTTID09</span><span class="chip" style="background:#ede9fe;color:#6d28d9">🔗 绑定·拆2件</span><span class="chip" style="background:#fee2e2;color:#b91c1c">⛔ 海外仓·缺子件成本</span></div>
+  <span style="color:#1d4ed8">　🌏 BAH6014ATTID ×1　TT印尼#总监#仓 ￥5.3951　·　60g · 8×3×3</span><br>
+  <span style="color:#b91c1c">　⛔ FUN1852CTTID ×1　海外仓子件无总监仓成本，手动补　(50g · 7×3×3)</span><br>
+  <span style="color:#b91c1c;font-weight:700">合计 ⛔ 海外仓子件取不到总监仓成本，成本不可得，手动补 · 重 110g · 体积 279cm³</span>
+</div>
+
+<h2>④ 批量模式 — SKU 单元格底色</h2>
+<div class="card">
+  <span class="cell" style="background:#dbeafe;color:#1d4ed8">🌏🔗 海外仓</span>
+  <span class="cell" style="background:#dcfce7;color:#15803d">✅ 正常</span>
+  <span class="cell" style="background:#fef08a;color:#854d0e">🏷️ 降本</span>
+  <span class="cell" style="background:#fee2e2;color:#b91c1c">⛔ 手动</span>
+  <span class="muted" style="display:block;margin-top:8px">（鼠标悬停单元格出明细 tooltip；绑定额外挂 🔗 / 🌏🔗 角标）</span>
+</div>
+</div>
+</body></html>

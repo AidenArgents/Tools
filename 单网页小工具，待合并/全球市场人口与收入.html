@@ -1,0 +1,1230 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>全球人口与收入画像</title>
+  <style>
+    :root {
+      --bg: #061419;
+      --panel: rgba(15, 27, 32, .9);
+      --panel-2: rgba(23, 40, 46, .78);
+      --line: rgba(255, 255, 255, .11);
+      --text: #f3f6ef;
+      --muted: #aab8ba;
+      --soft: #758589;
+      --gold: #f2c76e;
+      --teal: #77d6c5;
+      --blue: #71b9e6;
+      --orange: #ef9b67;
+      --pink: #db8fc1;
+      --shadow: 0 20px 60px rgba(0, 0, 0, .24);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { min-width: 320px; background: var(--bg); }
+    body { margin: 0; color: var(--text); background:
+      radial-gradient(circle at 10% -10%, rgba(119, 214, 197, .14), transparent 30rem),
+      radial-gradient(circle at 95% 10%, rgba(242, 199, 110, .12), transparent 28rem),
+      linear-gradient(145deg, #07191e, #071217 55%, #0b1619); font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+    button, input, select { font: inherit; }
+    button, select { color: inherit; }
+    .app-shell { width: min(1880px, 100%); margin: 0 auto; padding: clamp(18px, 2vw, 32px); }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; color: var(--teal); font-size: 12px; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
+    .eyebrow-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 16px rgba(119, 214, 197, .82); }
+    .topline { display: flex; align-items: flex-start; justify-content: space-between; gap: 22px; }
+    h1 { margin: 0; font-size: clamp(30px, 4vw, 56px); line-height: 1; letter-spacing: -.055em; }
+    .intro { max-width: 760px; margin: 14px 0 0; color: var(--muted); line-height: 1.7; font-size: 14px; }
+    .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+    .button, .select { min-height: 42px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255, 255, 255, .045); }
+    .button { padding: 0 16px; cursor: pointer; font-weight: 800; transition: .18s ease; }
+    .button:hover { border-color: rgba(242, 199, 110, .65); background: rgba(242, 199, 110, .12); transform: translateY(-1px); }
+    .button:disabled { opacity: .55; cursor: wait; transform: none; }
+    .select { padding: 0 35px 0 14px; outline: none; cursor: pointer; }
+    .select:focus, .button:focus-visible { outline: 2px solid rgba(119, 214, 197, .74); outline-offset: 2px; }
+    .status-row { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+    .status-pill, .tag { display: inline-flex; align-items: center; gap: 7px; min-height: 29px; padding: 0 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(255, 255, 255, .035); font-size: 11px; }
+    .status-pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--soft); }
+    .status-pill.online::before { background: var(--teal); box-shadow: 0 0 10px rgba(119, 214, 197, .8); }
+    .status-pill.loading::before { background: var(--gold); animation: pulse 1s infinite alternate; }
+    .status-pill.error::before { background: var(--orange); }
+    @keyframes pulse { to { opacity: .3; } }
+    .scope-note { margin: 13px 0 0; color: var(--soft); font-size: 11px; line-height: 1.6; }
+    .selector-panel { margin-top: 22px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 20px; background: rgba(15, 27, 32, .82); box-shadow: var(--shadow); }
+    .selector-row { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 14px; align-items: start; }
+    .selector-row + .selector-row { margin-top: 13px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.08); }
+    .selector-label { padding-top: 9px; color: var(--soft); font-size: 11px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .tab-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .tab-button { min-height: 36px; padding: 0 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.035); cursor: pointer; font-size: 12px; font-weight: 800; transition: .18s ease; }
+    .tab-button:hover { color: var(--text); border-color: rgba(119,214,197,.52); }
+    .tab-button[aria-selected="true"] { color: #102026; border-color: var(--teal); background: var(--teal); box-shadow: 0 5px 18px rgba(119,214,197,.18); }
+    .hero-card { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.8fr); gap: 18px; align-items: stretch; }
+    .hero-copy { padding: 6px 0; }
+    .hero-country { display: flex; align-items: center; gap: 11px; }
+    .hero-country .flag-image-wrap { width: 58px; height: 32px; }
+    .hero-country h2 { font-size: clamp(24px, 3vw, 38px); letter-spacing: -.045em; }
+    .hero-subtitle { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .hero-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+    .hero-metric { min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.04); }
+    .hero-metric span { display: block; color: var(--soft); font-size: 10px; }
+    .hero-metric strong { display: block; margin-top: 7px; font-size: clamp(17px, 2vw, 25px); letter-spacing: -.04em; }
+    .gender-value { display: inline-flex; align-items: baseline; gap: .16em; white-space: nowrap; }
+    .hero-metric strong .gender-value, .region-metric strong .gender-value { display: inline-flex; }
+    .hero-metric strong .gender-value { font-size: .92em; }
+    .region-metric strong .gender-value { font-size: 1em; }
+    .hero-metric .gender-value > span, .region-metric .gender-value > span { display: inline; font-size: inherit; }
+    /* The generic metric label rule also targets every nested span. Keep the
+       comparison color more specific so the larger sex is visibly highlighted. */
+    .hero-metric .gender-lead, .region-metric .gender-lead { color: var(--gold); font-weight: 900; }
+    .hero-metric .gender-muted, .region-metric .gender-muted { color: var(--soft); }
+    .hero-metric .gender-slash, .region-metric .gender-slash { color: var(--soft); font-weight: 500; }
+    .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; margin-top: 22px; }
+    .dashboard-column { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+    .dashboard-column > .content-card { margin-top: 0; min-width: 0; }
+    .dashboard-grid .hero-card { display: flex; flex-direction: column; }
+    .dashboard-grid .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dashboard-grid .income-explain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .age-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .age-pyramid { min-width: 0; padding: 12px 10px 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 15px; background: rgba(255,255,255,.025); }
+    .age-pyramid-head, .age-pyramid-row { display: grid; grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr); gap: 8px; align-items: center; }
+    .age-pyramid-head { padding: 0 8px 8px; color: var(--soft); font-size: 10px; }
+    .age-pyramid-head span:first-child { color: var(--pink); text-align: right; }
+    .age-pyramid-head span:last-child { color: var(--blue); }
+    .age-pyramid-scale { text-align: center; color: var(--muted); }
+    .age-pyramid-row { min-height: 22px; padding: 2px 8px; border-top: 1px solid rgba(255,255,255,.045); }
+    .age-pyramid-row:first-of-type { border-top: 0; }
+    .age-pyramid-side { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--soft); font-size: 10px; }
+    .age-pyramid-side.female { justify-content: flex-end; }
+    .age-pyramid-side.male { justify-content: flex-start; }
+    .age-pyramid-value { min-width: 44px; white-space: nowrap; }
+    .age-pyramid-side.female .age-pyramid-value { text-align: right; }
+    .age-pyramid-bar { height: 17px; width: var(--bar-width); min-width: 2px; border-radius: 4px; transition: width .22s ease; }
+    .age-pyramid-side.female .age-pyramid-bar { background: linear-gradient(90deg, rgba(219,143,193,.4), var(--pink)); }
+    .age-pyramid-side.male .age-pyramid-bar { background: linear-gradient(90deg, var(--blue), rgba(113,185,230,.4)); }
+    .age-pyramid-label { color: var(--text); font-size: 10px; font-weight: 800; text-align: center; white-space: nowrap; }
+    .age-pyramid-note { margin-top: 9px; color: var(--soft); font-size: 10px; line-height: 1.55; text-align: center; }
+    .age-pyramid-key { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; color: var(--muted); font-size: 10px; }
+    .age-pyramid-key b { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 2px; vertical-align: -1px; }
+    .age-pyramid-key .female-key { background: var(--pink); }
+    .age-pyramid-key .male-key { background: var(--blue); }
+    .admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+    .admin-stat { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.035); }
+    .admin-stat span { display: block; color: var(--soft); font-size: 10px; }
+    .admin-stat strong { display: block; margin-top: 7px; font-size: 20px; }
+    .admin-note { margin-top: 13px; padding: 12px 14px; border-left: 2px solid var(--gold); color: var(--muted); background: rgba(242,199,110,.06); font-size: 11px; line-height: 1.7; }
+    .admin-note a { margin-left: 4px; }
+    .map-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(250px, .75fr); gap: 14px; }
+    .map-frame { position: relative; aspect-ratio: 5 / 3; min-height: 320px; overflow: hidden; border: 1px solid var(--line); border-radius: 17px; background: radial-gradient(circle at 50% 40%, rgba(119,214,197,.07), transparent 65%), rgba(255,255,255,.025); }
+    #adminMap { display: block; width: 100%; height: 100%; min-height: 0; }
+    .admin-shape { fill: rgba(119,214,197,.2); stroke: rgba(119,214,197,.66); stroke-width: .85; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill .16s ease, stroke .16s ease; }
+    .admin-shape:hover, .admin-shape.selected { fill: rgba(242,199,110,.68); stroke: var(--gold); stroke-width: 1.4; }
+    .admin-label { fill: rgba(238,247,243,.94); font-size: 10px; font-weight: 800; paint-order: stroke; stroke: rgba(6,20,25,.88); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; text-anchor: middle; }
+    .admin-label-zh { font-size: 10px; font-weight: 850; }
+    .admin-label-local { fill: rgba(207,226,220,.86); font-size: 7px; font-weight: 650; letter-spacing: .01em; }
+    .admin-label.compact { font-size: 8px; stroke-width: 2.5px; }
+    .admin-label.compact .admin-label-zh { font-size: 8px; }
+    .admin-label.compact .admin-label-local { font-size: 6px; }
+    .map-loading, .map-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; color: var(--muted); font-size: 12px; text-align: center; }
+    .region-panel { min-width: 0; padding: 17px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,255,255,.035); }
+    .region-kicker { color: var(--teal); font-size: 10px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+    .region-panel h3 { margin-top: 8px; font-size: 22px; }
+    .region-panel .subcopy { margin-top: 7px; }
+    .region-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .region-metric { padding: 10px; border-radius: 11px; background: rgba(255,255,255,.045); }
+    .region-metric span { display: block; color: var(--soft); font-size: 10px; }
+    .region-metric strong { display: block; margin-top: 5px; font-size: 15px; }
+    .region-note { margin-top: 14px; padding: 11px 12px; border-left: 2px solid var(--gold); color: var(--muted); background: rgba(242,199,110,.06); font-size: 11px; line-height: 1.65; }
+    .map-source { margin-top: 10px; color: var(--soft); font-size: 10px; line-height: 1.5; }
+    .map-source a { margin-left: 3px; }
+    .content-card { margin-top: 22px; padding: 20px; border: 1px solid var(--line); border-radius: 23px; background: var(--panel); box-shadow: var(--shadow); }
+    .card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    h2, h3, p { margin: 0; }
+    h2 { font-size: 18px; letter-spacing: -.02em; }
+    h3 { font-size: 16px; }
+    .card-heading p, .subcopy { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .income-explain-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .explain-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 17px; background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018)); }
+    .explain-card h3 { font-size: 15px; }
+    .explain-card p { margin-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .explain-card a { display: inline-block; margin-top: 10px; font-size: 10px; }
+    .explain-value { display: inline-flex; margin-top: 9px; color: var(--gold); font-size: 20px; font-weight: 850; letter-spacing: -.04em; }
+    .explain-subvalue { display: block; margin-top: 4px; color: var(--soft); font-size: 10px; }
+    .explain-highlow { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 12px; }
+    .explain-highlow div { padding: 8px; border-radius: 10px; background: rgba(255,255,255,.04); }
+    .explain-highlow b { display: block; color: var(--text); font-size: 10px; }
+    .explain-highlow span { display: block; margin-top: 4px; color: var(--soft); font-size: 10px; line-height: 1.45; }
+    .explain-status { margin-top: 12px; padding: 9px 10px; border-left: 2px solid var(--gold); color: var(--muted); background: rgba(242,199,110,.06); font-size: 10px; line-height: 1.55; }
+    .household-bar { display: flex; height: 10px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.08); }
+    .household-bar i { display: block; height: 100%; }
+    .household-bar .food { background: var(--orange); }
+    .household-bar .nonfood { background: var(--blue); }
+    .household-legend { display: grid; gap: 5px; margin-top: 8px; color: var(--soft); font-size: 10px; line-height: 1.4; }
+    .household-legend span { display: flex; align-items: baseline; gap: 6px; }
+    .household-legend b { display: inline-block; flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; }
+    .household-legend .food { background: var(--orange); }
+    .household-legend .nonfood { background: var(--blue); }
+    .spending-taxonomy { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+    .spending-taxonomy span { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 7px 8px; border-radius: 9px; color: var(--soft); background: rgba(255,255,255,.04); font-size: 10px; line-height: 1.35; }
+    .spending-taxonomy i { flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+    .spending-taxonomy .food { background: var(--orange); }
+    .spending-taxonomy .need { background: var(--blue); }
+    .spending-taxonomy .life { background: var(--teal); }
+    .spending-taxonomy .emotion { background: var(--pink); }
+    .spending-taxonomy .saving { background: var(--gold); }
+    .group-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .group-card { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel-2); }
+    .group-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .group-head span { color: var(--soft); font-size: 11px; }
+    .group-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+    .mini-stat { padding: 10px; border-radius: 12px; background: rgba(255, 255, 255, .04); }
+    .mini-stat span { display: block; color: var(--soft); font-size: 10px; }
+    .mini-stat strong { display: block; margin-top: 5px; font-size: 15px; }
+    .age-bar { display: flex; height: 9px; margin-top: 14px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.08); }
+    .age-bar i { display: block; height: 100%; }
+    .age-young { background: var(--blue); }
+    .age-work { background: var(--teal); }
+    .age-old { background: var(--orange); }
+    .age-legend { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; color: var(--soft); font-size: 10px; }
+    .age-legend b { display: inline-block; width: 7px; height: 7px; margin-right: 4px; border-radius: 50%; }
+    .group-countries { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }
+    .tag { min-height: 24px; padding: 0 8px; font-size: 10px; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 15px; }
+    table { width: 100%; min-width: 1300px; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 13px 12px; border-bottom: 1px solid rgba(255,255,255,.075); text-align: left; vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    th { color: var(--soft); background: rgba(255,255,255,.035); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    td { color: #e9f0ec; }
+    .country-cell { display: flex; align-items: center; gap: 9px; min-width: 175px; }
+    .flag-image-wrap { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 32px; height: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,.18); border-radius: 4px; background: rgba(255,255,255,.08); box-shadow: 0 3px 10px rgba(0,0,0,.16); vertical-align: middle; }
+    .flag-svg { display: block; width: 100%; height: 100%; }
+    .flag-fallback { color: var(--text); font-size: 9px; font-weight: 850; letter-spacing: .03em; }
+    .tab-button .flag-image-wrap { width: 25px; height: 14px; margin-right: 5px; vertical-align: -2px; }
+    .country-name { font-weight: 800; }
+    .country-meta { margin-top: 4px; color: var(--soft); font-size: 10px; line-height: 1.4; }
+    th:nth-child(4), td:nth-child(4) { min-width: 360px; }
+    th:nth-child(4) { text-align: center; }
+    .age-inline { display: flex; justify-content: center; min-width: 0; color: var(--muted); font-size: 10px; }
+    .age-distribution { width: 320px; max-width: 100%; min-width: 0; text-align: left; }
+    .age-plot { height: 78px; padding: 2px 4px 0; border-radius: 10px; background: linear-gradient(to bottom, rgba(255,255,255,.045), rgba(255,255,255,.018)); }
+    .age-plot svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .age-plot .age-grid { stroke: rgba(255,255,255,.1); stroke-width: 1; stroke-dasharray: 2 4; }
+    .age-plot .age-area { fill: rgba(103, 210, 193, .13); }
+    .age-plot .age-line { fill: none; stroke: var(--teal); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .age-plot .age-point { fill: var(--teal); stroke: #10292c; stroke-width: 2; }
+    .age-plot .age-axis { stroke: rgba(255,255,255,.2); stroke-width: 1; }
+    .age-summary-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+    .age-summary-values span { padding: 4px 5px; border-radius: 8px; background: rgba(255,255,255,.045); text-align: center; }
+    .age-summary-values small { display: block; color: var(--soft); font-size: 9px; }
+    .age-summary-values b { display: block; margin-top: 2px; color: var(--text); font-size: 11px; }
+    .age-distribution-note { margin-top: 5px; color: var(--soft); font-size: 9px; }
+    .age-distribution-empty { color: var(--soft); text-align: center; }
+    .value-muted { color: var(--soft); }
+    .error-box { padding: 18px; border: 1px dashed rgba(239, 155, 103, .5); border-radius: 15px; color: var(--muted); background: rgba(239, 155, 103, .055); line-height: 1.7; font-size: 12px; }
+    .method-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .method-item { padding: 14px; border-left: 2px solid var(--teal); background: rgba(255,255,255,.035); }
+    .method-item strong { display: block; margin-bottom: 6px; font-size: 12px; }
+    .method-item p { color: var(--muted); font-size: 11px; line-height: 1.65; }
+    a { color: var(--teal); }
+    .empty { padding: 30px 12px; color: var(--soft); text-align: center; }
+    @media (max-width: 900px) {
+      .topline { flex-direction: column; }
+      .actions { justify-content: flex-start; }
+      .income-explain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .method-grid { grid-template-columns: 1fr; }
+      .hero-card, .age-panel, .map-layout { grid-template-columns: 1fr; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .dashboard-column { display: contents; }
+      .dashboard-grid .hero-card { order: 1; }
+      .dashboard-grid .age-card { order: 2; }
+      .dashboard-grid .income-card { order: 3; }
+      .dashboard-grid .admin-card { order: 4; }
+    }
+    @media (max-width: 620px) {
+      .app-shell { padding-top: 24px; }
+      .content-card { padding: 14px; border-radius: 18px; }
+      .group-grid { grid-template-columns: 1fr; }
+      .income-explain-grid { grid-template-columns: 1fr; }
+      .dashboard-grid .hero-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .group-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .selector-row { grid-template-columns: 1fr; gap: 7px; }
+      .selector-label { padding-top: 0; }
+      .hero-grid, .admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .actions { width: 100%; }
+      .actions > * { flex: 1 1 140px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header>
+      <div class="eyebrow"><span class="eyebrow-dot"></span>Population · income · market coverage</div>
+      <div class="topline">
+        <div>
+          <h1>全球人口与收入画像</h1>
+          <p class="intro">按当前工具覆盖的市场与国家查看人口规模、性别比例、年龄结构与收入水平；下方一级行政区只展示可核验的边界覆盖，不把全国数据硬拆到省州。</p>
+        </div>
+        <div class="actions">
+          <button class="button" id="refresh" type="button">刷新官方数据</button>
+        </div>
+      </div>
+      <div class="status-row">
+        <span class="status-pill loading" id="status">正在读取世界银行数据…</span>
+        <span class="tag" id="coverage">当前覆盖 13 个国家</span>
+      </div>
+      <p class="scope-note">口径提示：人口、性别和年龄结构来自世界银行 WDI 的最新可用年度；各指标年份可能不同。收入显示为“人均 GNI（世界银行 Atlas 法，当前美元）”，不是居民工资或家庭可支配收入。</p>
+    </header>
+
+    <section class="selector-panel" aria-label="国家选择">
+      <div class="selector-row"><div class="selector-label">市场</div><div class="tab-list" id="marketTabs"></div></div>
+      <div class="selector-row"><div class="selector-label">国家</div><div class="tab-list" id="countryTabs"></div></div>
+    </section>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-column">
+        <section class="content-card hero-card" id="countryHero"></section>
+
+        <section class="content-card income-card">
+          <div class="card-heading"><div><h2>收入与购买力怎么读</h2><p>这些指标回答的是不同问题：国家总体收入、收入分配差距、家庭可支配收入、消费结构和本地实际购买力不能互相替代。</p></div><span class="tag">指标说明</span></div>
+          <div class="income-explain-grid" id="incomeGuide"></div>
+        </section>
+      </div>
+
+      <div class="dashboard-column">
+        <section class="content-card age-card">
+          <div class="card-heading"><div><h2>年龄结构金字塔</h2><p>用年龄金字塔观察人口结构特征；左右两侧分别显示女性与男性，柱长按各自年龄占比镜像。</p></div><span class="tag" id="ageStatus">正在读取…</span></div>
+          <div class="age-panel" id="ageContent"></div>
+        </section>
+
+        <section class="content-card admin-card">
+          <div class="card-heading"><div><h2>州 / 省人口地图</h2><p>点击地图中的一级行政区查看名称和数据状态。边界用于定位；没有对应国家官方统计源的省州指标会保留为空。</p></div><span class="tag" id="adminStatus">正在读取地图…</span></div>
+          <div class="map-layout">
+            <div class="map-frame">
+              <div class="map-loading" id="mapLoading">正在读取行政区边界…</div>
+              <svg id="adminMap" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" role="img" aria-label="一级行政区地图"><g id="adminMapLayer"></g></svg>
+              <div class="map-empty" id="mapEmpty" hidden></div>
+            </div>
+            <aside class="region-panel" id="regionDetail"></aside>
+          </div>
+          <div class="admin-note" id="adminNote">边界来自 GeoBoundaries；省州人口、性别、年龄和收入只在有可核验的国家官方统计接口时显示。</div>
+        </section>
+      </div>
+    </div>
+
+    <section class="content-card">
+      <div class="card-heading">
+        <div><h2>国家明细</h2><p>点击刷新后，页面会优先显示联网返回的最新非空值；没有数据就保留为“—”。</p></div>
+        <span class="tag" id="rowCount"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>国家</th><th>人口</th><th>女性 / 男性</th><th>年龄结构</th><th>人均 GNI</th><th>基尼</th><th>数据年份</th></tr></thead>
+          <tbody id="countryRows"><tr><td colspan="7" class="empty">正在载入…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <div class="card-heading"><div><h2>数据来源与边界</h2><p>这页把“能核验的数字”和“辅助定位的行政区边界”分开。</p></div></div>
+      <div class="method-grid">
+        <div class="method-item"><strong>官方统计源</strong><p>数字实时读取 <a href="https://data.worldbank.org/" target="_blank" rel="noreferrer">世界银行 WDI</a> API。人口：SP.POP.TOTL；性别：SP.POP.TOTL.FE.IN / MA.IN；年龄金字塔使用男女各自的 5 岁年龄组指标（SP.POP.*.FE.5Y / MA.5Y），并换算为人数与占比。</p></div>
+        <div class="method-item"><strong>收入口径</strong><p>人均 GNI 使用 NY.GNP.PCAP.CD（Atlas 法、当前美元）；购买力参考使用 NY.GNP.PCAP.PP.CD（PPP、国际元 Int$），并用 NE.CON.PRVT.PP.KD 除以人口得到人均居民消费 PPP 参考。国际元是跨地区比较单位，不是实际流通货币，也不是可直接兑换的美元。它们都不是居民工资或家庭可支配收入；基尼系数 SI.POV.GINI 只展示各国最新可用值。</p></div>
+        <div class="method-item"><strong>行政区地图</strong><p>地图边界来自 <a href="https://www.geoboundaries.org/" target="_blank" rel="noreferrer">GeoBoundaries</a> 的 ADM1 数据，用于定位州、省或自治区。各国行政区统计口径不一，省州人口、性别、年龄、收入只有在对应国家官方接口可核验时才显示，否则不做估算。</p></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const COUNTRIES = [
+        { code: "IDN", name: "印度尼西亚", flag: "🇮🇩", market: "东南亚" },
+        { code: "PHL", name: "菲律宾", flag: "🇵🇭", market: "东南亚" },
+        { code: "VNM", name: "越南", flag: "🇻🇳", market: "东南亚" },
+        { code: "THA", name: "泰国", flag: "🇹🇭", market: "东南亚" },
+        { code: "MYS", name: "马来西亚", flag: "🇲🇾", market: "东南亚" },
+        { code: "SGP", name: "新加坡", flag: "🇸🇬", market: "东南亚" },
+        { code: "MEX", name: "墨西哥", flag: "🇲🇽", market: "拉美" },
+        { code: "BRA", name: "巴西", flag: "🇧🇷", market: "拉美" },
+        { code: "PER", name: "秘鲁", flag: "🇵🇪", market: "拉美" },
+        { code: "ARG", name: "阿根廷", flag: "🇦🇷", market: "拉美" },
+        { code: "SAU", name: "沙特阿拉伯", flag: "🇸🇦", market: "中东" },
+        { code: "ARE", name: "阿联酋", flag: "🇦🇪", market: "中东" },
+        { code: "POL", name: "波兰", flag: "🇵🇱", market: "欧洲" }
+      ];
+      const INDICATORS = {
+        population: "SP.POP.TOTL",
+        female: "SP.POP.TOTL.FE.IN",
+        male: "SP.POP.TOTL.MA.IN",
+        young: "SP.POP.0014.TO.ZS",
+        working: "SP.POP.1564.TO.ZS",
+        old: "SP.POP.65UP.TO.ZS",
+        gni: "NY.GNP.PCAP.CD",
+        gniPpp: "NY.GNP.PCAP.PP.CD",
+        consumptionPppTotal: "NE.CON.PRVT.PP.KD",
+        gini: "SI.POV.GINI"
+      };
+      const AGE_GROUPS = [
+        ["0004", "0–4 岁"], ["0509", "5–9 岁"], ["1014", "10–14 岁"], ["1519", "15–19 岁"],
+        ["2024", "20–24 岁"], ["2529", "25–29 岁"], ["3034", "30–34 岁"], ["3539", "35–39 岁"],
+        ["4044", "40–44 岁"], ["4549", "45–49 岁"], ["5054", "50–54 岁"], ["5559", "55–59 岁"],
+        ["6064", "60–64 岁"], ["6569", "65–69 岁"], ["7074", "70–74 岁"], ["7579", "75–79 岁"],
+        ["80UP", "80 岁以上"]
+      ].map(([key, label]) => ({ key, label, female: `SP.POP.${key}.FE.5Y`, male: `SP.POP.${key}.MA.5Y` }));
+      const AGE_INDICATORS = Object.fromEntries(AGE_GROUPS.flatMap(group => [
+        [`age_${group.key}_female`, group.female], [`age_${group.key}_male`, group.male]
+      ]));
+      const ALL_INDICATORS = { ...INDICATORS, ...AGE_INDICATORS };
+      const INDICATOR_KEYS = Object.keys(ALL_INDICATORS);
+      const COUNTRY_PATH = COUNTRIES.map(item => item.code).join(";");
+      const API_ROOT = `https://api.worldbank.org/v2/country/${COUNTRY_PATH}/indicator/`;
+      const CACHE_KEY = "globalMarketPopulationIncomeV2";
+      const PREFS_KEY = "globalMarketPopulationIncomePrefsV1";
+      const state = { market: "东南亚", country: "IDN", data: null, loading: true, errors: [], admin: { loading: true, meta: null, geojson: null, error: "", selected: null, regionalData: null, regionalLoading: false, regionalError: "" } };
+      const $ = id => document.getElementById(id);
+
+      function esc(value) { return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch])); }
+      const FLAG_SVGS = {
+        IDN: `<rect width="100" height="50" fill="#e51c2a"/><rect y="50" width="100" height="50" fill="#fff"/>`,
+        PHL: `<rect width="100" height="50" fill="#1768a9"/><rect y="50" width="100" height="50" fill="#d92b3a"/><path d="M0 0L54 50L0 100Z" fill="#fff"/><circle cx="14" cy="50" r="5" fill="#f6d34a"/><path d="M14 37l2.6 7.8h8.2l-6.6 4.8 2.5 7.8-6.7-4.8-6.6 4.8 2.5-7.8-6.6-4.8h8.2z" fill="#f6d34a"/>`,
+        VNM: `<rect width="100" height="100" fill="#da251d"/><path d="M50 25l5.9 18.2h19.1L59.5 54.4l5.9 18.1L50 61.3 34.6 72.5l5.9-18.1L25 43.2h19.1z" fill="#ffdf00"/>`,
+        THA: `<rect width="100" height="100" fill="#da1f35"/><rect y="16.7" width="100" height="66.6" fill="#fff"/><rect y="33.3" width="100" height="33.4" fill="#2d2a70"/>`,
+        MYS: `<rect width="100" height="100" fill="#d91f38"/><path d="M0 7.1h100v7.1H0zm0 14.3h100v7.1H0zm0 14.3h100v7.1H0zm0 14.3h100v7.1H0zm0 14.3h100v7.1H0zm0 14.3h100v7.1H0zm0 14.3h100v4.3H0z" fill="#fff"/><path d="M0 0h53v57H0z" fill="#143b8f"/><circle cx="25" cy="27" r="13" fill="#f5d33b"/><circle cx="30" cy="23" r="12" fill="#143b8f"/><path d="M40 12l2.4 7.4h7.8l-6.3 4.6 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6.3-4.6h7.8z" fill="#f5d33b"/>`,
+        SGP: `<rect width="100" height="50" fill="#ed2939"/><rect y="50" width="100" height="50" fill="#fff"/><circle cx="27" cy="25" r="14" fill="#fff"/><circle cx="33" cy="20" r="14" fill="#ed2939"/><circle cx="47" cy="13" r="2.2" fill="#fff"/><circle cx="53" cy="19" r="2.2" fill="#fff"/><circle cx="54" cy="27" r="2.2" fill="#fff"/><circle cx="48" cy="33" r="2.2" fill="#fff"/><circle cx="40" cy="34" r="2.2" fill="#fff"/>`,
+        MEX: `<rect width="33.3" height="100" fill="#006847"/><rect x="33.3" width="33.4" height="100" fill="#fff"/><rect x="66.7" width="33.3" height="100" fill="#ce1126"/><circle cx="50" cy="50" r="9" fill="#9b6a35" opacity=".85"/><path d="M44 57c5-8 10-8 14 0" fill="none" stroke="#006847" stroke-width="2"/>`,
+        BRA: `<rect width="100" height="100" fill="#009b3a"/><path d="M50 8L92 50 50 92 8 50z" fill="#ffdf00"/><circle cx="50" cy="50" r="22" fill="#002776"/><path d="M29 43c13-5 29-4 43 3" fill="none" stroke="#fff" stroke-width="4"/>`,
+        PER: `<rect width="33.3" height="100" fill="#d91023"/><rect x="33.3" width="33.4" height="100" fill="#fff"/><rect x="66.7" width="33.3" height="100" fill="#d91023"/>`,
+        ARG: `<rect width="100" height="33.3" fill="#75aadb"/><rect y="33.3" width="100" height="33.4" fill="#fff"/><rect y="66.7" width="100" height="33.3" fill="#75aadb"/><circle cx="50" cy="50" r="8" fill="#f6c744"/>`,
+        SAU: `<rect width="100" height="100" fill="#0b6b3a"/><path d="M22 58h52" stroke="#fff" stroke-width="4"/><path d="M28 63h48" stroke="#fff" stroke-width="2"/><path d="M28 49c10-10 21-10 31 0" fill="none" stroke="#fff" stroke-width="3"/>`,
+        ARE: `<rect width="25" height="100" fill="#d71920"/><rect x="25" width="75" height="33.3" fill="#279e58"/><rect x="25" y="33.3" width="75" height="33.4" fill="#fff"/><rect x="25" y="66.7" width="75" height="33.3" fill="#111"/>`,
+        POL: `<rect width="100" height="50" fill="#fff"/><rect y="50" width="100" height="50" fill="#dc143c"/>`
+      };
+      function flagImage(country) {
+        const code = String(country.code || "").toUpperCase();
+        return `<span class="flag-image-wrap"><svg class="flag-svg" viewBox="0 0 100 100" role="img" aria-label="${esc(country.name)}国旗">${FLAG_SVGS[code] || `<rect width="100" height="100" fill="#60747a"/>`}</svg><span class="flag-fallback" hidden>${esc(country.code)}</span></span>`;
+      }
+      function number(value) { if (value === null || value === undefined || value === "") return null; return Number.isFinite(Number(value)) ? Number(value) : null; }
+      function fmtInt(value) {
+        const n = number(value);
+        if (n === null) return "—";
+        return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 0 }).format(n);
+      }
+      function fmtPopulation(value) {
+        const n = number(value);
+        if (n === null) return "—";
+        if (n >= 100000000) return `${(n / 100000000).toFixed(2).replace(/\.00$/, "")} 亿`;
+        if (n >= 10000) return `${(n / 10000).toFixed(1).replace(/\.0$/, "")} 万`;
+        return fmtInt(n);
+      }
+      function fmtPct(value) { const n = number(value); return n === null ? "—" : `${n.toFixed(1)}%`; }
+      function fmtMoney(value) {
+        const n = number(value);
+        if (n === null) return "—";
+        if (n >= 10000) return `$${(n / 1000).toFixed(1)}k`;
+        return `$${fmtInt(n)}`;
+      }
+      function fmtInternational(value) {
+        const n = number(value);
+        if (n === null) return "—";
+        if (n >= 10000) return `${(n / 1000).toFixed(1)}k 国际元`;
+        return `${fmtInt(n)} 国际元`;
+      }
+      function fmtRupiah(value) {
+        const n = number(value);
+        if (n === null) return "暂无";
+        return `Rp ${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(n)}`;
+      }
+      function fmtRupiahShort(value) {
+        const n = number(value);
+        if (n === null) return "暂无";
+        if (n >= 1000000) return `Rp ${(n / 1000000).toFixed(2)}m`;
+        if (n >= 1000) return `Rp ${(n / 1000).toFixed(0)}k`;
+        return fmtRupiah(n);
+      }
+      const LOCAL_CURRENCY_PREFIX = { IDR: "Rp", PHP: "₱", VND: "₫", THB: "฿", MYR: "RM", SGD: "S$", MXN: "MX$", BRL: "R$", PEN: "S/", ARS: "ARS", SAR: "SAR", AED: "AED", PLN: "zł" };
+      const HOUSEHOLD_COLORS = { food: "var(--orange)", nonfood: "var(--blue)", housing: "#77c8bb", transport: "#70a9d0", health: "#c78ab5", education: "#d5b15d", communication: "#8e9fd4", recreation: "#c99b72", restaurants: "#e39b63", clothing: "#a8a0d1", hotel: "#8fc2a6", personal: "#b1c36e", furnishings: "#c18fc4", tobacco: "#7d8799", other: "#6d7d82", nonConsumption: "#68737b" };
+      function fmtLocalAmount(value, currency) {
+        const n = number(value);
+        if (n === null) return "暂无";
+        const prefix = LOCAL_CURRENCY_PREFIX[currency] || currency || "";
+        return `${prefix ? `${prefix} ` : ""}${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 0 }).format(n)}`;
+      }
+      function householdTotal(data) { return number(data?.total ?? data?.perCapitaMonthlyExpenditure); }
+      function householdIncome(data) { return number(data?.income); }
+      function categoryShare(category, data) {
+        const explicit = number(category?.share);
+        if (explicit !== null) return explicit;
+        const total = householdTotal(data), value = number(category?.value);
+        return total !== null && value !== null && total > 0 ? value / total * 100 : null;
+      }
+      function categoryAmount(category, data) {
+        const direct = number(category?.value);
+        if (direct !== null) return direct;
+        const total = householdTotal(data), share = number(category?.share);
+        return total !== null && share !== null ? total * share / 100 : null;
+      }
+      function latestRows(rows) {
+        return rows.filter(row => row && row.value !== null && row.value !== undefined && row.value !== "")
+          .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      }
+      function metric(record, key) { return record?.[key] || null; }
+      function value(record, key) { return number(metric(record, key)?.value); }
+      function year(record, key) { return metric(record, key)?.year || "—"; }
+      function getRecord(country) { return state.data?.values?.[country.code] || {}; }
+      function gender(record) {
+        const f = value(record, "female"), m = value(record, "male"), total = f !== null && m !== null ? f + m : null;
+        return total ? { female: f / total * 100, male: m / total * 100 } : { female: null, male: null };
+      }
+      function genderSplit(item) {
+        const female = number(item.female), male = number(item.male);
+        if (female === null || male === null) return `<span class="gender-value">${fmtPct(female)} <span class="gender-slash">/</span> ${fmtPct(male)}</span>`;
+        const femaleClass = female > male ? "gender-lead" : "gender-muted";
+        const maleClass = male > female ? "gender-lead" : "gender-muted";
+        return `<span class="gender-value"><span class="${femaleClass}">${fmtPct(female)}</span> <span class="gender-slash">/</span> <span class="${maleClass}">${fmtPct(male)}</span></span>`;
+      }
+      function age(record) { return { young: value(record, "young"), working: value(record, "working"), old: value(record, "old") }; }
+      function ageFine(record) {
+        const femaleTotal = value(record, "female"), maleTotal = value(record, "male"), total = value(record, "population");
+        if (femaleTotal === null || maleTotal === null || total === null || total <= 0) return [];
+        return AGE_GROUPS.map(group => {
+          const femalePct = value(record, `age_${group.key}_female`), malePct = value(record, `age_${group.key}_male`);
+          if (femalePct === null && malePct === null) return null;
+          const count = femaleTotal * (femalePct || 0) / 100 + maleTotal * (malePct || 0) / 100;
+          return { ...group, femalePct, malePct, count, pct: count / total * 100, year: year(record, `age_${group.key}_female`) !== "—" ? year(record, `age_${group.key}_female`) : year(record, `age_${group.key}_male`) };
+        }).filter(Boolean);
+      }
+      function countryData(country) {
+        const record = getRecord(country), g = gender(record), a = age(record);
+        const population = value(record, "population"), consumptionPppTotal = value(record, "consumptionPppTotal");
+        return { country, record, population, female: g.female, male: g.male, young: a.young, working: a.working, old: a.old, ageFine: ageFine(record), gni: value(record, "gni"), gniPpp: value(record, "gniPpp"), consumptionPpp: consumptionPppTotal !== null && population ? consumptionPppTotal / population : null, consumptionPppYear: year(record, "consumptionPppTotal"), gini: value(record, "gini") };
+      }
+      function ageFeature(item) {
+        const young = number(item.young), working = number(item.working), old = number(item.old);
+        if (young === null || working === null || old === null) return { label: "特征待补充", detail: "年龄结构数据不足" };
+        if (young >= 30) return { label: "年轻型人口", detail: `0–14 岁 ${fmtPct(young)}，少年儿童占比较高` };
+        if (old >= 14 || old >= young) return { label: "老龄化较明显", detail: `65 岁以上 ${fmtPct(old)}，老年人口占比偏高` };
+        if (old >= 10) return { label: "老龄化趋势", detail: `65 岁以上 ${fmtPct(old)}，年龄结构正在变老` };
+        if (working >= 65) return { label: "劳动年龄占主导", detail: `15–64 岁 ${fmtPct(working)}，劳动年龄人口占比高` };
+        return { label: "年龄结构较均衡", detail: `0–14 岁 ${fmtPct(young)} · 15–64 岁 ${fmtPct(working)} · 65+ ${fmtPct(old)}` };
+      }
+      function selectedCountry() { return COUNTRIES.find(country => country.code === state.country) || COUNTRIES.find(country => country.market === state.market) || COUNTRIES[0]; }
+      function renderSelectors() {
+        const markets = [...new Set(COUNTRIES.map(country => country.market))];
+        if (!markets.includes(state.market)) state.market = markets[0];
+        const countries = COUNTRIES.filter(country => country.market === state.market);
+        if (!countries.some(country => country.code === state.country)) state.country = countries[0]?.code || COUNTRIES[0].code;
+        $("marketTabs").innerHTML = markets.map(market => `<button class="tab-button" type="button" data-market="${esc(market)}" aria-selected="${String(market === state.market)}">${esc(market)}</button>`).join("");
+        $("countryTabs").innerHTML = countries.map(country => `<button class="tab-button" type="button" data-country="${country.code}" aria-selected="${String(country.code === state.country)}">${flagImage(country)}${esc(country.name)}</button>`).join("");
+      }
+      function renderHero() {
+        const c = selectedCountry(), item = countryData(c);
+        const feature = ageFeature(item);
+        $("countryHero").innerHTML = `<div class="hero-copy"><div class="hero-country">${flagImage(c)}<div><h2>${esc(c.name)}</h2><div class="hero-subtitle">${esc(c.market)}市场</div></div></div><p class="hero-subtitle">当前数字为国家级真实值；年龄特征为结构性描述，省/州层面只有接入对应官方统计后才会展开。</p><span class="tag">${esc(dataYears(item))}</span></div><div class="hero-grid"><div class="hero-metric"><span>总人口</span><strong>${fmtPopulation(item.population)}</strong></div><div class="hero-metric"><span>女性 / 男性</span><strong>${genderSplit(item)}</strong></div><div class="hero-metric"><span>年龄特征</span><strong>${esc(feature.label)}</strong></div><div class="hero-metric"><span>人均 GNI</span><strong>${fmtMoney(item.gni)}</strong></div></div>`;
+      }
+      const ADMIN_NAMES_ZH = {
+        IDN: {
+          aceh: "亚齐", northsumatra: "北苏门答腊", westsumatra: "西苏门答腊", riau: "廖内", jambi: "占碑", southsumatra: "南苏门答腊", bengkulu: "明古鲁", lampung: "楠榜", bangkabelitung: "邦加-勿里洞", bangkabelitungislands: "邦加-勿里洞", kepbangkabelitung: "邦加-勿里洞", riauislands: "廖内群岛", kepulauanriau: "廖内群岛", jakarta: "雅加达", dkijakarta: "雅加达", jakartaspecialcapitalregion: "雅加达", westjava: "西爪哇", centraljava: "中爪哇", yogyakarta: "日惹", specialregionofyogyakarta: "日惹", eastjava: "东爪哇", banten: "万丹", bali: "巴厘", westnusatenggara: "西努沙登加拉", eastnusatenggara: "东努沙登加拉", westkalimantan: "西加里曼丹", centralkalimantan: "中加里曼丹", southkalimantan: "南加里曼丹", eastkalimantan: "东加里曼丹", northkalimantan: "北加里曼丹", northsulawesi: "北苏拉威西", centralsulawesi: "中苏拉威西", southsulawesi: "南苏拉威西", southeastsulawesi: "东南苏拉威西", gorontalo: "哥伦打洛", westsulawesi: "西苏拉威西", maluku: "马鲁古", northmaluku: "北马鲁古", westpapua: "西巴布亚", papua: "巴布亚", southwestpapua: "西南巴布亚", centralpapua: "中巴布亚", highlandpapua: "巴布亚高地", southpapua: "南巴布亚"
+        },
+        PHL: {
+          ilocosregion: "伊罗戈斯区", cagayanvalley: "卡加延河谷区", centralluzon: "中央吕宋", calabarzon: "卡拉巴松", mimaropa: "民马罗巴", bicolregion: "比科尔区", westernvisayas: "西米沙鄢", centralvisayas: "中米沙鄢", easternvisayas: "东米沙鄢", zamboangapeninsula: "三宝颜半岛", northernmindanao: "北棉兰老", davaoregion: "达沃区", soccsksargen: "索克萨根", caraga: "卡拉加", bangsamoroautonomousregioninmuslimmindanao: "邦萨摩洛自治区", nationalcapitalregion: "国家首都区", cordilleraadministrativeregion: "科迪勒拉行政区", negrosislandregion: "内格罗斯岛区"
+        },
+        MYS: {
+          johor: "柔佛", kedah: "吉打", kelantan: "吉兰丹", melaka: "马六甲", negerisembilan: "森美兰", pahang: "彭亨", perak: "霹雳", perlis: "玻璃市", penang: "槟城", pulaipinang: "槟城", sabah: "沙巴", sarawak: "砂拉越", selangor: "雪兰莪", terengganu: "登嘉楼", kualalumpur: "吉隆坡", labuan: "纳闽", putrajaya: "布城"
+        },
+        MEX: {
+          aguascalientes: "阿瓜斯卡连特斯", bajacalifornia: "下加利福尼亚", bajacaliforniasur: "南下加利福尼亚", campeche: "坎佩切", chiapas: "恰帕斯", chihuahua: "奇瓦瓦", coahuiladezaragoza: "科阿韦拉", colima: "科利马", ciudaddemexico: "墨西哥城", durango: "杜兰戈", guanajuato: "瓜纳华托", guerrero: "格雷罗", hidalgo: "伊达尔戈", jalisco: "哈利斯科", mexico: "墨西哥州", michoacandeocampo: "米却肯", morelos: "莫雷洛斯", nayarit: "纳亚里特", nuevoleon: "新莱昂", oaxaca: "瓦哈卡", puebla: "普埃布拉", queretaro: "克雷塔罗", quintanaroo: "金塔纳罗奥", sanluispotosi: "圣路易斯波托西", sinaloa: "锡那罗亚", sonora: "索诺拉", tabasco: "塔巴斯科", tamaulipas: "塔毛利帕斯", tlaxcala: "特拉斯卡拉", veracruzdeignaciodelallave: "韦拉克鲁斯", yucatan: "尤卡坦", zacatecas: "萨卡特卡斯"
+        },
+        BRA: {
+          acre: "阿克里", alagoas: "阿拉戈斯", amapa: "阿马帕", amazonas: "亚马孙", bahia: "巴伊亚", ceara: "塞阿拉", distritofederal: "联邦区", espiritosanto: "圣埃斯皮里图", goias: "戈亚斯", maranhao: "马拉尼昂", matogrosso: "马托格罗索", matogrossodosul: "南马托格罗索", minasgerais: "米纳斯吉拉斯", para: "帕拉", paraiba: "帕拉伊巴", parana: "巴拉那", pernambuco: "伯南布哥", piaui: "皮奥伊", riodejaneiro: "里约热内卢", riodenorte: "北里奥格兰德", riograndedonorte: "北里奥格兰德", riograndedosul: "南里奥格兰德", rondonia: "朗多尼亚", roraima: "罗赖马", santacatarina: "圣卡塔琳娜", saopaulo: "圣保罗", sergipe: "塞尔希培", tocantins: "托坎廷斯"
+        }
+      };
+      const ADMIN_NAMES_LOCAL = {
+        IDN: {
+          aceh: "Aceh", northsumatra: "Sumatera Utara", westsumatra: "Sumatera Barat", riau: "Riau", jambi: "Jambi", southsumatra: "Sumatera Selatan", bengkulu: "Bengkulu", lampung: "Lampung", bangkabelitung: "Kepulauan Bangka Belitung", bangkabelitungislands: "Kepulauan Bangka Belitung", kepbangkabelitung: "Kepulauan Bangka Belitung", riauislands: "Kepulauan Riau", kepulauanriau: "Kepulauan Riau", jakarta: "DKI Jakarta", dkijakarta: "DKI Jakarta", jakartaspecialcapitalregion: "DKI Jakarta", westjava: "Jawa Barat", centraljava: "Jawa Tengah", yogyakarta: "DI Yogyakarta", specialregionofyogyakarta: "DI Yogyakarta", eastjava: "Jawa Timur", banten: "Banten", bali: "Bali", westnusatenggara: "Nusa Tenggara Barat", eastnusatenggara: "Nusa Tenggara Timur", westkalimantan: "Kalimantan Barat", centralkalimantan: "Kalimantan Tengah", southkalimantan: "Kalimantan Selatan", eastkalimantan: "Kalimantan Timur", northkalimantan: "Kalimantan Utara", northsulawesi: "Sulawesi Utara", centralsulawesi: "Sulawesi Tengah", southsulawesi: "Sulawesi Selatan", southeastsulawesi: "Sulawesi Tenggara", gorontalo: "Gorontalo", westsulawesi: "Sulawesi Barat", maluku: "Maluku", northmaluku: "Maluku Utara", westpapua: "Papua Barat", papua: "Papua", southwestpapua: "Papua Barat Daya", centralpapua: "Papua Tengah", highlandpapua: "Papua Pegunungan", southpapua: "Papua Selatan"
+        },
+        PHL: {
+          ilocosregion: "Ilocos Region", cagayanvalley: "Cagayan Valley", centralluzon: "Central Luzon", calabarzon: "CALABARZON", mimaropa: "MIMAROPA", bicolregion: "Bicol Region", westernvisayas: "Western Visayas", centralvisayas: "Central Visayas", easternvisayas: "Eastern Visayas", zamboangapeninsula: "Zamboanga Peninsula", northernmindanao: "Northern Mindanao", davaoregion: "Davao Region", soccsksargen: "SOCCSKSARGEN", caraga: "Caraga", bangsamoroautonomousregioninmuslimmindanao: "Bangsamoro", nationalcapitalregion: "National Capital Region", cordilleraadministrativeregion: "Cordillera Administrative Region", negrosislandregion: "Negros Island Region"
+        },
+        MYS: {
+          johor: "Johor", kedah: "Kedah", kelantan: "Kelantan", melaka: "Melaka", negerisembilan: "Negeri Sembilan", pahang: "Pahang", perak: "Perak", perlis: "Perlis", penang: "Pulau Pinang", pulaipinang: "Pulau Pinang", sabah: "Sabah", sarawak: "Sarawak", selangor: "Selangor", terengganu: "Terengganu", kualalumpur: "W.P. Kuala Lumpur", labuan: "W.P. Labuan", putrajaya: "W.P. Putrajaya"
+        },
+        MEX: {
+          aguascalientes: "Aguascalientes", bajacalifornia: "Baja California", bajacaliforniasur: "Baja California Sur", campeche: "Campeche", chiapas: "Chiapas", chihuahua: "Chihuahua", coahuiladezaragoza: "Coahuila de Zaragoza", colima: "Colima", ciudaddemexico: "Ciudad de México", durango: "Durango", guanajuato: "Guanajuato", guerrero: "Guerrero", hidalgo: "Hidalgo", jalisco: "Jalisco", mexico: "Estado de México", estadodemexico: "Estado de México", michoacandeocampo: "Michoacán de Ocampo", morelos: "Morelos", nayarit: "Nayarit", nuevoleon: "Nuevo León", oaxaca: "Oaxaca", puebla: "Puebla", queretaro: "Querétaro", quintanaroo: "Quintana Roo", sanluispotosi: "San Luis Potosí", sinaloa: "Sinaloa", sonora: "Sonora", tabasco: "Tabasco", tamaulipas: "Tamaulipas", tlaxcala: "Tlaxcala", veracruzdeignaciodelallave: "Veracruz de Ignacio de la Llave", yucatan: "Yucatán", zacatecas: "Zacatecas"
+        },
+        BRA: {
+          acre: "Acre", alagoas: "Alagoas", amapa: "Amapá", amazonas: "Amazonas", bahia: "Bahia", ceara: "Ceará", distritofederal: "Distrito Federal", federaldistrict: "Distrito Federal", espiritosanto: "Espírito Santo", goias: "Goiás", maranhao: "Maranhão", matogrosso: "Mato Grosso", matogrossodosul: "Mato Grosso do Sul", minasgerais: "Minas Gerais", para: "Pará", paraiba: "Paraíba", parana: "Paraná", pernambuco: "Pernambuco", piaui: "Piauí", riodejaneiro: "Rio de Janeiro", riodonorte: "Rio Grande do Norte", riograndedonorte: "Rio Grande do Norte", riograndedosul: "Rio Grande do Sul", rondonia: "Rondônia", roraima: "Roraima", santacatarina: "Santa Catarina", saopaulo: "São Paulo", sergipe: "Sergipe", tocantins: "Tocantins"
+        }
+      };
+      const REGIONAL_SOURCES = {
+        IDN: [{ label: "BPS省级人口/性别", url: "https://sensus.bps.go.id/topik/tabular/sp2022/187/1/3" }, { label: "BPS年龄/性别专题", url: "https://sensus.bps.go.id/topik/tabular/sp2022/188" }, { label: "印尼政府性别数据", url: "https://data.go.id/dataset/dataset/provinsi2023-jumlah-penduduk-menurut-jenis-kelamin-provinsi-dan-rasio-jenis-kelamin" }],
+        MYS: [{ label: "OpenDOSM州级人口（2026）", url: "https://open.dosm.gov.my/data-catalogue/population_state" }, { label: "官方州级 CSV", url: "https://storage.dosm.gov.my/population/population_state.csv" }],
+        PHL: [{ label: "PSA省级人口（2024）", url: "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__3S__C1/?tablelist=true" }, { label: "PSA年龄/性别", url: "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1A__PO/0021A6DPAG0.px/" }, { label: "PSA家庭收入", url: "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1E__IE/?tablelist=true" }],
+        VNM: [{ label: "越南国家统计局省级人口表", url: "https://pxweb.nso.gov.vn/pxweb/en/Population%20and%20Employment/Population%20and%20Employment/E02.03-07.px/" }],
+        THA: [{ label: "泰国统计年鉴 2024 · 表1.5", url: "https://www.nso.go.th/public/e-book/Statistical-Yearbook/SYB-2024/77/" }],
+        SGP: [{ label: "新加坡统计局人口数据", url: "https://www.singstat.gov.sg/find-data/search-by-theme/population/population-and-population-structure/latest-data" }],
+        MEX: [{ label: "INEGI州级年龄/性别", url: "https://www.inegi.org.mx/app/tabulados/interactivos/?bd=Poblacion&px=Poblacion_01" }],
+        BRA: [{ label: "IBGE人口普查", url: "https://www.ibge.gov.br/en/statistics/social/labor/22836-2022-census-3.html?edicao=38188" }, { label: "IBGE人口估计", url: "https://www.ibge.gov.br/estatisticas/sociais/populacao/9109-projecao-da-populacao.html" }],
+        PER: [{ label: "秘鲁 INEI 人口数据", url: "https://www.inei.gob.pe/estadisticas/indice-tematico/population/" }],
+        ARG: [{ label: "阿根廷 INDEC 人口数据", url: "https://www.indec.gob.ar/indec/web/Nivel4-Tema-2-18-77" }],
+        SAU: [{ label: "沙特人口普查 2022", url: "https://www.stats.gov.sa/en/indicators/1" }],
+        ARE: [{ label: "阿联酋官方人口入口", url: "https://u.ae/en/information-and-services/social-affairs-and-health/census" }],
+        POL: [{ label: "波兰统计局 BDL", url: "https://bdl.stat.gov.pl/bdl/start" }]
+      };
+      const REGIONAL_PROVENANCE = {
+        IDN: "BPS 官方省级数据",
+        MYS: "OpenDOSM 官方州级 CSV",
+        PHL: "公开行政区统计汇编，底层对应 PSA 统计",
+        VNM: "公开行政区统计汇编，底层对应越南 2019 人口普查",
+        THA: "公开行政区统计汇编，省级性别口径为 2010 普查；官方 2024 年鉴已提供更新入口",
+        SGP: "公开行政区统计汇编，底层对应新加坡统计局 2025 估计",
+        MEX: "公开行政区统计汇编，底层对应 INEGI 2020 普查",
+        BRA: "公开行政区统计汇编，人口为 IBGE 2025 估计、性别为 IBGE 2022 普查",
+        PER: "公开行政区统计汇编，人口为 INEI 2025 预测、性别为 2025 估计",
+        ARG: "公开行政区统计汇编，底层对应 INDEC 2022 普查",
+        SAU: "公开行政区统计汇编，底层对应 GASTAT 2022 普查",
+        ARE: "公开行政区统计汇编，各酋长国年份不同",
+        POL: "公开行政区统计汇编，底层对应波兰统计局 2025 估计"
+      };
+      const HOUSEHOLD_DATA = {
+        IDN: {
+          year: "2024", sourceLabel: "BPS Susenas 2024",
+          sourceUrl: "https://www.bps.go.id/id/statistics-table/3/VTJaSFFtWklXVnBYZVdSREwyczJlbm93UWpVM1FUMDkjMw%3D%3D/rata-rata-pengeluaran-per-kapita-sebulan-menurut-kelompok-komoditas-dan-klasifikasi-desa--rupiah---2016.html?year=2024",
+          currency: "IDR", basis: "perCapita", periodLabel: "人均月均", total: 1500556,
+          categories: [
+            { key: "food", label: "食品 / 吃饭", value: 751789 },
+            { key: "nonfood", label: "非食品 / 家庭与其他", value: 748767 }
+          ],
+          note: "BPS直接公布食品与非食品两大项；家庭刚需、情绪价值和储蓄等细项不能从这两个总项反推。"
+        },
+        PHL: {
+          year: "2023", sourceLabel: "PSA FIES 2023",
+          sourceUrl: "https://psa.gov.ph/statistics/income-expenditure/fies?vcode=fC2zj6",
+          currency: "PHP", basis: "household", periodLabel: "家庭月均", total: 258050 / 12, income: 353230 / 12, incomeLabel: "家庭月均收入（当前收入）",
+          categories: [
+            { key: "food", label: "食品 / 非酒精饮料", share: 40.9, calculated: true },
+            { key: "housing", label: "住房水电燃料", share: 22.9, calculated: true },
+            { key: "transport", label: "交通", share: 6.8, calculated: true },
+            { key: "health", label: "医疗", share: 3.0, calculated: true },
+            { key: "education", label: "教育", share: 2.7, calculated: true }
+          ],
+          note: "收入与支出为PSA家庭年均值换算的月均值；分类金额按官方家庭支出总额乘官方占比折算，金额不是原表直接列示值。"
+        },
+        VNM: {
+          year: "2022", sourceLabel: "GSO VHLSS 2022",
+          sourceUrl: "https://www.nso.gov.vn/en/default/2024/04/results-of-the-viet-nam-household-living-standards-survey-2022/",
+          currency: "VND", basis: "perCapita", periodLabel: "人均月均", total: 2700000, income: 4670000,
+          categories: [
+            { key: "food", label: "食品 / 吃饭", value: 1300000, approx: true },
+            { key: "nonfood", label: "非食品", value: 1400000, approx: true }
+          ],
+          note: "GSO官方摘要使用约数：人均月生活支出约270万越南盾，其中食品约130万、非食品约140万；收入约467万。"
+        },
+        THA: {
+          year: "2024", sourceLabel: "泰国 NSO SES 2024",
+          sourceUrl: "https://www.nso.go.th/nsoweb/storage/survey_detail/2025/20250617102045_11768.pdf",
+          currency: "THB", basis: "household", periodLabel: "家庭月均", total: 22282, consumptionTotal: 19319,
+          categories: [
+            { key: "food", label: "食品、饮料与烟草", value: 8005 },
+            { key: "housing", label: "住房与家庭运营", value: 4736 },
+            { key: "transport", label: "车辆与交通", value: 3713 },
+            { key: "clothing", label: "服装鞋类", value: 1036 },
+            { key: "communication", label: "通信", value: 826 },
+            { key: "education", label: "教育", value: 293 },
+            { key: "health", label: "医疗健康", value: 272 },
+            { key: "recreation", label: "娱乐与宗教", value: 242 },
+            { key: "personal", label: "个人护理", value: 197 },
+            { key: "nonConsumption", label: "非消费支出（税费等）", value: 2963, kind: "nonConsumption" }
+          ],
+          note: "家庭月均总支出22,282泰铢，其中消费支出19,319、非消费支出2,963；非消费支出不应当当作购物。"
+        },
+        MYS: {
+          year: "2024", sourceLabel: "DOSM HES 2024",
+          sourceUrl: "https://www.dosm.gov.my/portal-main/release-content/household-expenditure-survey-report--malaysia--states",
+          currency: "MYR", basis: "household", periodLabel: "家庭月均", total: 5566,
+          categories: [
+            { key: "housing", label: "住房水电燃料", share: 23.5, calculated: true },
+            { key: "restaurants", label: "餐饮与住宿", share: 17.0, calculated: true },
+            { key: "food", label: "食品与饮料", share: 15.7, calculated: true },
+            { key: "transport", label: "交通", share: 11.0, calculated: true }
+          ],
+          note: "四个大类占比为DOSM官方发布值；分类金额按RM5,566乘占比折算，未列出的项目合并为其余类别。"
+        },
+        SGP: {
+          year: "2023", sourceLabel: "Singapore DOS HES 2023",
+          sourceUrl: "https://www.singstat.gov.sg/-/media/files/visualising_data/infographics/households/hes-householdexpenditure.ashx",
+          currency: "SGD", basis: "household", periodLabel: "家庭月均", total: 5931,
+          categories: [
+            { key: "housing", label: "住房及相关", share: 29.8, calculated: true },
+            { key: "food", label: "食品", share: 20.0, calculated: true },
+            { key: "transport", label: "交通", share: 13.4, calculated: true },
+            { key: "recreation", label: "休闲、运动与文化", share: 4.7, calculated: true },
+            { key: "health", label: "医疗", share: 5.7, calculated: true },
+            { key: "education", label: "教育", share: 6.7, calculated: true },
+            { key: "communication", label: "信息与通信", share: 3.8, calculated: true },
+            { key: "clothing", label: "服装鞋类", share: 1.7, calculated: true },
+            { key: "hotel", label: "酒店住宿", share: 1.2, calculated: true },
+            { key: "other", label: "其他", share: 13.2, calculated: true }
+          ],
+          note: "总额与份额均来自DOS HES 2023；住房详细金额可能含自有住房估算租金，不能与现金支出直接混用。"
+        },
+        MEX: {
+          year: "2024", sourceLabel: "INEGI ENIGH 2024",
+          sourceUrl: "https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2025/enigh/ENIGH2024.pdf",
+          currency: "MXN", basis: "household", periodLabel: "家庭月均", total: 15891, income: 25955, incomeLabel: "家庭月均当前收入",
+          categories: [
+            { key: "food", label: "食品、饮料与烟草", share: 37.7, calculated: true },
+            { key: "transport", label: "交通与通信", share: 19.5, calculated: true }
+          ],
+          note: "支出为货币性经常支出；收入为经常收入，不等于可支配收入。分类金额按官方总额乘占比折算。"
+        },
+        BRA: {
+          year: "2017–2018", sourceLabel: "IBGE POF 2017–2018",
+          sourceUrl: "https://agenciadenoticias.ibge.gov.br/agencia-de-noticias/2013-agencia-de-noticias/releases/29490-pof-2017-2018-cerca-de-da-renda-disponivel-das-familias-brasileiras-e-nao-monetaria",
+          currency: "BRL", basis: "perCapita", periodLabel: "人均月均", total: 1667.90, consumptionTotal: 1370.53,
+          categories: [
+            { key: "housing", label: "住房", value: 466.34 },
+            { key: "transport", label: "交通", value: 234.08 },
+            { key: "food", label: "食品", value: 219.44 },
+            { key: "health", label: "医疗", value: 133.23 },
+            { key: "education", label: "教育", value: 120.16 },
+            { key: "communication", label: "水电与通信", value: 114.12 }
+          ],
+          note: "IBGE给出人均月度总支出1,667.90雷亚尔；消费支出总额另列为1,370.53，前者含非消费或资产负债变动项目。"
+        },
+        PER: {
+          year: "2023", sourceLabel: "INEI ENAHO 2023",
+          sourceUrl: "https://www.inei.gob.pe/media/MenuRecursivo/investigaciones/analizando-los-impactos-nutricionales.pdf",
+          currency: "PEN", basis: "perCapita", periodLabel: "人均月均", total: null,
+          categories: [{ key: "food", label: "家庭内食品", value: 395, share: 48, approx: true }],
+          note: "官方摘要公开人均家庭内食品支出约S/395及其约48%占比，但同一摘要未给出可直接配套的全国总消费金额，因此不反推总额。"
+        },
+        ARG: {
+          year: "2017–2018", sourceLabel: "INDEC ENGHo 2017–2018",
+          sourceUrl: "https://www.indec.gob.ar/ftp/cuadros/sociedad/engho_2017_2018_resultados_preliminares.pdf",
+          currency: "ARS", basis: "household", periodLabel: "消费结构", total: null,
+          categories: [
+            { key: "food", label: "食品与非酒精饮料", share: 22.8 },
+            { key: "housing", label: "住房水电燃料", share: 14.5 },
+            { key: "transport", label: "交通", share: 14.4 }
+          ],
+          note: "官方公布全国消费结构份额；该轮调查处于高通胀旧币值环境，页面不把旧币值金额换算成今天金额。"
+        },
+        SAU: {
+          year: "2023", sourceLabel: "GASTAT HICES 2023",
+          sourceUrl: "https://www.stats.gov.sa/documents/20117/2067012/Household%2BIncome%2Band%2BConsumption%2BExpenditure%2BSurvey%2BPublication%2B2023%2BEN.pdf/1230658d-e2cb-db0b-06ad-6d0315c1f04c",
+          currency: "SAR", basis: "household", periodLabel: "家庭月均", total: 10884, income: 11839, incomeLabel: "家庭月均可支配收入",
+          categories: [
+            { key: "food", label: "食品与饮料", share: 27.9, calculated: true },
+            { key: "housing", label: "住房水电燃料", share: 14.1, calculated: true },
+            { key: "transport", label: "交通", share: 10.5, calculated: true }
+          ],
+          note: "GASTAT 2023公布家庭月均可支配收入11,839里亚尔、消费支出10,884里亚尔；分类金额按官方总额乘COICOP占比折算。"
+        },
+        ARE: {
+          year: "2019", sourceLabel: "Dubai CPI 2019 官方权重",
+          sourceUrl: "https://www.dsc.gov.ae/Publication/Consumer%20Price%20Index%202019.pdf",
+          currency: "AED", basis: "officialWeight", periodLabel: "迪拜消费篮子权重", total: null, scope: "subnational",
+          categories: [
+            { key: "food", label: "食品", share: 13.09 },
+            { key: "tobacco", label: "烟草", share: 0.35 },
+            { key: "clothing", label: "服装鞋类", share: 2.05 },
+            { key: "housing", label: "住房水电燃料", share: 43.62 },
+            { key: "furnishings", label: "家具与家庭维护", share: 3.76 },
+            { key: "health", label: "医疗", share: 0.85 },
+            { key: "transport", label: "交通", share: 10.62 },
+            { key: "communication", label: "通信", share: 5.22 },
+            { key: "recreation", label: "休闲文化", share: 2.33 },
+            { key: "education", label: "教育", share: 8.48 },
+            { key: "restaurants", label: "餐饮酒店", share: 4.00 },
+            { key: "other", label: "杂项服务", share: 5.63 }
+          ],
+          note: "阿联酋全国2019家庭收入与支出调查已开展，但当前官方公开页面未提供可直接读取的全国结果；这里仅展示迪拜2019 CPI消费篮子权重，不代表全国居民实际月消费金额。"
+        },
+        POL: {
+          year: "2024", sourceLabel: "Statistics Poland HBS 2024",
+          sourceUrl: "https://stat.gov.pl/files/gfx/portalinformacyjny/en/defaultaktualnosci/3305/2/20/1/house_hold_budget_survey_2024_2.pdf",
+          currency: "PLN", basis: "perCapita", periodLabel: "人均月均", total: 1878, income: 3167, incomeLabel: "人均月均可支配收入",
+          categories: [
+            { key: "food", label: "食品与非酒精饮料", share: 25.3, calculated: true },
+            { key: "housing", label: "住房水电燃料", share: 18.8, calculated: true }
+          ],
+          note: "收入为人均月均可支配收入；支出为人均月均支出；分类金额按官方总额乘占比折算。"
+        }
+      };
+      function normalizeAdminName(value) {
+        return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+      function adminNameZh(countryCode, rawName) {
+        const map = { ...(ADMIN_NAMES_ZH[countryCode] || {}), ...(ADMIN_NAMES_ZH_EXTRA[countryCode] || {}) }, key = normalizeAdminName(rawName);
+        return map[key] || rawName;
+      }
+      function adminNameLocal(countryCode, rawName) {
+        const map = { ...(ADMIN_NAMES_LOCAL[countryCode] || {}), ...(ADMIN_NAMES_LOCAL_EXTRA[countryCode] || {}) }, key = normalizeAdminName(rawName);
+        return map[key] || rawName;
+      }
+      function regionalSourceLinks(countryCode) {
+        return (REGIONAL_SOURCES[countryCode] || []).map(source => `<a href="${esc(source.url)}" target="_blank" rel="noreferrer">${esc(source.label)}</a>`).join(" · ");
+      }
+      const REGIONAL_DATA_ALIASES = {
+        IDN: { northsumatra: "sumaterautara", westsumatra: "sumaterabarat", southsumatra: "sumateraselatan", bangkabelitung: "kepulauanbangkabelitung", bangkabelitungislands: "kepulauanbangkabelitung", riauislands: "kepulauanriau", jakarta: "dkijakarta", dkijakarta: "dkijakarta", jakartaspecialcapitalregion: "dkijakarta", westjava: "jawabarat", centraljava: "jawatengah", yogyakarta: "diyogyakarta", specialregionofyogyakarta: "diyogyakarta", eastjava: "jawatimur", westnusatenggara: "nusatenggarabarat", eastnusatenggara: "nusatenggaratimur", westkalimantan: "kalimantanbarat", centralkalimantan: "kalimantantengah", southkalimantan: "kalimantanselatan", eastkalimantan: "kalimantantimur", northkalimantan: "kalimantanutara", northsulawesi: "sulawesiutara", centralsulawesi: "sulawesitengah", southsulawesi: "sulawesiselatan", southeastsulawesi: "sulawesitenggara", westsulawesi: "sulawesibarat", northmaluku: "malukuutara", westpapua: "papuabarat" }
+      };
+      const STATIC_REGIONAL_DATA = {
+        IDN: {
+          aceh: { population: 5407855, male: 2715386, female: 2692469, year: "2022" }, sumaterautara: { population: 15115206, male: 7584993, female: 7530213, year: "2022" }, sumaterabarat: { population: 5640629, male: 2841802, female: 2798827, year: "2022" }, riau: { population: 6614384, male: 3383451, female: 3230933, year: "2022" }, sumateraselatan: { population: 8657008, male: 4411612, female: 4245396, year: "2022" }, jambi: { population: 3631136, male: 1849269, female: 1781867, year: "2022" }, bengkulu: { population: 2060092, male: 1053196, female: 1006896, year: "2022" }, lampung: { population: 9176546, male: 4697217, female: 4479329, year: "2022" }, kepulauanbangkabelitung: { population: 1494621, male: 767582, female: 727039, year: "2022" }, kepulauanriau: { population: 2179820, male: 1112152, female: 1067668, year: "2022" }, dkijakarta: { population: 10679951, male: 5375869, female: 5304082, year: "2022" }, jawabarat: { population: 49405808, male: 25067226, female: 24338582, year: "2022" }, jawatengah: { population: 37032410, male: 18614868, female: 18417542, year: "2022" }, diyogyakarta: { population: 3761870, male: 1862085, female: 1899785, year: "2022" }, jawatimur: { population: 41149974, male: 20525756, female: 20624218, year: "2022" }, banten: { population: 12251985, male: 6241041, female: 6010944, year: "2022" }, bali: { population: 4415064, male: 2219607, female: 2195457, year: "2022" }, nusatenggarabarat: { population: 5473671, male: 2741857, female: 2731814, year: "2022" }, nusatenggaratimur: { population: 5466285, male: 2733049, female: 2733236, year: "2022" }, kalimantanbarat: { population: 5541376, male: 2845114, female: 2696262, year: "2022" }, kalimantantengah: { population: 2741075, male: 1420881, female: 1320194, year: "2022" }, kalimantanselatan: { population: 4182080, male: 2115905, female: 2066175, year: "2022" }, kalimantantimur: { population: 3859783, male: 2005128, female: 1854655, year: "2022" }, kalimantanutara: { population: 727755, male: 383382, female: 344373, year: "2022" }, sulawesiutara: { population: 2659543, male: 1359358, female: 1300185, year: "2022" }, sulawesitengah: { population: 3066143, male: 1572085, female: 1494058, year: "2022" }, sulawesitenggara: { population: 2701661, male: 1366872, female: 1334789, year: "2022" }, sulawesiselatan: { population: 9225747, male: 4581647, female: 4644100, year: "2022" }, gorontalo: { population: 1192737, male: 601585, female: 591152, year: "2022" }, sulawesibarat: { population: 1458606, male: 739649, female: 718957, year: "2022" }, maluku: { population: 1881727, male: 952406, female: 929321, year: "2022" }, malukuutara: { population: 1319338, male: 675131, female: 644207, year: "2022" }, papuabarat: { population: 1183307, male: 622886, female: 560421, year: "2022" }, papua: { population: 4418581, male: 2348882, female: 2069699, year: "2022" }
+        }
+      };
+      const REGIONAL_DATA_EXTENSIONS = {"PHL":{"bangsamorobangsamoroautonomousregioninmuslimmindanao":{"population":5691583,"year":"2024"},"bicol":{"population":6064426,"year":"2024"},"cagayanvalley":{"population":3777608,"year":"2024"},"calabarzon":{"population":16933234,"year":"2024"},"caraga":{"population":2865196,"year":"2024"},"centralluzon":{"population":12989074,"year":"2024"},"centralvisayas":{"population":6640875,"year":"2024"},"cordilleracordilleraadministrativeregion":{"population":1808985,"year":"2024"},"davao":{"population":5389422,"year":"2024"},"easternvisayas":{"population":4625929,"year":"2024"},"ilocos":{"population":5342453,"year":"2024"},"metromanilanationalcapitalregionncr":{"population":14001751,"year":"2024"},"mimaropa":{"population":3245446,"year":"2024"},"negrosisland":{"population":4904944,"year":"2024"},"northernmindanao":{"population":5178326,"year":"2024"},"soccsksargen":{"population":4462776,"year":"2024"},"westernvisayas":{"population":4861911,"year":"2024"},"zamboangapeninsula":{"population":3943837,"year":"2024"}},"VNM":{"angiang":{"population":1908352,"year":"2019"},"bacgiang":{"population":1803950,"year":"2019"},"backan":{"population":313905,"year":"2019"},"baclieu":{"population":907236,"year":"2019"},"bacninh":{"population":1368840,"year":"2019"},"bariavungtau":{"population":1148313,"year":"2019"},"bentre":{"population":1288463,"year":"2019"},"binhdinh":{"population":1486918,"year":"2019"},"binhduong":{"population":2426561,"year":"2019"},"binhphuoc":{"population":994679,"year":"2019"},"binhthuan":{"population":1230808,"year":"2019"},"camau":{"population":1194476,"year":"2019"},"cantho":{"population":1235171,"year":"2019"},"caobang":{"population":530341,"year":"2019"},"daklak":{"population":1869322,"year":"2019"},"daknong":{"population":622168,"year":"2019"},"danang":{"population":1134310,"year":"2019"},"dienbien":{"population":598856,"year":"2019"},"dongnai":{"population":3097107,"year":"2019"},"dongthap":{"population":1599504,"year":"2019"},"gialai":{"population":1513847,"year":"2019"},"hagiang":{"population":854679,"year":"2019"},"haiduong":{"population":1892254,"year":"2019"},"haiphong":{"population":2028514,"year":"2019"},"hanam":{"population":852800,"year":"2019"},"hanoihanoi":{"population":8053663,"year":"2019"},"hatinh":{"population":1288866,"year":"2019"},"haugiang":{"population":733017,"year":"2019"},"hoabinh":{"population":854131,"year":"2019"},"hungyen":{"population":1252731,"year":"2019"},"khanhhoa":{"population":1231107,"year":"2019"},"kiengiang":{"population":1723067,"year":"2019"},"kontum":{"population":540438,"year":"2019"},"laichau":{"population":460196,"year":"2019"},"lamdong":{"population":1296906,"year":"2019"},"langson":{"population":781655,"year":"2019"},"laocai":{"population":730420,"year":"2019"},"longan":{"population":1688547,"year":"2019"},"namdinh":{"population":1780393,"year":"2019"},"nghean":{"population":3327791,"year":"2019"},"ninhbinh":{"population":982487,"year":"2019"},"ninhthuan":{"population":590467,"year":"2019"},"phutho":{"population":1463726,"year":"2019"},"phuyen":{"population":872964,"year":"2019"},"quangbinh":{"population":895430,"year":"2019"},"quangnam":{"population":1495812,"year":"2019"},"quangngai":{"population":1231697,"year":"2019"},"quangninh":{"population":1320324,"year":"2019"},"quangtri":{"population":632375,"year":"2019"},"soctrang":{"population":1199653,"year":"2019"},"sonla":{"population":1248415,"year":"2019"},"tayninh":{"population":1169165,"year":"2019"},"thaibinh":{"population":1860447,"year":"2019"},"thainguyen":{"population":1286751,"year":"2019"},"thanhhoa":{"population":3640128,"year":"2019"},"thanhphohochiminhhochiminhcity":{"population":8993082,"year":"2019"},"thuathienhue":{"population":1128620,"year":"2019"},"tiengiang":{"population":1764185,"year":"2019"},"travinh":{"population":1009168,"year":"2019"},"tuyenquang":{"population":784811,"year":"2019"},"vinhlong":{"population":1022791,"year":"2019"},"vinhphuc":{"population":1151154,"year":"2019"},"yenbai":{"population":821030,"year":"2019"}},"SGP":{"angmokio":{"population":158720,"year":"2025"},"bedok":{"population":274360,"year":"2025"},"bishan":{"population":87530,"year":"2025"},"boonlay":{"population":30,"year":"2025"},"bukitbatok":{"population":165830,"year":"2025"},"bukitmerah":{"population":146200,"year":"2025"},"bukitpanjang":{"population":136360,"year":"2025"},"bukittimah":{"population":85900,"year":"2025"},"changi":{"population":1960,"year":"2025"},"choachukang":{"population":187550,"year":"2025"},"clementi":{"population":104240,"year":"2025"},"downtowncore":{"population":5230,"year":"2025"},"geylang":{"population":117640,"year":"2025"},"hougang":{"population":227220,"year":"2025"},"jurongeast":{"population":72950,"year":"2025"},"jurongwest":{"population":253840,"year":"2025"},"kallang":{"population":101720,"year":"2025"},"limchukang":{"population":30,"year":"2025"},"mandai":{"population":2120,"year":"2025"},"marineparade":{"population":47480,"year":"2025"},"museum":{"population":820,"year":"2025"},"newton":{"population":10110,"year":"2025"},"northeasternislands":{"population":40,"year":"2025"},"novena":{"population":53160,"year":"2025"},"orchard":{"population":1450,"year":"2025"},"outram":{"population":16940,"year":"2025"},"pasirris":{"population":144260,"year":"2025"},"payalebar":{"population":20,"year":"2025"},"pioneer":{"population":50,"year":"2025"},"punggol":{"population":204150,"year":"2025"},"queenstown":{"population":101480,"year":"2025"},"rivervalley":{"population":12700,"year":"2025"},"rochor":{"population":12790,"year":"2025"},"seletar":{"population":290,"year":"2025"},"sembawang":{"population":113350,"year":"2025"},"sengkang":{"population":267600,"year":"2025"},"serangoon":{"population":116630,"year":"2025"},"singaporeriver":{"population":4630,"year":"2025"},"southernislands":{"population":2680,"year":"2025"},"sungeikadut":{"population":730,"year":"2025"},"tampines":{"population":290090,"year":"2025"},"tanglin":{"population":24630,"year":"2025"},"tengah":{"population":22960,"year":"2025"},"toapayoh":{"population":142220,"year":"2025"},"tuas":{"population":80,"year":"2025"},"westernislands":{"population":10,"year":"2025"},"westernwatercatchment":{"population":580,"year":"2025"},"woodlands":{"population":254440,"year":"2025"},"yishun":{"population":228730,"year":"2025"}},"MEX":{"aguascalientes":{"population":1425607,"year":"2020"},"bajacalifornia":{"population":3769020,"year":"2020"},"bajacaliforniasur":{"population":798447,"year":"2020"},"campeche":{"population":928363,"year":"2020"},"chiapas":{"population":5543828,"year":"2020"},"chihuahua":{"population":3741869,"year":"2020"},"ciudaddemexicodistritofederal":{"population":9209944,"year":"2020"},"coahuiladezaragoza":{"population":3146771,"year":"2020"},"colima":{"population":731391,"year":"2020"},"durango":{"population":1832650,"year":"2020"},"guanajuato":{"population":6166934,"year":"2020"},"guerrero":{"population":3540685,"year":"2020"},"hidalgo":{"population":3082841,"year":"2020"},"jalisco":{"population":8348151,"year":"2020"},"mexico":{"population":16992418,"year":"2020"},"michoacandeocampo":{"population":4748846,"year":"2020"},"morelos":{"population":1971520,"year":"2020"},"nayarit":{"population":1235456,"year":"2020"},"nuevoleon":{"population":5784442,"year":"2020"},"oaxaca":{"population":4132148,"year":"2020"},"puebla":{"population":6583278,"year":"2020"},"queretarodearteaga":{"population":2368467,"year":"2020"},"quintanaroo":{"population":1857985,"year":"2020"},"sanluispotosi":{"population":2822255,"year":"2020"},"sinaloa":{"population":3026943,"year":"2020"},"sonora":{"population":2944840,"year":"2020"},"tabasco":{"population":2402598,"year":"2020"},"tamaulipas":{"population":3527735,"year":"2020"},"tlaxcala":{"population":1342977,"year":"2020"},"veracruzdeignaciodelallave":{"population":8062579,"year":"2020"},"yucatan":{"population":2320898,"year":"2020"},"zacatecas":{"population":1622138,"year":"2020"}},"PER":{"amazonas":{"population":467688,"year":"2025"},"ancash":{"population":1205923,"year":"2025"},"apurimac":{"population":467513,"year":"2025"},"arequipa":{"population":1814554,"year":"2025"},"ayacucho":{"population":709026,"year":"2025"},"cajamarca":{"population":1490732,"year":"2025"},"cuscocuzco":{"population":1379167,"year":"2025"},"huancavelica":{"population":372158,"year":"2025"},"huanuco":{"population":807393,"year":"2025"},"ica":{"population":1033084,"year":"2025"},"junin":{"population":1422780,"year":"2025"},"lalibertad":{"population":2056445,"year":"2025"},"lambayeque":{"population":1404643,"year":"2025"},"limainclprovinciadelima":{"population":11157400,"year":"2025"},"loreto":{"population":1032771,"year":"2025"},"madrededios":{"population":208667,"year":"2025"},"moquegua":{"population":194828,"year":"2025"},"pasco":{"population":253549,"year":"2025"},"piura":{"population":2115215,"year":"2025"},"puno":{"population":1232993,"year":"2025"},"sanmartin":{"population":967923,"year":"2025"},"tacna":{"population":389226,"year":"2025"},"tumbes":{"population":256691,"year":"2025"},"ucayali":{"population":623868,"year":"2025"}},"ARG":{"buenosaires":{"population":17523996,"year":"2022"},"catamarca":{"population":429562,"year":"2022"},"chaco":{"population":1129606,"year":"2022"},"chubut":{"population":592621,"year":"2022"},"cordoba":{"population":3840905,"year":"2022"},"corrientes":{"population":1212696,"year":"2022"},"entrerios":{"population":1425578,"year":"2022"},"formosa":{"population":607419,"year":"2022"},"jujuy":{"population":811611,"year":"2022"},"lapampa":{"population":361859,"year":"2022"},"larioja":{"population":383865,"year":"2022"},"mendoza":{"population":2043540,"year":"2022"},"misiones":{"population":1278873,"year":"2022"},"neuquen":{"population":710814,"year":"2022"},"rionegro":{"population":750768,"year":"2022"},"salta":{"population":1441351,"year":"2022"},"sanjuan":{"population":822853,"year":"2022"},"sanluis":{"population":542069,"year":"2022"},"santacruz":{"population":337226,"year":"2022"},"santafe":{"population":3544908,"year":"2022"},"santiagodelestero":{"population":1060906,"year":"2022"},"tierradelfuego":{"population":185732,"year":"2022"},"tucuman":{"population":1731820,"year":"2022"}},"POL":{"dolnoslaskielowersilesia":{"population":2857273,"year":"2025"},"kujawskopomorskiekuyaviapomerania":{"population":1971891,"year":"2025"},"odzkieodz":{"population":2328825,"year":"2025"},"lubelskielublin":{"population":1980772,"year":"2025"},"lubuskielubusz":{"population":963601,"year":"2025"},"maopolskielesserpoland":{"population":3429342,"year":"2025"},"mazowieckiemazovia":{"population":5505857,"year":"2025"},"opolskieopole":{"population":923536,"year":"2025"},"podkarpackiesubcarpathia":{"population":2053760,"year":"2025"},"podlaskiepodlachia":{"population":1126679,"year":"2025"},"pomorskiepomerania":{"population":2358409,"year":"2025"},"slaskiesilesia":{"population":4261792,"year":"2025"},"swietokrzyskieholycross":{"population":1147293,"year":"2025"},"warminskomazurskiewarmiamasuria":{"population":1339498,"year":"2025"},"wielkopolskiegreaterpoland":{"population":3471302,"year":"2025"},"zachodniopomorskiewestpomerania":{"population":1612680,"year":"2025"}},"THA":{"amnatcharoen":{"population":283732,"year":"2010"},"angthong":{"population":254292,"year":"2010"},"buengkannongkhai":{"population":362755,"year":"2010"},"buriram":{"population":1274921,"year":"2010"},"chachoengsao":{"population":715603,"year":"2010"},"chainat":{"population":305587,"year":"2010"},"chaiyaphum":{"population":963907,"year":"2010"},"chanthaburi":{"population":485611,"year":"2010"},"chiangmai":{"population":1737041,"year":"2010"},"chiangrai":{"population":1172928,"year":"2010"},"chonburi":{"population":1555358,"year":"2010"},"chumphon":{"population":467801,"year":"2010"},"kalasin":{"population":824538,"year":"2010"},"kamphaengphet":{"population":797391,"year":"2010"},"kanchanaburi":{"population":801519,"year":"2010"},"khonkaen":{"population":1741980,"year":"2010"},"krabi":{"population":362203,"year":"2010"},"lampang":{"population":743143,"year":"2010"},"lamphun":{"population":412741,"year":"2010"},"loei":{"population":546028,"year":"2010"},"lopburi":{"population":769925,"year":"2010"},"maehongson":{"population":209153,"year":"2010"},"mahasarakham":{"population":827639,"year":"2010"},"mukdahan":{"population":357339,"year":"2010"},"nakhonnayok":{"population":246868,"year":"2010"},"nakhonpathom":{"population":943892,"year":"2010"},"nakhonphanom":{"population":583726,"year":"2010"},"nakhonratchasima":{"population":2525975,"year":"2010"},"nakhonsawan":{"population":992749,"year":"2010"},"nakhonsithammarat":{"population":1450466,"year":"2010"},"nan":{"population":452814,"year":"2010"},"narathiwat":{"population":670002,"year":"2010"},"nongbualamphu":{"population":485974,"year":"2010"},"nongkhai":{"population":458772,"year":"2010"},"nonthaburi":{"population":1334083,"year":"2010"},"pathumthani":{"population":1327147,"year":"2010"},"pattani":{"population":609015,"year":"2010"},"phangnga":{"population":258535,"year":"2010"},"phatthalung":{"population":480976,"year":"2010"},"phayao":{"population":417380,"year":"2010"},"phetchabun":{"population":940076,"year":"2010"},"phetchaburi":{"population":472589,"year":"2010"},"phichit":{"population":548242,"year":"2010"},"phitsanulok":{"population":912827,"year":"2010"},"phrae":{"population":427398,"year":"2010"},"phranakhonsiayutthaya":{"population":870671,"year":"2010"},"phuket":{"population":525709,"year":"2010"},"prachinburi":{"population":546996,"year":"2010"},"prachuapkhirikhan":{"population":467466,"year":"2010"},"ranong":{"population":249017,"year":"2010"},"ratchaburi":{"population":796748,"year":"2010"},"rayong":{"population":821072,"year":"2010"},"roiet":{"population":1084985,"year":"2010"},"sakaeo":{"population":555961,"year":"2010"},"sakonnakhon":{"population":941810,"year":"2010"},"samutprakan":{"population":1828694,"year":"2010"},"samutsakhon":{"population":887191,"year":"2010"},"samutsongkhram":{"population":185564,"year":"2010"},"saraburi":{"population":717054,"year":"2010"},"satun":{"population":274863,"year":"2010"},"singburi":{"population":199982,"year":"2010"},"sisaket":{"population":1055980,"year":"2010"},"songkhla":{"population":1481021,"year":"2010"},"sukhothai":{"population":629707,"year":"2010"},"suphanburi":{"population":845561,"year":"2010"},"suratthani":{"population":1009351,"year":"2010"},"surin":{"population":1122900,"year":"2010"},"tak":{"population":526382,"year":"2010"},"trang":{"population":598877,"year":"2010"},"trat":{"population":247876,"year":"2010"},"ubonratchathani":{"population":1746790,"year":"2010"},"udonthani":{"population":1288365,"year":"2010"},"uthaithani":{"population":297493,"year":"2010"},"uttaradit":{"population":438578,"year":"2010"},"yala":{"population":433167,"year":"2010"},"yasothon":{"population":487976,"year":"2010"}},"MYS":{"johor":{"population":4224300,"year":"2026"},"kedah":{"population":2237400,"year":"2026"},"kelantan":{"population":1925300,"year":"2026"},"melaka":{"population":1057400,"year":"2026"},"negerisembilan":{"population":1248500,"year":"2026"},"pahang":{"population":1686200,"year":"2026"},"perak":{"population":2577900,"year":"2026"},"perlis":{"population":297300,"year":"2026"},"pulaupinang":{"population":1808300,"year":"2026"},"penang":{"population":1808300,"year":"2026"},"sabah":{"population":3767000,"year":"2026"},"sarawak":{"population":2539800,"year":"2026"},"selangor":{"population":7454200,"year":"2026"},"terengganu":{"population":1260900,"year":"2026"},"kualalumpur":{"population":2082300,"year":"2026"},"labuan":{"population":101100,"year":"2026"},"putrajaya":{"population":121400,"year":"2026"}},"BRA":{"acre":{"population":884372,"year":"2025"},"alagoas":{"population":3220848,"year":"2025"},"amapa":{"population":806517,"year":"2025"},"amazonas":{"population":4321616,"year":"2025"},"bahia":{"population":14870907,"year":"2025"},"ceara":{"population":9268836,"year":"2025"},"distritofederal":{"population":2996899,"year":"2025"},"espiritosanto":{"population":4126854,"year":"2025"},"goias":{"population":7423629,"year":"2025"},"maranhao":{"population":7018211,"year":"2025"},"matogrosso":{"population":3893659,"year":"2025"},"matogrossodosul":{"population":2924631,"year":"2025"},"minasgerais":{"population":21393441,"year":"2025"},"para":{"population":8711196,"year":"2025"},"paraiba":{"population":4164468,"year":"2025"},"parana":{"population":11890517,"year":"2025"},"pernambuco":{"population":9562007,"year":"2025"},"piaui":{"population":3384547,"year":"2025"},"riodejaneiro":{"population":17223547,"year":"2025"},"riograndedonorte":{"population":3455236,"year":"2025"},"riograndedosul":{"population":11233263,"year":"2025"},"rondonia":{"population":1751950,"year":"2025"},"roraima":{"population":738772,"year":"2025"},"santacatarina":{"population":8187029,"year":"2025"},"saopaulo":{"population":46081801,"year":"2025"},"sergipe":{"population":2299425,"year":"2025"},"tocantins":{"population":1586859,"year":"2025"}},"SAU":{"arriyad":{"population":8591748,"year":"2022"},"makkahalmukarramah":{"population":7769994,"year":"2022"},"almadinahalmunuwarah":{"population":2389452,"year":"2022"},"alqasim":{"population":1336179,"year":"2022"},"ashsharqiyah":{"population":5125254,"year":"2022"},"asir":{"population":2024285,"year":"2022"},"tabuk":{"population":886036,"year":"2022"},"hail":{"population":746406,"year":"2022"},"alhududashshamiyah":{"population":373577,"year":"2022"},"jazan":{"population":1404997,"year":"2022"},"najran":{"population":592300,"year":"2022"},"albahah":{"population":339174,"year":"2022"},"aljawf":{"population":595822,"year":"2022"}},"ARE":{"abudhabi":{"population":4135985,"year":"2024"},"dubai":{"population":3655000,"year":"2023"},"fujairah":{"population":309080,"year":"2023"},"ajman":{"population":504846,"year":"2017"},"sharjah":{"population":1818000,"year":"2022"}}};
+      const REGIONAL_EXTRA_ALIASES = {"PHL":{"bangsamoro":"bangsamorobangsamoroautonomousregioninmuslimmindanao","cordilleraadministrativeregion":"cordilleracordilleraadministrativeregion","nationalcapitalregion":"metromanilanationalcapitalregionncr"},"VNM":{"hochiminhcity":"thanhphohominh","hcmcity":"thanhphohominh","hochiminh":"thanhphohominh"},"MEX":{"ciudaddemexicodistritofederal":"ciudaddemexicodistritofederal","queretaro":"queretarodearteaga"},"PER":{"cusco":"cuscocuzco","lima":"limainclprovinciadelima"},"THA":{"bangkok":"krungthepmahanakhon","buengkan":"buengkannongkhai"},"SAU":{"riyadh":"arriyad","makkah":"makkahalmukarramah","mecca":"makkahalmukarramah","medina":"almadinahalmunuwarah","qassim":"alqasim","easternprovince":"ashsharqiyah","northernborders":"alhududashshamiyah"},"ARE":{"abudhabiemirate":"abudhabi","emirateofabudhabi":"abudhabi","emirateofdubai":"dubai","emirateofsharjah":"sharjah","emirateofajman":"ajman","emirateoffujairah":"fujairah"}};
+      const REGIONAL_STATS_EXTENSIONS = {"PHL":{"bangsamorobangsamoroautonomousregioninmuslimmindanao":{"male":2474905,"genderYear":"2020","female":2463634,"age":{"child":2044958,"working":2792892,"senior":100689},"ageYear":"2020"},"bicol":{"male":3078272,"genderYear":"2020","female":2989018,"age":{"child":2069572,"working":3645553,"senior":352165},"ageYear":"2020"},"cagayanvalley":{"male":1874484,"genderYear":"2020","female":1805264,"age":{"child":1058178,"working":2394292,"senior":227278},"ageYear":"2020"},"calabarzon":{"male":8113997,"genderYear":"2020","female":8025773,"age":{"child":4672259,"working":10673858,"senior":793653},"ageYear":"2020"},"caraga":{"male":1434391,"genderYear":"2020","female":1360949,"age":{"child":907734,"working":1732035,"senior":155571},"ageYear":"2020"},"centralluzon":{"male":6272297,"genderYear":"2020","female":6115514,"age":{"child":3618595,"working":8077676,"senior":691540},"ageYear":"2020"},"centralvisayas":{"male":4081138,"genderYear":"2020","female":3965147,"age":{"child":2460515,"working":5106041,"senior":479729},"ageYear":"2020"},"cordilleracordilleraadministrativeregion":{"male":917431,"genderYear":"2020","female":873690,"age":{"child":505157,"working":1178144,"senior":107820},"ageYear":"2020"},"davao":{"male":2678976,"genderYear":"2020","female":2544826,"age":{"child":1637285,"working":3321859,"senior":264658},"ageYear":"2020"},"easternvisayas":{"male":2321372,"genderYear":"2020","female":2210140,"age":{"child":1471721,"working":2766283,"senior":293508},"ageYear":"2020"},"ilocos":{"male":2680776,"genderYear":"2020","female":2611521,"age":{"child":1493942,"working":3410812,"senior":387543},"ageYear":"2020"},"metromanilanationalcapitalregionncr":{"male":6674239,"genderYear":"2020","female":6729312,"age":{"child":3693365,"working":9075664,"senior":634522},"ageYear":"2020"},"mimaropa":{"male":1638824,"genderYear":"2020","female":1573463,"age":{"child":1045884,"working":1991829,"senior":174574},"ageYear":"2020"},"negrosisland":{},"northernmindanao":{"male":2554944,"genderYear":"2020","female":2452854,"age":{"child":1655136,"working":3105754,"senior":246908},"ageYear":"2020"},"soccsksargen":{"male":2225425,"genderYear":"2020","female":2126348,"age":{"child":1439256,"working":2720454,"senior":192063},"ageYear":"2020"},"westernvisayas":{"male":4029971,"genderYear":"2020","female":3905560,"age":{"child":2344554,"working":5035325,"senior":555652},"ageYear":"2020"},"zamboangapeninsula":{"male":1966201,"genderYear":"2020","female":1896387,"age":{"child":1296134,"working":2368878,"senior":197576},"ageYear":"2020"}},"VNM":{"angiang":{"male":947570,"genderYear":"2019","female":960782},"bacgiang":{"male":905152,"genderYear":"2019","female":898798},"backan":{"male":160036,"genderYear":"2019","female":153869},"baclieu":{"male":453972,"genderYear":"2019","female":453264},"bacninh":{"male":676060,"genderYear":"2019","female":692780},"bariavungtau":{"male":576228,"genderYear":"2019","female":572085},"bentre":{"male":630492,"genderYear":"2019","female":657971},"binhdinh":{"male":732087,"genderYear":"2019","female":754831},"binhduong":{"male":1220006,"genderYear":"2019","female":1206555},"binhphuoc":{"male":501473,"genderYear":"2019","female":493206},"binhthuan":{"male":618384,"genderYear":"2019","female":612424},"camau":{"male":604901,"genderYear":"2019","female":589575},"cantho":{"male":612543,"genderYear":"2019","female":622628},"caobang":{"male":265620,"genderYear":"2019","female":264721},"daklak":{"male":942578,"genderYear":"2019","female":926744},"daknong":{},"danang":{"male":558982,"genderYear":"2019","female":575328},"dienbien":{"male":303436,"genderYear":"2019","female":295420},"dongnai":{"male":1553342,"genderYear":"2019","female":1543765},"dongthap":{"male":799230,"genderYear":"2019","female":800274},"gialai":{"male":758589,"genderYear":"2019","female":755258},"hagiang":{"male":431771,"genderYear":"2019","female":422908},"haiduong":{"male":940044,"genderYear":"2019","female":952210},"haiphong":{"male":1007767,"genderYear":"2019","female":1020747},"hanam":{"male":419751,"genderYear":"2019","female":433049},"hanoihanoi":{"male":3991919,"genderYear":"2019","female":4061744},"hatinh":{"male":640709,"genderYear":"2019","female":648157},"haugiang":{"male":366206,"genderYear":"2019","female":366811},"hoabinh":{"male":426923,"genderYear":"2019","female":427208},"hungyen":{"male":626817,"genderYear":"2019","female":625914},"khanhhoa":{"male":612513,"genderYear":"2019","female":618594},"kiengiang":{"male":873236,"genderYear":"2019","female":849831},"kontum":{"male":271619,"genderYear":"2019","female":268819},"laichau":{"male":233097,"genderYear":"2019","female":227099},"lamdong":{"male":653074,"genderYear":"2019","female":643832},"langson":{"male":399410,"genderYear":"2019","female":382245},"laocai":{"male":371306,"genderYear":"2019","female":359114},"longan":{"male":842074,"genderYear":"2019","female":846473},"namdinh":{"male":872035,"genderYear":"2019","female":908358},"nghean":{"male":1672901,"genderYear":"2019","female":1654890},"ninhbinh":{"male":489334,"genderYear":"2019","female":493153},"ninhthuan":{"male":296026,"genderYear":"2019","female":294441},"phutho":{"male":726909,"genderYear":"2019","female":736817},"phuyen":{"male":439078,"genderYear":"2019","female":433886},"quangbinh":{"male":449296,"genderYear":"2019","female":446134},"quangnam":{"male":735586,"genderYear":"2019","female":760226},"quangngai":{"male":611914,"genderYear":"2019","female":619783},"quangninh":{"male":671522,"genderYear":"2019","female":648802},"quangtri":{"male":313493,"genderYear":"2019","female":318882},"soctrang":{"male":597922,"genderYear":"2019","female":601731},"sonla":{"male":632598,"genderYear":"2019","female":615817},"tayninh":{"male":584180,"genderYear":"2019","female":584985},"thaibinh":{"male":905408,"genderYear":"2019","female":955039},"thainguyen":{"male":629197,"genderYear":"2019","female":657554},"thanhhoa":{"male":1816001,"genderYear":"2019","female":1824127},"thanhphohochiminhhochiminhcity":{"male":4381242,"genderYear":"2019","female":4611840},"thuathienhue":{"male":558488,"genderYear":"2019","female":570132},"tiengiang":{"male":865821,"genderYear":"2019","female":898364},"travinh":{"male":496858,"genderYear":"2019","female":512310},"tuyenquang":{"male":395146,"genderYear":"2019","female":389665},"vinhlong":{"male":503878,"genderYear":"2019","female":518913},"vinhphuc":{"male":573621,"genderYear":"2019","female":577533},"yenbai":{"male":412977,"genderYear":"2019","female":408053}},"SGP":{"angmokio":{"male":75260,"genderYear":"2025","female":83460,"age":{"child":16370,"working":100740,"senior":41670},"ageYear":"2025"},"bedok":{"male":132120,"genderYear":"2025","female":142240,"age":{"child":31820,"working":177640,"senior":64920},"ageYear":"2025"},"bishan":{"male":42290,"genderYear":"2025","female":45240,"age":{"child":10810,"working":56850,"senior":19920},"ageYear":"2025"},"boonlay":{},"bukitbatok":{"male":80770,"genderYear":"2025","female":85060,"age":{"child":22780,"working":112630,"senior":30450},"ageYear":"2025"},"bukitmerah":{},"bukitpanjang":{"male":66900,"genderYear":"2025","female":69470,"age":{"child":18060,"working":93780,"senior":24580},"ageYear":"2025"},"bukittimah":{"male":39760,"genderYear":"2025","female":46140,"age":{"child":14750,"working":55600,"senior":15610},"ageYear":"2025"},"centralwatercatchment":{},"changi":{"male":990,"genderYear":"2025","female":970,"age":{"child":440,"working":1270,"senior":310},"ageYear":"2025"},"changibay":{},"choachukang":{"male":92810,"genderYear":"2025","female":94740,"age":{"child":25050,"working":134240,"senior":28300},"ageYear":"2025"},"clementi":{"male":49460,"genderYear":"2025","female":54780,"age":{"child":14510,"working":67670,"senior":22120},"ageYear":"2025"},"downtowncore":{"male":2550,"genderYear":"2025","female":2680,"age":{"child":490,"working":4220,"senior":580},"ageYear":"2025"},"geylang":{"male":57360,"genderYear":"2025","female":60280,"age":{"child":13980,"working":77590,"senior":26110},"ageYear":"2025"},"hougang":{"male":110300,"genderYear":"2025","female":116920,"age":{"child":27310,"working":152090,"senior":47880},"ageYear":"2025"},"jurongeast":{"male":35830,"genderYear":"2025","female":37120,"age":{"child":7050,"working":47560,"senior":18390},"ageYear":"2025"},"jurongwest":{"male":126680,"genderYear":"2025","female":127170,"age":{"child":32050,"working":177540,"senior":44270},"ageYear":"2025"},"kallang":{"male":49760,"genderYear":"2025","female":51970,"age":{"child":11190,"working":66010,"senior":24510},"ageYear":"2025"},"limchukang":{},"mandai":{"male":1030,"genderYear":"2025","female":1090,"age":{"child":260,"working":1530,"senior":360},"ageYear":"2025"},"marinaeast":{},"marinasouth":{},"marineparade":{"male":22230,"genderYear":"2025","female":25250,"age":{"child":6640,"working":30570,"senior":10280},"ageYear":"2025"},"museum":{"male":400,"genderYear":"2025","female":420,"age":{"child":120,"working":670,"senior":90},"ageYear":"2025"},"newton":{"male":4830,"genderYear":"2025","female":5280,"age":{"child":1730,"working":6880,"senior":1560},"ageYear":"2025"},"northeasternislands":{},"novena":{"male":25790,"genderYear":"2025","female":27370,"age":{"child":7930,"working":35290,"senior":10000},"ageYear":"2025"},"orchard":{"male":680,"genderYear":"2025","female":770,"age":{"child":170,"working":1050,"senior":260},"ageYear":"2025"},"outram":{"male":8410,"genderYear":"2025","female":8530,"age":{"child":1540,"working":10550,"senior":4930},"ageYear":"2025"},"pasirris":{"male":71080,"genderYear":"2025","female":73180,"age":{"child":17940,"working":103150,"senior":23220},"ageYear":"2025"},"payalebar":{},"pioneer":{},"punggol":{"male":100270,"genderYear":"2025","female":103880,"age":{"child":41810,"working":142010,"senior":20390},"ageYear":"2025"},"queenstown":{"male":47440,"genderYear":"2025","female":54040,"age":{"child":11990,"working":66490,"senior":22950},"ageYear":"2025"},"rivervalley":{"male":5860,"genderYear":"2025","female":6840,"age":{"child":1950,"working":9020,"senior":1750},"ageYear":"2025"},"rochor":{"male":6320,"genderYear":"2025","female":6480,"age":{"child":1200,"working":8410,"senior":3200},"ageYear":"2025"},"seletar":{"male":140,"genderYear":"2025","female":150,"age":{"working":190},"ageYear":"2025"},"sembawang":{"male":55820,"genderYear":"2025","female":57530,"age":{"child":18530,"working":81270,"senior":13540},"ageYear":"2025"},"sengkang":{"male":131030,"genderYear":"2025","female":136580,"age":{"child":45340,"working":186940,"senior":35330},"ageYear":"2025"},"serangoon":{"male":55900,"genderYear":"2025","female":60730,"age":{"child":12970,"working":75880,"senior":27850},"ageYear":"2025"},"simpang":{},"singaporeriver":{"male":2120,"genderYear":"2025","female":2500,"age":{"child":900,"working":3360,"senior":440},"ageYear":"2025"},"southernislands":{"male":1270,"genderYear":"2025","female":1410,"age":{"child":480,"working":1930,"senior":310},"ageYear":"2025"},"straitsview":{},"sungeikadut":{"male":360,"genderYear":"2025","female":370,"age":{"child":90,"working":520,"senior":150},"ageYear":"2025"},"tampines":{"male":141300,"genderYear":"2025","female":148790,"age":{"child":42810,"working":193310,"senior":54000},"ageYear":"2025"},"tanglin":{"male":11360,"genderYear":"2025","female":13270,"age":{"child":4290,"working":16360,"senior":4000},"ageYear":"2025"},"tengah":{"male":11380,"genderYear":"2025","female":11580,"age":{"child":4400,"working":16880,"senior":1730},"ageYear":"2025"},"toapayoh":{"male":67790,"genderYear":"2025","female":74430,"age":{"child":19170,"working":91410,"senior":31690},"ageYear":"2025"},"tuas":{},"westernislands":{},"westernwatercatchment":{"male":260,"genderYear":"2025","female":320,"age":{"child":80,"working":490,"senior":20},"ageYear":"2025"},"woodlands":{"male":127170,"genderYear":"2025","female":127270,"age":{"child":34300,"working":184460,"senior":35700},"ageYear":"2025"},"yishun":{"male":111940,"genderYear":"2025","female":116800,"age":{"child":32710,"working":156330,"senior":39710},"ageYear":"2025"}},"MEX":{"aguascalientes":{"male":696683,"genderYear":"2020","female":728924,"age":{"child":385195,"working":941834,"senior":97070},"ageYear":"2020"},"bajacalifornia":{"male":1900589,"genderYear":"2020","female":1868431,"age":{"child":878303,"working":2637218,"senior":245280},"ageYear":"2020"},"bajacaliforniasur":{"male":405879,"genderYear":"2020","female":392568,"age":{"child":197053,"working":549039,"senior":48513},"ageYear":"2020"},"campeche":{"male":456939,"genderYear":"2020","female":471424,"age":{"child":241118,"working":613113,"senior":69838},"ageYear":"2020"},"chiapas":{"male":2705947,"genderYear":"2020","female":2837881,"age":{"child":1770076,"working":3396877,"senior":349031},"ageYear":"2020"},"chihuahua":{"male":1853822,"genderYear":"2020","female":1888047,"age":{"child":942323,"working":2512947,"senior":278960},"ageYear":"2020"},"ciudaddemexicodistritofederal":{"male":4404927,"genderYear":"2020","female":4805017,"age":{"child":1652773,"working":6525440,"senior":1022105},"ageYear":"2020"},"coahuiladezaragoza":{"male":1563669,"genderYear":"2020","female":1583102,"age":{"child":824280,"working":2086745,"senior":229587},"ageYear":"2020"},"colima":{"male":360622,"genderYear":"2020","female":370769,"age":{"child":173163,"working":494510,"senior":61762},"ageYear":"2020"},"durango":{"male":904866,"genderYear":"2020","female":927784,"age":{"child":513904,"working":1172629,"senior":142942},"ageYear":"2020"},"guanajuato":{"male":2996454,"genderYear":"2020","female":3170480,"age":{"child":1635692,"working":4052225,"senior":466968},"ageYear":"2020"},"guerrero":{"male":1700612,"genderYear":"2020","female":1840073,"age":{"child":1034961,"working":2174538,"senior":316769},"ageYear":"2020"},"hidalgo":{"male":1481379,"genderYear":"2020","female":1601462,"age":{"child":791418,"working":2023471,"senior":264746},"ageYear":"2020"},"jalisco":{"male":4098455,"genderYear":"2020","female":4249696,"age":{"child":2103989,"working":5507037,"senior":686074},"ageYear":"2020"},"mexico":{"male":8251295,"genderYear":"2020","female":8741123,"age":{"child":4122067,"working":11603770,"senior":1258354},"ageYear":"2020"},"michoacandeocampo":{"male":2306341,"genderYear":"2020","female":2442505,"age":{"child":1298324,"working":3024137,"senior":422855},"ageYear":"2020"},"morelos":{"male":950847,"genderYear":"2020","female":1020673,"age":{"child":468551,"working":1312593,"senior":189428},"ageYear":"2020"},"nayarit":{"male":612278,"genderYear":"2020","female":623178,"age":{"child":330878,"working":793713,"senior":109697},"ageYear":"2020"},"nuevoleon":{"male":2890950,"genderYear":"2020","female":2893492,"age":{"child":1381448,"working":3948050,"senior":436812},"ageYear":"2020"},"oaxaca":{"male":1974843,"genderYear":"2020","female":2157305,"age":{"child":1146974,"working":2580989,"senior":394797},"ageYear":"2020"},"puebla":{"male":3160115,"genderYear":"2020","female":3423163,"age":{"child":1780704,"working":4280848,"senior":516055},"ageYear":"2020"},"queretarodearteaga":{"male":1156820,"genderYear":"2020","female":1211647,"age":{"child":583463,"working":1618687,"senior":159493},"ageYear":"2020"},"quintanaroo":{"male":936779,"genderYear":"2020","female":921206,"age":{"child":457400,"working":1297832,"senior":81731},"ageYear":"2020"},"sanluispotosi":{"male":1372451,"genderYear":"2020","female":1449804,"age":{"child":726438,"working":1839911,"senior":253964},"ageYear":"2020"},"sinaloa":{"male":1494815,"genderYear":"2020","female":1532128,"age":{"child":746904,"working":2007923,"senior":269891},"ageYear":"2020"},"sonora":{"male":1472197,"genderYear":"2020","female":1472643,"age":{"child":723847,"working":1981467,"senior":236801},"ageYear":"2020"},"tabasco":{"male":1173671,"genderYear":"2020","female":1228927,"age":{"child":653633,"working":1575450,"senior":172639},"ageYear":"2020"},"tamaulipas":{"male":1736140,"genderYear":"2020","female":1791595,"age":{"child":871537,"working":2364217,"senior":286327},"ageYear":"2020"},"tlaxcala":{"male":649894,"genderYear":"2020","female":693083,"age":{"child":347916,"working":874755,"senior":99381},"ageYear":"2020"},"veracruzdeignaciodelallave":{"male":3871774,"genderYear":"2020","female":4190805,"age":{"child":1960903,"working":5288164,"senior":810042},"ageYear":"2020"},"yucatan":{"male":1140279,"genderYear":"2020","female":1180619,"age":{"child":551245,"working":1563575,"senior":202262},"ageYear":"2020"},"zacatecas":{"male":791058,"genderYear":"2020","female":831080,"age":{"child":458804,"working":1019736,"senior":141740},"ageYear":"2020"}},"MYS":{"johor":{"male":2261100,"female":1963200,"genderYear":"2026"},"kedah":{"male":1140600,"female":1096800,"genderYear":"2026"},"kelantan":{"male":967500,"female":957800,"genderYear":"2026"},"melaka":{"male":558900,"female":498500,"genderYear":"2026"},"negerisembilan":{"male":647000,"female":601500,"genderYear":"2026"},"pahang":{"male":897600,"female":788600,"genderYear":"2026"},"perak":{"male":1345300,"female":1232500,"genderYear":"2026"},"perlis":{"male":148200,"female":149100,"genderYear":"2026"},"pulaupinang":{"male":926500,"female":881800,"genderYear":"2026"},"penang":{"male":926500,"female":881800,"genderYear":"2026"},"sabah":{"male":1962800,"female":1804200,"genderYear":"2026"},"sarawak":{"male":1309300,"female":1230500,"genderYear":"2026"},"selangor":{"male":3978500,"female":3475700,"genderYear":"2026"},"terengganu":{"male":647000,"female":614000,"genderYear":"2026"},"kualalumpur":{"male":1123500,"female":958800,"genderYear":"2026"},"labuan":{"male":51700,"female":49400,"genderYear":"2026"},"putrajaya":{"male":59700,"female":61600,"genderYear":"2026"}}};
+      Object.entries(REGIONAL_STATS_EXTENSIONS).forEach(([code, data]) => {
+        Object.entries(data).forEach(([key, stats]) => {
+          if (STATIC_REGIONAL_DATA[code]?.[key]) STATIC_REGIONAL_DATA[code][key] = { ...STATIC_REGIONAL_DATA[code][key], ...stats };
+        });
+      });
+      Object.entries(REGIONAL_DATA_EXTENSIONS).forEach(([code, data]) => {
+        STATIC_REGIONAL_DATA[code] = { ...(STATIC_REGIONAL_DATA[code] || {}), ...data };
+      });
+      Object.entries(REGIONAL_STATS_EXTENSIONS).forEach(([code, data]) => {
+        Object.entries(data).forEach(([key, stats]) => {
+          if (STATIC_REGIONAL_DATA[code]?.[key]) STATIC_REGIONAL_DATA[code][key] = { ...STATIC_REGIONAL_DATA[code][key], ...stats };
+        });
+      });
+      const REGIONAL_ALIAS_OVERRIDES = {
+        VNM: {
+          hochiminhcity: "thanhphohochiminhhochiminhcity", hcmcity: "thanhphohochiminhhochiminhcity", hochiminh: "thanhphohochiminhhochiminhcity",
+          thanhphohiminh: "thanhphohochiminhhochiminhcity", thanhphohochiminh: "thanhphohochiminhhochiminhcity"
+        },
+        POL: {
+          subcarpathianvoivodeship: "podkarpackiesubcarpathia", podlaskievoivodeship: "podlaskiepodlachia", odzvoivodeship: "odzkieodz",
+          lowersilesianvoivodeship: "dolnoslaskielowersilesia", opolevoivodeship: "opolskieopole", swietokrzyskievoivodeship: "swietokrzyskieholycross",
+          masovianvoivodeship: "mazowieckiemazovia", greaterpolandvoivodeship: "wielkopolskiegreaterpoland", lesserpolandvoivodeship: "maopolskielesserpoland",
+          lubuszvoivodeship: "lubuskielubusz", kuyavianpomeranianvoivodeship: "kujawskopomorskiekuyaviapomerania", pomeranianvoivodeship: "pomorskiepomerania",
+          westpomeranianvoivodeship: "zachodniopomorskiewestpomerania", lublinvoivodeship: "lubelskielublin",
+          warmianmasurianvoivodeship: "warminskomazurskiewarmiamasuria", silesianvoivodeship: "slaskiesilesia"
+        }
+      };
+      const ADMIN_NAMES_ZH_EXTRA = {
+        VNM: {
+          hanoi: "河内", hanoihanoi: "河内", hagiang: "河江", caobang: "高平", backan: "北𣴓", tuyenquang: "宣光", laocai: "老街", dienbien: "奠边", ienbien: "奠边", laichau: "莱州", sonla: "山罗", yenbai: "安沛", hoabinh: "和平", thainguyen: "太原", langson: "谅山", quangninh: "广宁", bacgiang: "北江", phutho: "富寿", vinhphuc: "永福", bacninh: "北宁", haiduong: "海阳", haiphong: "海防", hungyen: "兴安", thaibinh: "太平", hanam: "河南", namdinh: "南定", naminh: "南定", ninhbinh: "宁平", thanhhoa: "清化", nghean: "乂安", hatinh: "河静", quangbinh: "广平", quangtri: "广治", thuathienhue: "承天顺化", danang: "岘港", anang: "岘港", quangnam: "广南", quangngai: "广义", binhdinh: "平定", binhinh: "平定", phuyen: "富安", khanhhoa: "庆和", ninhthuan: "宁顺", binhthuan: "平顺", kontum: "昆嵩", gialai: "嘉莱", daklak: "得乐", aklak: "得乐", daknong: "得农", aknong: "得农", lamdong: "林同", lamong: "林同", binhphuoc: "平福", tayninh: "西宁", binhduong: "平阳", dongnai: "同奈", ongnai: "同奈", bariavungtau: "巴地头顿", hochiminh: "胡志明市", hochiminhcity: "胡志明市", thanhphohiminh: "胡志明市", thanhphohochiminh: "胡志明市", longan: "隆安", tiengiang: "前江", bentre: "槟椥", travinh: "茶荣", vinhlong: "永隆", dongthap: "同塔", ongthap: "同塔", angiang: "安江", kiengiang: "坚江", cantho: "芹苴", haugiang: "后江", soctrang: "朔庄", baclieu: "薄辽", camau: "金瓯", conao: "昆岛"
+        },
+        PHL: { armm: "穆斯林棉兰老岛自治区", car: "科迪勒拉行政区", ncr: "国家首都区" },
+        MYS: { malacca: "马六甲" },
+        MEX: { distritofederal: "墨西哥城", queretarodearteaga: "克雷塔罗" },
+        BRA: { riograndadonorte: "北里奥格兰德", riodejeneiro: "里约热内卢" },
+        THA: {
+          roietprovince: "黎逸", phayaoprovince: "帕尧", nakhonsawanprovince: "那空沙旺", nongbualamphuprovince: "廊磨喃蒲", chachoengsaoprovince: "北柳", surinprovince: "素林", nakhonratchasimaprovince: "呵叻", sukhothaiprovince: "素可泰", phetchaburiprovince: "佛丕", chaiyaphumprovince: "猜也奔", phetchabunprovince: "碧差汶", suratthaniprovince: "素叻他尼", sisaketprovince: "四色菊", nongkhaiprovince: "廊开", bangkok: "曼谷", khonkaenprovince: "孔敬", loeiprovince: "黎", saraburiprovince: "北标", uthaithaniprovince: "乌泰他尼", chumphonprovince: "春蓬", kalasin: "加拉信", kalasinprovince: "加拉信", phitsanulokprovince: "彭世洛", ranongprovince: "拉廊", udonthaniprovince: "乌隆他尼", sakonnakhonprovince: "沙功那空", chiangraiprovince: "清莱", takprovince: "达府", nakhonpathomprovince: "佛统", lamphunprovince: "南奔", tratprovince: "达叻", ratchaburiprovince: "叻丕", yasothonprovince: "益梭通", phraeprovince: "帕府", yalaprovince: "惹拉", uttaraditprovince: "程逸", buriramprovince: "武里南", kamphaengphetprovince: "甘烹碧", lampangprovince: "南邦", nonthaburiprovince: "暖武里", buengkanprovince: "汶干", narathiwatprovince: "陶公", ubonratchathaniprovince: "乌汶", prachuapkhirikhanprovince: "巴蜀府", songkhlaprovince: "宋卡", phuketprovince: "普吉", angthongprovince: "红统", mahasarakhamprovince: "玛哈沙拉堪", trangprovince: "董里", suphanburiprovince: "素攀武里", singburiprovince: "信武里", samutsongkhramprovince: "夜功", rayongprovince: "罗勇", prachinburiprovince: "巴真", phranakhonsiayutthayaprovince: "大城", phichitprovince: "披集", phatthalungprovince: "博他仑", phangngaprovince: "攀牙", pattaniprovince: "北大年", pathumthaniprovince: "巴吞他尼", nakhonsithammaratprovince: "洛坤", nakhonnayokprovince: "那空那育", mukdahanprovince: "穆达汉", lopburiprovince: "华富里", krabiprovince: "甲米", chonburiprovince: "春武里", chiangmaiprovince: "清迈", chainatprovince: "猜纳", amnatcharoenprovince: "安纳乍能", samutsakhonprovince: "龙仔厝", samutprakanprovince: "北榄", nanprovince: "难", chanthaburiprovince: "尖竹汶", nakhonphanomprovince: "那空帕农", kanchanaburiprovince: "北碧", maehongsonprovince: "夜丰颂", sakaeoprovince: "沙缴", satunprovince: "沙敦"
+        },
+        SGP: { centralregion: "中部区", eastregion: "东部区", northeastregion: "东北部区", northregion: "北部区", westregion: "西部区" },
+        PER: {
+          puno: "普诺", tumbes: "通贝斯", piura: "皮乌拉", lambayeque: "兰巴耶克", cajamarca: "卡哈马卡", amazonas: "亚马孙省", lalibertad: "拉利伯塔德", ancash: "安卡什", sanmartin: "圣马丁", huanuco: "瓦努科", pasco: "帕斯科", lima: "利马", elcallao: "卡亚俄", municipalidadmetropolitanadelima: "利马大都会市", ucayali: "乌卡亚利", junin: "胡宁", ica: "伊卡", huancavelica: "万卡维利卡", madrededios: "马德雷德迪奥斯", cusco: "库斯科", apurimac: "阿普里马克", ayacucho: "阿亚库乔", arequipa: "阿雷基帕", moquegua: "莫克瓜", tacna: "塔克纳", loreto: "洛雷托"
+        },
+        ARG: {
+          buenosaires: "布宜诺斯艾利斯", catamarca: "卡塔马卡", chaco: "查科", chubut: "丘布特", ciudadautonomadebuenosaires: "布宜诺斯艾利斯自治市", cordoba: "科尔多瓦", corrientes: "科连特斯", formosa: "福尔摩萨", jujuy: "胡胡伊", lapampa: "拉潘帕", laroja: "拉里奥哈", larioja: "拉里奥哈", mendoza: "门多萨", misiones: "米西奥内斯", neuquen: "内乌肯", rionegro: "内格罗河", salta: "萨尔塔", sanjuan: "圣胡安", sanluis: "圣路易斯", santacruz: "圣克鲁斯", santafe: "圣菲", santiagodelestero: "圣地亚哥-德尔埃斯特罗", tierradelfuego: "火地岛", tucuman: "图库曼"
+        },
+        SAU: {
+          easternregion: "东部省", najranregion: "纳季兰省", northernbordersregion: "北部边疆省", hayelregion: "哈伊勒省", riyadhregion: "利雅得省", asirregion: "阿西尔省", makkahregion: "麦加省", tabukregion: "泰布克省", almadinahregion: "麦地那省", alqassimregion: "卡西姆省", albahahregion: "巴哈省", jazanregion: "吉赞省", aljawfregion: "朱夫省"
+        },
+        ARE: { abudhabi: "阿布扎比", ajman: "阿治曼", dubai: "迪拜", fujairah: "富查伊拉", rasalkhaimah: "哈伊马角", sharjah: "沙迦", ummalquwain: "乌姆盖万" },
+        POL: {
+          subcarpathianvoivodeship: "喀尔巴阡山省", podlaskievoivodeship: "波德拉谢省", odzvoivodeship: "罗兹省", lowersilesianvoivodeship: "下西里西亚省",
+          opolevoivodeship: "奥波莱省", swietokrzyskievoivodeship: "圣十字省", masovianvoivodeship: "马佐夫舍省", greaterpolandvoivodeship: "大波兰省",
+          lesserpolandvoivodeship: "小波兰省", lubuszvoivodeship: "卢布斯卡省", kuyavianpomeranianvoivodeship: "库亚维-波美拉尼亚省",
+          pomeranianvoivodeship: "波美拉尼亚省", westpomeranianvoivodeship: "西波美拉尼亚省", lublinvoivodeship: "卢布林省",
+          warmianmasurianvoivodeship: "瓦尔米亚-马祖里省", silesianvoivodeship: "西里西亚省"
+        }
+      };
+      const ADMIN_NAMES_LOCAL_EXTRA = {
+        VNM: {
+          hanoi: "Hà Nội", hanoihanoi: "Hà Nội", hagiang: "Hà Giang", caobang: "Cao Bằng", backan: "Bắc Kạn", tuyenquang: "Tuyên Quang", laocai: "Lào Cai", dienbien: "Điện Biên", ienbien: "Điện Biên", laichau: "Lai Châu", sonla: "Sơn La", yenbai: "Yên Bái", hoabinh: "Hòa Bình", thainguyen: "Thái Nguyên", langson: "Lạng Sơn", quangninh: "Quảng Ninh", bacgiang: "Bắc Giang", phutho: "Phú Thọ", vinhphuc: "Vĩnh Phúc", bacninh: "Bắc Ninh", haiduong: "Hải Dương", haiphong: "Hải Phòng", hungyen: "Hưng Yên", thaibinh: "Thái Bình", hanam: "Hà Nam", namdinh: "Nam Định", naminh: "Nam Định", ninhbinh: "Ninh Bình", thanhhoa: "Thanh Hóa", nghean: "Nghệ An", hatinh: "Hà Tĩnh", quangbinh: "Quảng Bình", quangtri: "Quảng Trị", thuathienhue: "Thừa Thiên Huế", danang: "Đà Nẵng", anang: "Đà Nẵng", quangnam: "Quảng Nam", quangngai: "Quảng Ngãi", binhdinh: "Bình Định", binhinh: "Bình Định", phuyen: "Phú Yên", khanhhoa: "Khánh Hòa", ninhthuan: "Ninh Thuận", binhthuan: "Bình Thuận", kontum: "Kon Tum", gialai: "Gia Lai", daklak: "Đắk Lắk", aklak: "Đắk Lắk", daknong: "Đắk Nông", aknong: "Đắk Nông", lamdong: "Lâm Đồng", lamong: "Lâm Đồng", binhphuoc: "Bình Phước", tayninh: "Tây Ninh", binhduong: "Bình Dương", dongnai: "Đồng Nai", ongnai: "Đồng Nai", bariavungtau: "Bà Rịa - Vũng Tàu", hochiminh: "Thành phố Hồ Chí Minh", hochiminhcity: "Thành phố Hồ Chí Minh", thanhphohiminh: "Thành phố Hồ Chí Minh", thanhphohochiminh: "Thành phố Hồ Chí Minh", longan: "Long An", tiengiang: "Tiền Giang", bentre: "Bến Tre", travinh: "Trà Vinh", vinhlong: "Vĩnh Long", dongthap: "Đồng Tháp", ongthap: "Đồng Tháp", angiang: "An Giang", kiengiang: "Kiên Giang", cantho: "Cần Thơ", haugiang: "Hậu Giang", soctrang: "Sóc Trăng", baclieu: "Bạc Liêu", camau: "Cà Mau", conao: "Côn Đảo"
+        },
+        PHL: { armm: "Autonomous Region in Muslim Mindanao", car: "Cordillera Administrative Region", ncr: "National Capital Region" },
+        MYS: { malacca: "Melaka" },
+        MEX: { distritofederal: "Ciudad de México", queretarodearteaga: "Querétaro de Arteaga" },
+        BRA: { riograndadonorte: "Rio Grande do Norte", riodejeneiro: "Rio de Janeiro" },
+        THA: {
+          roietprovince: "ร้อยเอ็ด", phayaoprovince: "พะเยา", nakhonsawanprovince: "นครสวรรค์", nongbualamphuprovince: "หนองบัวลำภู", chachoengsaoprovince: "ฉะเชิงเทรา", surinprovince: "สุรินทร์", nakhonratchasimaprovince: "นครราชสีมา", sukhothaiprovince: "สุโขทัย", phetchaburiprovince: "เพชรบุรี", chaiyaphumprovince: "ชัยภูมิ", phetchabunprovince: "เพชรบูรณ์", suratthaniprovince: "สุราษฎร์ธานี", sisaketprovince: "ศรีสะเกษ", nongkhaiprovince: "หนองคาย", bangkok: "กรุงเทพมหานคร", khonkaenprovince: "ขอนแก่น", loeiprovince: "เลย", saraburiprovince: "สระบุรี", uthaithaniprovince: "อุทัยธานี", chumphonprovince: "ชุมพร", kalasin: "กาฬสินธุ์", kalasinprovince: "กาฬสินธุ์", phitsanulokprovince: "พิษณุโลก", ranongprovince: "ระนอง", udonthaniprovince: "อุดรธานี", sakonnakhonprovince: "สกลนคร", chiangraiprovince: "เชียงราย", takprovince: "ตาก", nakhonpathomprovince: "นครปฐม", lamphunprovince: "ลำพูน", tratprovince: "ตราด", ratchaburiprovince: "ราชบุรี", yasothonprovince: "ยโสธร", phraeprovince: "แพร่", yalaprovince: "ยะลา", uttaraditprovince: "อุตรดิตถ์", buriramprovince: "บุรีรัมย์", kamphaengphetprovince: "กำแพงเพชร", lampangprovince: "ลำปาง", nonthaburiprovince: "นนทบุรี", buengkanprovince: "บึงกาฬ", narathiwatprovince: "นราธิวาส", ubonratchathaniprovince: "อุบลราชธานี", prachuapkhirikhanprovince: "ประจวบคีรีขันธ์", songkhlaprovince: "สงขลา", phuketprovince: "ภูเก็ต", angthongprovince: "อ่างทอง", mahasarakhamprovince: "มหาสารคาม", trangprovince: "ตรัง", suphanburiprovince: "สุพรรณบุรี", singburiprovince: "สิงห์บุรี", samutsongkhramprovince: "สมุทรสงคราม", rayongprovince: "ระยอง", prachinburiprovince: "ปราจีนบุรี", phranakhonsiayutthayaprovince: "พระนครศรีอยุธยา", phichitprovince: "พิจิตร", phatthalungprovince: "พัทลุง", phangngaprovince: "พังงา", pattaniprovince: "ปัตตานี", pathumthaniprovince: "ปทุมธานี", nakhonsithammaratprovince: "นครศรีธรรมราช", nakhonnayokprovince: "นครนายก", mukdahanprovince: "มุกดาหาร", lopburiprovince: "ลพบุรี", krabiprovince: "กระบี่", chonburiprovince: "ชลบุรี", chiangmaiprovince: "เชียงใหม่", chainatprovince: "ชัยนาท", amnatcharoenprovince: "อำนาจเจริญ", samutsakhonprovince: "สมุทรสาคร", samutprakanprovince: "สมุทรปราการ", nanprovince: "น่าน", chanthaburiprovince: "จันทบุรี", nakhonphanomprovince: "นครพนม", kanchanaburiprovince: "กาญจนบุรี", maehongsonprovince: "แม่ฮ่องสอน", sakaeoprovince: "สระแก้ว", satunprovince: "สตูล"
+        },
+        SAU: {
+          easternregion: "المنطقة الشرقية", najranregion: "منطقة نجران", northernbordersregion: "منطقة الحدود الشمالية", hayelregion: "منطقة حائل", riyadhregion: "منطقة الرياض", asirregion: "منطقة عسير", makkahregion: "منطقة مكة المكرمة", tabukregion: "منطقة تبوك", almadinahregion: "منطقة المدينة المنورة", alqassimregion: "منطقة القصيم", albahahregion: "منطقة الباحة", jazanregion: "منطقة جازان", aljawfregion: "منطقة الجوف"
+        },
+        ARE: { abudhabi: "أبوظبي", ajman: "عجمان", dubai: "دبي", fujairah: "الفجيرة", rasalkhaimah: "رأس الخيمة", sharjah: "الشارقة", ummalquwain: "أم القيوين" },
+        POL: {
+          subcarpathianvoivodeship: "Województwo podkarpackie", podlaskievoivodeship: "Województwo podlaskie", odzvoivodeship: "Województwo łódzkie",
+          lowersilesianvoivodeship: "Województwo dolnośląskie", opolevoivodeship: "Województwo opolskie", swietokrzyskievoivodeship: "Województwo świętokrzyskie",
+          masovianvoivodeship: "Województwo mazowieckie", greaterpolandvoivodeship: "Województwo wielkopolskie", lesserpolandvoivodeship: "Województwo małopolskie",
+          lubuszvoivodeship: "Województwo lubuskie", kuyavianpomeranianvoivodeship: "Województwo kujawsko-pomorskie", pomeranianvoivodeship: "Województwo pomorskie",
+          westpomeranianvoivodeship: "Województwo zachodniopomorskie", lublinvoivodeship: "Województwo lubelskie",
+          warmianmasurianvoivodeship: "Województwo warmińsko-mazurskie", silesianvoivodeship: "Województwo śląskie"
+        }
+      };
+      const REGIONAL_STATS_EXTENSIONS_2 = {"PER":{"amazonas":{"male":234677,"genderYear":"2025","female":233011,"age":{"child":136112,"working":251682,"senior":29571},"ageYear":"2017"},"ancash":{"male":593989,"genderYear":"2025","female":611934,"age":{"child":307619,"working":719371,"senior":112126},"ageYear":"2017"},"apurimac":{},"arequipa":{"male":905335,"genderYear":"2025","female":909219,"age":{"child":345906,"working":988622,"senior":125905},"ageYear":"2017"},"ayacucho":{"male":350154,"genderYear":"2025","female":358872,"age":{"child":185820,"working":408709,"senior":56412},"ageYear":"2017"},"cajamarca":{"male":729627,"genderYear":"2025","female":761105,"age":{"child":422736,"working":882647,"senior":122144},"ageYear":"2017"},"cuscocuzco":{"male":681322,"genderYear":"2025","female":697845,"age":{"child":357972,"working":856073,"senior":101175},"ageYear":"2017"},"huancavelica":{"male":182430,"genderYear":"2025","female":189728,"age":{"child":111429,"working":220923,"senior":34900},"ageYear":"2017"},"huanuco":{"male":398921,"genderYear":"2025","female":408472,"age":{"child":229687,"working":473619,"senior":56656},"ageYear":"2017"},"ica":{"male":513760,"genderYear":"2025","female":519324,"age":{"child":243317,"working":578171,"senior":71805},"ageYear":"2017"},"junin":{"male":698853,"genderYear":"2025","female":723927,"age":{"child":370664,"working":843234,"senior":102996},"ageYear":"2017"},"lalibertad":{"male":1010716,"genderYear":"2025","female":1045729,"age":{"child":528626,"working":1203191,"senior":157155},"ageYear":"2017"},"lambayeque":{"male":684913,"genderYear":"2025","female":719730,"age":{"child":339660,"working":797942,"senior":107220},"ageYear":"2017"},"limainclprovinciadelima":{"male":5478393,"genderYear":"2025","female":5679007,"age":{"child":2279864,"working":6976662,"senior":878483},"ageYear":"2017"},"loreto":{"male":519330,"genderYear":"2025","female":513441,"age":{"child":363084,"working":562224,"senior":56589},"ageYear":"2017"},"madrededios":{},"moquegua":{"male":97592,"genderYear":"2025","female":97236,"age":{"child":42416,"working":122955,"senior":16647},"ageYear":"2017"},"pasco":{"male":126132,"genderYear":"2025","female":127417,"age":{"child":77607,"working":176560,"senior":17969},"ageYear":"2017"},"piura":{"male":1050000,"genderYear":"2025","female":1065215,"age":{"child":578451,"working":1207388,"senior":144131},"ageYear":"2017"},"puno":{},"sanmartin":{"male":490040,"genderYear":"2025","female":477883,"age":{"child":271566,"working":539209,"senior":51684},"ageYear":"2017"},"tacna":{"male":192445,"genderYear":"2025","female":196781,"age":{"child":80914,"working":243443,"senior":24699},"ageYear":"2017"},"tumbes":{"male":129181,"genderYear":"2025","female":127510,"age":{"child":68877,"working":151004,"senior":14818},"ageYear":"2017"},"ucayali":{"male":316226,"genderYear":"2025","female":307642,"age":{"child":191231,"working":330497,"senior":27270},"ageYear":"2017"}},"ARG":{"buenosaires":{"male":8470569,"genderYear":"2022","female":9053427,"age":{"child":3832135,"working":11541084,"senior":2149351},"ageYear":"2022"},"catamarca":{},"chaco":{"male":547655,"genderYear":"2022","female":581951,"age":{"child":273197,"working":756542,"senior":99762},"ageYear":"2022"},"chubut":{"male":291412,"genderYear":"2022","female":301209,"age":{"child":132657,"working":400310,"senior":59610},"ageYear":"2022"},"cordoba":{"male":1856395,"genderYear":"2022","female":1984510,"age":{"child":807514,"working":2547655,"senior":485600},"ageYear":"2022"},"corrientes":{"male":589009,"genderYear":"2022","female":623687,"age":{"child":291713,"working":798922,"senior":121994},"ageYear":"2022"},"entrerios":{"male":693547,"genderYear":"2022","female":732031,"age":{"child":315395,"working":937518,"senior":172499},"ageYear":"2022"},"formosa":{"male":296810,"genderYear":"2022","female":310609,"age":{"child":153098,"working":398067,"senior":56254},"ageYear":"2022"},"jujuy":{"male":393590,"genderYear":"2022","female":418021,"age":{"child":189598,"working":541582,"senior":80349},"ageYear":"2022"},"lapampa":{"male":177858,"genderYear":"2022","female":184001,"age":{"child":77953,"working":236927,"senior":46969},"ageYear":"2022"},"larioja":{"male":187348,"genderYear":"2022","female":196517,"age":{"child":84765,"working":264174,"senior":34912},"ageYear":"2022"},"mendoza":{"male":989578,"genderYear":"2022","female":1053962,"age":{"child":470015,"working":1319994,"senior":253400},"ageYear":"2022"},"misiones":{"male":626076,"genderYear":"2022","female":652797,"age":{"child":341379,"working":831156,"senior":106264},"ageYear":"2022"},"neuquen":{"male":349088,"genderYear":"2022","female":361726,"age":{"child":159793,"working":484270,"senior":66738},"ageYear":"2022"},"rionegro":{"male":366857,"genderYear":"2022","female":383911,"age":{"child":165021,"working":502325,"senior":83348},"ageYear":"2022"},"salta":{"male":702839,"genderYear":"2022","female":738512,"age":{"child":363068,"working":946860,"senior":131169},"ageYear":"2022"},"sanjuan":{"male":401201,"genderYear":"2022","female":421652,"age":{"child":202530,"working":531664,"senior":88608},"ageYear":"2022"},"sanluis":{"male":265327,"genderYear":"2022","female":276742,"age":{"child":120548,"working":364136,"senior":57381},"ageYear":"2022"},"santacruz":{"male":167133,"genderYear":"2022","female":170093,"age":{"child":81987,"working":230059,"senior":25093},"ageYear":"2022"},"santafe":{"male":1710259,"genderYear":"2022","female":1834649,"age":{"child":746863,"working":2337884,"senior":459762},"ageYear":"2022"},"santiagodelestero":{"male":521543,"genderYear":"2022","female":539363,"age":{"child":269201,"working":695737,"senior":95913},"ageYear":"2022"},"tierradelfuego":{"male":92340,"genderYear":"2022","female":93392,"age":{"child":42584,"working":130835,"senior":12313},"ageYear":"2022"},"tucuman":{"male":840020,"genderYear":"2022","female":891800,"age":{"child":402133,"working":1147230,"senior":182375},"ageYear":"2022"}},"POL":{"dolnoslaskielowersilesia":{"male":1372565,"genderYear":"2025","female":1484708,"age":{"senior":628286},"ageYear":"2025"},"kujawskopomorskiekuyaviapomerania":{"male":953096,"genderYear":"2025","female":1018795,"age":{"senior":421459},"ageYear":"2025"},"odzkieodz":{"male":1109532,"genderYear":"2025","female":1219293,"age":{"senior":544304},"ageYear":"2025"},"lubelskielublin":{"male":958473,"genderYear":"2025","female":1022299,"age":{"senior":439307},"ageYear":"2025"},"lubuskielubusz":{"male":467124,"genderYear":"2025","female":496477,"age":{"senior":208163},"ageYear":"2025"},"maopolskielesserpoland":{"male":1662952,"genderYear":"2025","female":1766390,"age":{"senior":658627},"ageYear":"2025"},"mazowieckiemazovia":{"male":2636460,"genderYear":"2025","female":2869397,"age":{"senior":1092582},"ageYear":"2025"},"opolskieopole":{"male":445891,"genderYear":"2025","female":477645,"age":{"senior":204779},"ageYear":"2025"},"podkarpackiesubcarpathia":{"male":1004573,"genderYear":"2025","female":1049187,"age":{"senior":414755},"ageYear":"2025"},"podlaskiepodlachia":{"male":547823,"genderYear":"2025","female":578856,"age":{"senior":239126},"ageYear":"2025"},"pomorskiepomerania":{"male":1144497,"genderYear":"2025","female":1213912,"age":{"senior":457645},"ageYear":"2025"},"slaskiesilesia":{"male":2047510,"genderYear":"2025","female":2214282,"age":{"senior":957656},"ageYear":"2025"},"swietokrzyskieholycross":{"male":557264,"genderYear":"2025","female":590029,"age":{"senior":273560},"ageYear":"2025"},"warminskomazurskiewarmiamasuria":{"male":652947,"genderYear":"2025","female":686551,"age":{"senior":281683},"ageYear":"2025"},"wielkopolskiegreaterpoland":{"male":1685270,"genderYear":"2025","female":1786032,"age":{"senior":681507},"ageYear":"2025"},"zachodniopomorskiewestpomerania":{"male":780927,"genderYear":"2025","female":831753,"age":{"senior":364543},"ageYear":"2025"}},"THA":{"amnatcharoen":{"male":139958,"genderYear":"2010","female":143772},"angthong":{"male":121606,"genderYear":"2010","female":132687},"buengkannongkhai":{"male":179422,"genderYear":"2010","female":183334},"buriram":{"male":620110,"genderYear":"2010","female":654803},"chachoengsao":{"male":354567,"genderYear":"2010","female":361037},"chainat":{},"chaiyaphum":{"male":470375,"genderYear":"2010","female":493533},"chanthaburi":{"male":239429,"genderYear":"2010","female":246184},"chiangmai":{"male":852245,"genderYear":"2010","female":884794},"chiangrai":{"male":578092,"genderYear":"2010","female":594836},"chonburi":{"male":773438,"genderYear":"2010","female":781921},"chumphon":{"male":238025,"genderYear":"2010","female":229777},"kalasin":{"male":403667,"genderYear":"2010","female":420867},"kamphaengphet":{"male":392300,"genderYear":"2010","female":405090},"kanchanaburi":{"male":398328,"genderYear":"2010","female":403189},"khonkaen":{"male":846676,"genderYear":"2010","female":895291},"krabi":{"male":181186,"genderYear":"2010","female":181017},"lampang":{"male":367508,"genderYear":"2010","female":375634},"lamphun":{"male":201351,"genderYear":"2010","female":211391},"loei":{"male":272260,"genderYear":"2010","female":273769},"lopburi":{"male":385706,"genderYear":"2010","female":384219},"maehongson":{"male":106074,"genderYear":"2010","female":103079},"mahasarakham":{"male":399298,"genderYear":"2010","female":428340},"mukdahan":{"male":177335,"genderYear":"2010","female":180006},"nakhonnayok":{"male":121595,"genderYear":"2010","female":125272},"nakhonpathom":{"male":460061,"genderYear":"2010","female":483830},"nakhonphanom":{"male":285698,"genderYear":"2010","female":298028},"nakhonratchasima":{"male":1244928,"genderYear":"2010","female":1281062},"nakhonsawan":{"male":482771,"genderYear":"2010","female":509978},"nakhonsithammarat":{"male":717436,"genderYear":"2010","female":733030},"nan":{"male":225883,"genderYear":"2010","female":226931},"narathiwat":{"male":332191,"genderYear":"2010","female":337811},"nongbualamphu":{"male":236835,"genderYear":"2010","female":249138},"nongkhai":{"male":222985,"genderYear":"2010","female":235787},"nonthaburi":{"male":640631,"genderYear":"2010","female":693452},"pathumthani":{"male":643587,"genderYear":"2010","female":683560},"pattani":{"male":298040,"genderYear":"2010","female":310976},"phangnga":{"male":132374,"genderYear":"2010","female":126160},"phatthalung":{"male":234144,"genderYear":"2010","female":246831},"phayao":{"male":205077,"genderYear":"2010","female":212303},"phetchabun":{"male":462439,"genderYear":"2010","female":477639},"phetchaburi":{"male":231178,"genderYear":"2010","female":241413},"phichit":{"male":266875,"genderYear":"2010","female":281365},"phitsanulok":{"male":445505,"genderYear":"2010","female":467321},"phrae":{"male":208210,"genderYear":"2010","female":219188},"phranakhonsiayutthaya":{"male":422651,"genderYear":"2010","female":448017},"phuket":{"male":262330,"genderYear":"2010","female":263379},"prachinburi":{"male":268546,"genderYear":"2010","female":278449},"prachuapkhirikhan":{"male":235458,"genderYear":"2010","female":232007},"ranong":{"male":126765,"genderYear":"2010","female":122253},"ratchaburi":{"male":385149,"genderYear":"2010","female":411600},"rayong":{"male":417355,"genderYear":"2010","female":403717},"roiet":{"male":530358,"genderYear":"2010","female":554633},"sakaeo":{"male":276074,"genderYear":"2010","female":279887},"sakonnakhon":{"male":461446,"genderYear":"2010","female":480365},"samutprakan":{"male":895121,"genderYear":"2010","female":933573},"samutsakhon":{"male":441615,"genderYear":"2010","female":445577},"samutsongkhram":{"male":90591,"genderYear":"2010","female":94974},"saraburi":{"male":353684,"genderYear":"2010","female":363368},"satun":{"male":139512,"genderYear":"2010","female":135351},"singburi":{"male":96049,"genderYear":"2010","female":103932},"sisaket":{"male":515130,"genderYear":"2010","female":540850},"songkhla":{"male":722596,"genderYear":"2010","female":758426},"sukhothai":{"male":303814,"genderYear":"2010","female":325891},"suphanburi":{"male":407313,"genderYear":"2010","female":438249},"suratthani":{"male":498523,"genderYear":"2010","female":510826},"surin":{"male":545364,"genderYear":"2010","female":577538},"tak":{"male":260736,"genderYear":"2010","female":265645},"trang":{"male":293291,"genderYear":"2010","female":305585},"trat":{"male":126436,"genderYear":"2010","female":121440},"ubonratchathani":{"male":860712,"genderYear":"2010","female":886081},"udonthani":{"male":630478,"genderYear":"2010","female":657886},"uthaithani":{"male":144241,"genderYear":"2010","female":153251},"uttaradit":{"male":213033,"genderYear":"2010","female":225545},"yala":{"male":214645,"genderYear":"2010","female":218522},"yasothon":{"male":241094,"genderYear":"2010","female":246880}}};
+      Object.entries(REGIONAL_STATS_EXTENSIONS_2).forEach(([code, data]) => {
+        Object.entries(data).forEach(([key, stats]) => {
+          if (STATIC_REGIONAL_DATA[code]?.[key]) STATIC_REGIONAL_DATA[code][key] = { ...STATIC_REGIONAL_DATA[code][key], ...stats };
+        });
+      });
+      const REGIONAL_STATS_EXTENSIONS_3 = {"BRA":{"acre":{"male":415332,"female":414686,"genderYear":"2022"},"alagoas":{"male":1497419,"female":1630264,"genderYear":"2022"},"amapa":{"male":364516,"female":369243,"genderYear":"2022"},"amazonas":{"male":1965810,"female":1975803,"genderYear":"2022"},"bahia":{"male":6835686,"female":7305940,"genderYear":"2022"},"ceara":{"male":4257927,"female":4537030,"genderYear":"2022"},"distritofederal":{"male":1342786,"female":1474595,"genderYear":"2022"},"espiritosanto":{"male":1870063,"female":1963649,"genderYear":"2022"},"goias":{"male":3466941,"female":3589554,"genderYear":"2022"},"maranhao":{"male":3329423,"female":3447276,"genderYear":"2022"},"matogrosso":{"male":1841241,"female":1817408,"genderYear":"2022"},"matogrossodosul":{"male":1356515,"female":1400498,"genderYear":"2022"},"minasgerais":{"male":10015709,"female":10524280,"genderYear":"2022"},"para":{"male":4051813,"female":4068318,"genderYear":"2022"},"paraiba":{"male":1918855,"female":2055832,"genderYear":"2022"},"pernambuco":{"male":4321320,"female":4737611,"genderYear":"2022"},"piaui":{"male":1600602,"female":1670597,"genderYear":"2022"},"riodejaneiro":{"male":7577675,"female":8477499,"genderYear":"2022"},"riograndedonorte":{"male":1598762,"female":1703967,"genderYear":"2022"},"rondonia":{"male":787987,"female":793209,"genderYear":"2022"},"roraima":{"male":320392,"female":316315,"genderYear":"2022"},"saopaulo":{"male":21396376,"female":23014862,"genderYear":"2022"},"sergipe":{"male":1057808,"female":1152196,"genderYear":"2022"},"tocantins":{"male":757269,"female":754191,"genderYear":"2022"}},"SAU":{"arriyad":{"male":5382340,"female":3209408,"genderYear":"2022"},"makkahalmukarramah":{"male":4878926,"female":3142537,"genderYear":"2022"},"almadinahalmunuwarah":{"male":1278117,"female":859866,"genderYear":"2022"},"alqasim":{"male":792227,"female":543952,"genderYear":"2022"},"ashsharqiyah":{"male":3269878,"female":1855376,"genderYear":"2022"},"asir":{"male":1201031,"female":823254,"genderYear":"2022"},"tabuk":{"male":527681,"female":358355,"genderYear":"2022"},"hail":{"male":443406,"female":303000,"genderYear":"2022"},"alhududashshamiyah":{"male":214532,"female":159045,"genderYear":"2022"},"jazan":{"male":800579,"female":604418,"genderYear":"2022"},"najran":{"male":349933,"female":242367,"genderYear":"2022"},"albahah":{"male":194258,"female":144916,"genderYear":"2022"},"aljawf":{"male":345687,"female":250135,"genderYear":"2022"}},"ARE":{"abudhabi":{"male":2767060,"female":1368925,"genderYear":"2024"},"dubai":{"male":2438780,"female":1111120,"genderYear":"2022"},"fujairah":{"male":201647,"female":107433,"genderYear":"2023"},"ajman":{"male":329633,"female":175213,"genderYear":"2017"}}};
+      Object.entries(REGIONAL_STATS_EXTENSIONS_3).forEach(([code, data]) => {
+        Object.entries(data).forEach(([key, stats]) => {
+          if (STATIC_REGIONAL_DATA[code]?.[key]) STATIC_REGIONAL_DATA[code][key] = { ...STATIC_REGIONAL_DATA[code][key], ...stats };
+        });
+      });
+      function regionalDataKey(countryCode, rawName) {
+        const key = normalizeAdminName(rawName);
+        const data = STATIC_REGIONAL_DATA[countryCode] || {};
+        const aliases = { ...(REGIONAL_DATA_ALIASES[countryCode] || {}), ...(REGIONAL_EXTRA_ALIASES[countryCode] || {}), ...(REGIONAL_ALIAS_OVERRIDES[countryCode] || {}) };
+        const direct = aliases[key] || key;
+        if (data[direct]) return direct;
+        const compact = key.replace(/region|province|state|voivodeship|municipality|administrative|special|capital|district|city/g, "");
+        const match = Object.keys(data).find(candidate => candidate === key || candidate === direct || candidate.includes(compact) || compact.includes(candidate));
+        return match || direct;
+      }
+      function parseRegionalData(countryCode, payload) {
+        if (countryCode !== "IDN" || !Array.isArray(payload?.data)) return {};
+        const result = {};
+        payload.data.forEach(row => {
+          if (row.nama_item__kategori_1 !== "Total") return;
+          const regionKey = normalizeAdminName(row.nama_wilayah), sex = row.nama_item__kategori_2;
+          if (!regionKey || !["Laki-laki", "Perempuan", "Total"].includes(sex)) return;
+          const item = result[regionKey] ||= { year: String(row.period || "2022") };
+          if (sex === "Laki-laki") item.male = number(row.nilai);
+          if (sex === "Perempuan") item.female = number(row.nilai);
+          if (sex === "Total") item.population = number(row.nilai);
+        });
+        Object.values(result).forEach(item => {
+          if (item.population === null || item.population === undefined) item.population = item.male !== null && item.female !== null ? item.male + item.female : null;
+          const total = number(item.male) !== null && number(item.female) !== null ? item.male + item.female : null;
+          if (total) { item.malePct = item.male / total * 100; item.femalePct = item.female / total * 100; }
+        });
+        return result;
+      }
+      function sourceUrl(meta) {
+        const raw = meta?.boundarySourceURL || "https://www.geoboundaries.org/api.html";
+        return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      }
+      function geoUrls(meta) {
+        const originals = [meta?.simplifiedGeometryGeoJSON, meta?.simplifiedGeometryGeojson, meta?.gjDownloadURL, meta?.staticDownloadURL].filter(Boolean);
+        const preferred = originals.flatMap(url => [
+          url.replace(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/raw\/(.+)$/i, "https://media.githubusercontent.com/media/$1/$2/$3"),
+          url.replace(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/raw\/(.+)$/i, "https://raw.githubusercontent.com/$1/$2/$3")
+        ]);
+        return [...new Set([...preferred, ...originals])];
+      }
+      function featureName(feature, index) {
+        const props = feature?.properties || {};
+        return props.shapeName || props.name || props.NAME_1 || props.NAME || props.admin1Name || props.boundaryName || `一级行政区 ${index + 1}`;
+      }
+      function featureCode(feature, index) {
+        const props = feature?.properties || {};
+        return props.shapeISO || props.shapeID || props.GID_1 || props.id || `ADM1-${index + 1}`;
+      }
+      function featureRings(feature) {
+        const geometry = feature?.geometry;
+        if (!geometry) return [];
+        if (geometry.type === "Polygon") return geometry.coordinates || [];
+        if (geometry.type === "MultiPolygon") return (geometry.coordinates || []).flat();
+        return [];
+      }
+      function projectFeatures(geojson, countryCode = state.country) {
+        const features = (geojson?.features || []).filter(feature => featureRings(feature).length);
+        const coords = features.flatMap(feature => featureRings(feature).flat()).filter(point => Array.isArray(point) && point.length >= 2).map(point => [Number(point[0]), Number(point[1])]).filter(point => point.every(Number.isFinite));
+        if (!coords.length) return [];
+        const lons = coords.map(point => point[0]), lats = coords.map(point => point[1]);
+        const minLon = Math.min(...lons), maxLon = Math.max(...lons), minLat = Math.min(...lats), maxLat = Math.max(...lats);
+        const lonSpan = Math.max(maxLon - minLon, .0001), latSpan = Math.max(maxLat - minLat, .0001), pad = 28;
+        const meanLat = (minLat + maxLat) / 2 * Math.PI / 180, longitudeScale = Math.max(Math.cos(meanLat), .2);
+        const projectedWidth = lonSpan * longitudeScale, projectedHeight = latSpan;
+        const scale = Math.min((1000 - pad * 2) / projectedWidth, (600 - pad * 2) / projectedHeight);
+        const mapWidth = projectedWidth * scale, mapHeight = projectedHeight * scale;
+        const offsetX = (1000 - mapWidth) / 2, offsetY = (600 - mapHeight) / 2;
+        const project = point => [offsetX + (Number(point[0]) - minLon) * longitudeScale * scale, offsetY + mapHeight - (Number(point[1]) - minLat) * scale];
+        return features.map((feature, index) => {
+          const name = featureName(feature, index), nameZh = adminNameZh(countryCode, name), nameLocal = adminNameLocal(countryCode, name), rings = featureRings(feature), projectedPoints = rings.flatMap(ring => ring.map(project));
+          const path = rings.map(ring => ring.map((point, pointIndex) => { const [x, y] = project(point); return `${pointIndex ? "L" : "M"}${x.toFixed(2)} ${y.toFixed(2)}`; }).join(" ") + " Z").join(" ");
+          const xs = projectedPoints.map(point => point[0]), ys = projectedPoints.map(point => point[1]);
+          return { feature, index, path, name, nameZh, nameLocal, code: featureCode(feature, index), labelX: (Math.min(...xs) + Math.max(...xs)) / 2, labelY: (Math.min(...ys) + Math.max(...ys)) / 2 };
+        });
+      }
+      function renderRegionDetail(projected = []) {
+        const selected = state.admin.selected !== null ? projected[state.admin.selected] : null;
+        if (!selected) {
+          const links = regionalSourceLinks(selectedCountry().code);
+          $("regionDetail").innerHTML = `<div class="region-kicker">行政区数据</div><h3>请选择州 / 省</h3><p class="subcopy">点击左侧地图中的行政区后，这里会显示中文名、当地/官方名称、边界编号和可用指标。</p><div class="region-note">页面按各国可核验来源加载省州人口；性别、年龄和收入只有在统计口径可对应时才显示，不用全国数值硬拆。${links ? `可核验官方源：${links}` : "当前国家暂未配置省州数据入口。"}</div>`;
+          return;
+        }
+        const item = countryData(selectedCountry()), source = sourceUrl(state.admin.meta), links = regionalSourceLinks(selectedCountry().code), regional = state.admin.regionalData?.[regionalDataKey(selectedCountry().code, selected.name)] || null;
+        const hasGender = regional && number(regional.femalePct) !== null && number(regional.malePct) !== null;
+        const ageTotal = regional?.age ? ["child", "working", "senior"].map(key => number(regional.age[key])).filter(value => value !== null).reduce((sum, value) => sum + value, 0) : 0;
+        const regionalAge = ageTotal > 0 ? ["child", "working", "senior"].map((key, index) => ["0–14", "15–64", "65+"][index] + " " + fmtPct(number(regional.age[key]) / ageTotal * 100)).join(" · ") : "";
+        const regionalPopulation = regional && number(regional.population) !== null ? fmtPopulation(regional.population) : state.admin.regionalLoading ? "读取中" : "暂无";
+        const regionalGender = hasGender ? genderSplit({ female: regional.femalePct, male: regional.malePct }) : state.admin.regionalLoading ? "读取中" : "暂无";
+        const regionalNote = regional ? `数据层：${esc(REGIONAL_PROVENANCE[selectedCountry().code] || "公开行政区统计汇编")}。已接入行政区人口数据，人口统计年份 ${esc(regional.year || "—")}；${hasGender ? `性别 ${esc(regional.genderYear || regional.year || "—")}` : "性别暂无同口径数据"}；${regionalAge ? `年龄 ${esc(regional.ageYear || regional.year || "—")}` : "年龄暂无同口径数据"}。收入暂未强行把全国值拆分到州 / 省。` : state.admin.regionalError ? `省州官方数据读取失败：${esc(state.admin.regionalError)}。` : `该行政区有官方统计入口，但当前尚未接入对应指标。页面不会把 ${fmtPopulation(item.population)} 的全国数字拆分到州 / 省。`;
+        $("regionDetail").innerHTML = `<div class="region-kicker">${esc(selected.code)}</div><h3>${esc(selected.nameZh)}</h3><p class="subcopy">当地/官方名：${esc(selected.nameLocal)}${selected.nameLocal !== selected.name ? ` · 原始名：${esc(selected.name)}` : ""} · ${esc(selectedCountry().name)} · 一级行政区</p><div class="region-metrics"><div class="region-metric"><span>人口</span><strong>${regionalPopulation}</strong></div><div class="region-metric"><span>女性 / 男性</span><strong>${regionalGender}</strong></div><div class="region-metric"><span>年龄结构</span><strong>${regionalAge || "暂无"}</strong></div><div class="region-metric"><span>收入</span><strong>暂无</strong></div></div><div class="region-note">${regionalNote}${links ? `可核验源：${links}` : ""}</div><div class="map-source">边界编号：${esc(selected.code)}<a href="${esc(source)}" target="_blank" rel="noreferrer">查看边界来源</a></div>`;
+      }
+      function renderAdmin() {
+        const meta = state.admin.meta, loading = state.admin.loading;
+        $("mapLoading").hidden = !loading;
+        $("mapEmpty").hidden = true;
+        $("adminMap").hidden = loading || Boolean(state.admin.error) || !state.admin.geojson;
+        if (loading) { $("adminStatus").textContent = "正在读取地图…"; $("adminNote").textContent = "正在读取 GeoBoundaries 的一级行政区边界…"; renderRegionDetail(); return; }
+        if (state.admin.error || !meta || !state.admin.geojson) {
+          $("adminStatus").textContent = "地图暂不可用";
+          $("mapEmpty").hidden = false;
+          $("mapEmpty").textContent = "行政区地图暂时无法读取；未读取到边界时不显示任何省州推算数据。";
+          $("adminNote").textContent = "边界源暂时无法读取，本页不会用全国数字推算省州数据。";
+          renderRegionDetail();
+          return;
+        }
+        const projected = projectFeatures(state.admin.geojson, selectedCountry().code);
+        if (!projected.length) { state.admin.error = "没有可用的面数据"; renderAdmin(); return; }
+        $("adminStatus").textContent = `可点击 · ${projected.length} 个州 / 省`;
+        const regionLinks = regionalSourceLinks(selectedCountry().code);
+        const shapes = projected.map(item => `<path class="admin-shape${item.index === state.admin.selected ? " selected" : ""}" data-region-index="${item.index}" d="${item.path}" tabindex="0" role="button" aria-label="${esc(item.nameZh)}（${esc(item.nameLocal)}）"><title>${esc(item.nameZh)} / ${esc(item.nameLocal)}</title></path>`).join("");
+        const labels = projected.map(item => `<text class="admin-label${item.nameZh.length > 6 || item.nameLocal.length > 18 ? " compact" : ""}" x="${item.labelX.toFixed(1)}" y="${item.labelY.toFixed(1)}"><tspan class="admin-label-zh" x="${item.labelX.toFixed(1)}" dy="-0.35em">${esc(item.nameZh)}</tspan><tspan class="admin-label-local" x="${item.labelX.toFixed(1)}" dy="1.25em">${esc(item.nameLocal)}</tspan></text>`).join("");
+        $("adminMapLayer").innerHTML = `${shapes}${labels}`;
+        $("adminNote").innerHTML = `地图显示 ${esc(selectedCountry().name)} 的一级行政区边界，地图内同时标注中文名和当地/官方名称；点击后可查看原名和数据状态。${regionLinks ? `可核验官方源：${regionLinks}。` : "当前国家暂未配置省州数据入口。"}<a href="${esc(sourceUrl(meta))}" target="_blank" rel="noreferrer">查看边界来源</a>`;
+        renderRegionDetail(projected);
+      }
+      async function fetchJson(url, timeoutMs = 30000) {
+        const controller = new AbortController(), timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const response = await fetch(url, { signal: controller.signal });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.json();
+        } finally { clearTimeout(timer); }
+      }
+      async function loadRegionalData(token) {
+        const staticData = STATIC_REGIONAL_DATA[token] || null;
+        state.admin.regionalData = staticData;
+        state.admin.regionalLoading = false;
+        state.admin.regionalError = "";
+        if (staticData) Object.values(staticData).forEach(item => {
+          const total = number(item.male) !== null && number(item.female) !== null ? item.male + item.female : null;
+          if (total) { item.malePct = item.male / total * 100; item.femalePct = item.female / total * 100; }
+        });
+        renderAdmin();
+      }
+      async function loadAdminMap() {
+        const token = state.country;
+        state.admin = { loading: true, meta: null, geojson: null, error: "", selected: null, regionalData: null, regionalLoading: false, regionalError: "" }; renderAdmin();
+        try {
+          const meta = await fetchJson(`https://www.geoboundaries.org/api/current/gbOpen/${token}/ADM1/`, 18000);
+          const urls = geoUrls(meta);
+          if (!urls.length) throw new Error("边界下载地址缺失");
+          let geojson = null, lastError = null;
+          for (const url of urls) {
+            try { geojson = await fetchJson(url, 90000); break; } catch (error) { lastError = error; }
+          }
+          if (!geojson) throw lastError || new Error("边界下载失败");
+          if (token !== state.country) return;
+          state.admin = { loading: false, meta, geojson, error: "", selected: null, regionalData: null, regionalLoading: false, regionalError: "" }; renderAdmin();
+          loadRegionalData(token);
+        } catch (error) {
+          if (token !== state.country) return;
+          state.admin = { loading: false, meta: null, geojson: null, error: error.name === "AbortError" ? "读取超时" : error.message, selected: null, regionalData: null, regionalLoading: false, regionalError: "" }; renderAdmin();
+        }
+      }
+      function dataYears(item) {
+        const r = item.record;
+        const parts = [["人口", "population"], ["性别", "female"], ["年龄", "working"], ["GNI", "gni"], ["基尼", "gini"]].map(([label, key]) => metric(r, key)?.year ? `${label} ${metric(r, key).year}` : null).filter(Boolean);
+        return parts.length ? parts.join(" · ") : "—";
+      }
+      function setStatus(text, kind = "loading") { const el = $("status"); el.textContent = text; el.className = `status-pill ${kind}`; }
+      function renderAgePyramid() {
+        const item = countryData(selectedCountry()), rows = item.ageFine || [], ageStatus = $("ageStatus");
+        const feature = ageFeature(item);
+        if (!rows.length) {
+          ageStatus.textContent = feature.label;
+          $("ageContent").innerHTML = `<div class="error-box">暂时没有可核验的 5 岁年龄组数据。页面不会把 0–14 / 15–64 / 65+ 三段百分比伪装成更细的年龄数字。</div>`;
+          return;
+        }
+        const femaleTotal = value(item.record, "female"), maleTotal = value(item.record, "male");
+        const maxPct = Math.max(...rows.flatMap(row => [row.femalePct || 0, row.malePct || 0]), 1);
+        const ordered = [...rows].reverse();
+        ageStatus.textContent = feature.label;
+        $("ageContent").innerHTML = `<div class="age-pyramid" aria-label="${esc(item.country.name)}年龄结构金字塔"><div class="age-pyramid-head"><span>女性（人数 · 占比）</span><span class="age-pyramid-scale">年龄</span><span>男性（占比 · 人数）</span></div>${ordered.map(row => {
+          const femaleCount = femaleTotal === null || row.femalePct === null ? null : femaleTotal * row.femalePct / 100;
+          const maleCount = maleTotal === null || row.malePct === null ? null : maleTotal * row.malePct / 100;
+          const femaleWidth = ((row.femalePct || 0) / maxPct * 100).toFixed(1), maleWidth = ((row.malePct || 0) / maxPct * 100).toFixed(1);
+          return `<div class="age-pyramid-row"><div class="age-pyramid-side female"><span class="age-pyramid-value">${fmtPopulation(femaleCount)} · ${fmtPct(row.femalePct)}</span><i class="age-pyramid-bar" style="--bar-width:${femaleWidth}%"></i></div><span class="age-pyramid-label">${esc(row.label)}</span><div class="age-pyramid-side male"><i class="age-pyramid-bar" style="--bar-width:${maleWidth}%"></i><span class="age-pyramid-value">${fmtPct(row.malePct)} · ${fmtPopulation(maleCount)}</span></div></div>`;
+        }).join("")}<div class="age-pyramid-key"><span><b class="female-key"></b>女性</span><span><b class="male-key"></b>男性</span><span>${esc(feature.detail)}</span></div><p class="age-pyramid-note">金字塔用于查看具体年龄段，顶部是高龄组、底部是低龄组；人数由性别总人口与年龄组占比换算，年龄指标年份以各国最新可用值为准。</p></div>`;
+      }
+      function giniBand(value) {
+        const n = number(value);
+        if (n === null) return "暂无可用值";
+        if (n < 30) return "相对均衡";
+        if (n < 40) return "中等差距";
+        if (n < 50) return "差距较明显";
+        return "差距很明显";
+      }
+      function renderIncomeGuide() {
+        const country = selectedCountry(), item = countryData(country), gini = number(item.gini);
+        const household = HOUSEHOLD_DATA[country.code] || null;
+        const total = householdTotal(household), income = householdIncome(household), currency = household?.currency || "";
+        const basis = household?.basis === "perCapita" ? "人均" : household?.basis === "household" ? "家庭" : household?.basis === "officialWeight" ? "官方权重" : "";
+        const period = household?.periodLabel || (basis ? `${basis}月均` : "月均");
+        const sourceScope = household?.scope === "subnational" ? " · 仅迪拜" : "";
+        const categories = (household?.categories || []).map((category, index) => ({
+          ...category,
+          pct: categoryShare(category, household),
+          amount: categoryAmount(category, household),
+          color: HOUSEHOLD_COLORS[category.key] || `hsl(${165 + index * 23} 45% 62%)`
+        })).filter(category => category.pct !== null || category.amount !== null);
+        const listedShare = categories.reduce((sum, category) => sum + (category.pct || 0), 0);
+        if (total !== null && listedShare > 0 && listedShare < 99.5 && household?.basis !== "officialWeight") {
+          const remainder = 100 - listedShare;
+          categories.push({ key: "other", label: "其余未列明项目", pct: remainder, amount: total * remainder / 100, calculated: true, color: HOUSEHOLD_COLORS.other });
+        }
+        const chartCategories = categories.filter(category => category.pct !== null && category.pct > 0).slice(0, 12);
+        const chartShareTotal = chartCategories.reduce((sum, category) => sum + category.pct, 0);
+        const chartScale = chartShareTotal > 100 ? 100 / chartShareTotal : 1;
+        const headline = income !== null ? fmtLocalAmount(income, currency) : total !== null ? fmtLocalAmount(total, currency) : "官方结构占比";
+        const unitLine = `${income !== null ? esc(household.incomeLabel || "收入") + " · " : ""}${total !== null ? esc(household.totalLabel || "支出") + "：" + fmtLocalAmount(total, currency) + " · " : ""}${esc(period)}${sourceScope}`;
+        const consumptionLine = household?.consumptionTotal !== undefined ? `<span class="explain-subvalue">消费支出：${fmtLocalAmount(household.consumptionTotal, currency)}</span>` : "";
+        const bar = chartCategories.length ? `<div class="household-bar" aria-label="官方消费结构占比">${chartCategories.map(category => `<i style="width:${Math.max(0, category.pct * chartScale).toFixed(2)}%;background:${category.color}"></i>`).join("")}</div>` : "";
+        const legend = chartCategories.length ? `<div class="household-legend">${chartCategories.map(category => `<span><b style="background:${category.color}"></b>${esc(category.label)}：${category.amount !== null ? fmtLocalAmount(category.amount, currency) + " · " : ""}${category.pct !== null ? category.pct.toFixed(1) + "%" : "—"}${category.calculated ? "*" : ""}${category.approx ? "（约）" : ""}</span>`).join("")}</div>` : "";
+        const householdCard = household ? `
+          <article class="explain-card"><h3>家庭收入 / 消费结构</h3><strong class="explain-value">${headline}</strong><span class="explain-subvalue">${unitLine}</span>${consumptionLine}<span class="explain-subvalue">${esc(household.sourceLabel)} · ${esc(household.year)}</span>${bar}${legend}<p>这里展示各国官方家庭调查或官方消费结构。食品可近似回答“吃饭花多少”；住房、交通、医疗、教育和休闲等项目分别列出。带 * 的金额是用官方总额乘官方占比折算，不能当作原表直接列示值。</p><div class="explain-status">${esc(household.note)}</div><a href="${esc(household.sourceUrl)}" target="_blank" rel="noreferrer">查看官方来源</a> · <a href="https://www.oecd.org/en/data/indicators/household-disposable-income.html" target="_blank" rel="noreferrer">查看可支配收入定义</a></article>` : `
+          <article class="explain-card"><h3>家庭收入 / 消费结构</h3><strong class="explain-value">暂无直接值</strong><span class="explain-subvalue">${esc(country.name)}：尚未接入同口径家庭调查</span><p>家庭可支配收入应是扣除所得税、社保等之后可用于消费或储蓄的钱；消费结构还要有该国官方家庭调查，不能用人均 GNI 或 PPP 代替。</p><div class="spending-taxonomy"><span><i class="food"></i>吃饭 / 食品</span><span><i class="need"></i>住房水电 / 家庭用品</span><span><i class="life"></i>交通通信 / 医疗教育</span><span><i class="emotion"></i>休闲文化 / 餐饮兴趣</span><span><i class="saving"></i>储蓄（不是消费）</span></div><div class="explain-status">“情绪价值购物”不是官方统计分类；需要把该国官方消费调查的 COICOP 项目重新映射后才能给出实际金额或占比。</div><a href="https://www.oecd.org/en/data/indicators/household-disposable-income.html" target="_blank" rel="noreferrer">查看 OECD 定义</a> · <a href="https://unstats.un.org/unsd/classifications/coicop" target="_blank" rel="noreferrer">查看 COICOP 分类</a></article>`;
+        const localConsumption = total !== null ? `<span class="explain-subvalue">本地调查支出：${fmtLocalAmount(total, currency)} · ${esc(period)} · ${esc(household.sourceLabel)}</span>` : "";
+        $("incomeGuide").innerHTML = `
+          <article class="explain-card"><h3>人均 GNI</h3><strong class="explain-value">${fmtMoney(item.gni)}</strong><span class="explain-subvalue">Atlas 法 · 当前美元 · ${esc(country.name)}</span><p>把一个国家居民和企业获得的国民收入平均到每个人，更像“国家总体收入能力”指标，不是居民平均工资，也不是家庭到手收入。</p><div class="explain-highlow"><div><b>较高</b><span>总体收入能力通常更强。</span></div><div><b>较低</b><span>总体收入能力通常更弱。</span></div></div><a href="https://data.worldbank.org/indicator/NY.GNP.PCAP.CD" target="_blank" rel="noreferrer">查看 WDI 定义</a></article>
+          <article class="explain-card"><h3>基尼系数</h3><strong class="explain-value">${gini === null ? "—" : gini.toFixed(1)}</strong><span class="explain-subvalue">0–100 · ${giniBand(item.gini)}</span><p>衡量收入或消费在居民之间的分配差距。它看的是“分得均不均”，不代表这个国家整体富裕或贫穷。</p><div class="explain-highlow"><div><b>数值较低</b><span>收入分配相对均衡。</span></div><div><b>数值较高</b><span>收入差距相对明显。</span></div></div><a href="https://databank.worldbank.org/metadataglossary/world-development-indicators/series/SI.POV.GINI" target="_blank" rel="noreferrer">查看 WDI 定义</a></article>
+          ${householdCard}
+          <article class="explain-card"><h3>当地购买力参考</h3><strong class="explain-value">${fmtInternational(item.gniPpp)}</strong><span class="explain-subvalue">PPP 人均 GNI · 国际元（Int$）</span><span class="explain-subvalue">人均居民消费 PPP：${fmtInternational(item.consumptionPpp)} · ${item.consumptionPppYear === "—" ? "最新可用" : item.consumptionPppYear} 年不变价</span>${localConsumption}<p>国际元（Int$）不是实体货币，也不是汇率换算后的美元；它是购买力平价的比较单位。数值越高，表示按当地物价校正后，收入或消费的购买力通常越强。</p><div class="explain-status">PPP 人均 GNI 看收入购买力；人均居民消费 PPP 看实际消费规模。两者都不能直接替代家庭可支配收入，也不能直接兑换成现金。</div><a href="https://data.worldbank.org/indicator/NY.GNP.PCAP.PP.CD" target="_blank" rel="noreferrer">查看收入 PPP</a> · <a href="https://data.worldbank.org/indicator/NE.CON.PRVT.PP.KD" target="_blank" rel="noreferrer">查看消费 PPP</a></article>`;
+      }
+      function ageDistribution(item) {
+        const summary = [
+          { label: "0–14", value: number(item.young) },
+          { label: "15–64", value: number(item.working) },
+          { label: "65+", value: number(item.old) }
+        ];
+        const fine = (item.ageFine || []).map(row => ({ label: row.label, value: number(row.pct) })).filter(row => row.value !== null);
+        const source = fine.length >= 4 ? fine : summary;
+        const usable = source.map(row => row.value).filter(value => value !== null);
+        if (!usable.length) return `<div class="age-distribution-empty">暂无年龄结构数据</div>`;
+        const width = 320, height = 86, left = 12, right = 12, top = 8, bottom = 18;
+        const max = Math.max(...usable, 1), step = source.length > 1 ? (width - left - right) / (source.length - 1) : 0;
+        const points = source.map((row, index) => {
+          const value = row.value === null ? 0 : row.value;
+          return { ...row, x: left + step * index, y: top + (max - value) / max * (height - top - bottom) };
+        });
+        const linePath = points.reduce((path, point, index) => {
+          if (!index) return `M ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+          const previous = points[index - 1], middle = (previous.x + point.x) / 2;
+          return `${path} C ${middle.toFixed(1)} ${previous.y.toFixed(1)}, ${middle.toFixed(1)} ${point.y.toFixed(1)}, ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+        }, "");
+        const baseline = height - bottom;
+        const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${baseline} L ${points[0].x.toFixed(1)} ${baseline} Z`;
+        const grid = [0.25, 0.5, 0.75].map(level => {
+          const y = top + (1 - level) * (height - top - bottom);
+          return `<line class="age-grid" x1="${left}" y1="${y.toFixed(1)}" x2="${width - right}" y2="${y.toFixed(1)}"></line>`;
+        }).join("");
+        const pointsMarkup = points.map(point => `<circle class="age-point" cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="3"><title>${esc(point.label)}：${fmtPct(point.value)}</title></circle>`).join("");
+        const summaryMarkup = summary.map(row => `<span><small>${row.label}</small><b>${fmtPct(row.value)}</b></span>`).join("");
+        const note = fine.length >= 4 ? "5 岁组分布曲线 · 下方显示三段合计" : "三段年龄结构分布 · 占总人口";
+        return `<div class="age-distribution" aria-label="${esc(item.country.name)}年龄分布图"><div class="age-plot"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(item.country.name)}年龄分布曲线">${grid}<line class="age-axis" x1="${left}" y1="${baseline}" x2="${width - right}" y2="${baseline}"></line><path class="age-area" d="${areaPath}"></path><path class="age-line" d="${linePath}"></path>${pointsMarkup}</svg></div><div class="age-summary-values">${summaryMarkup}</div><div class="age-distribution-note">${note}</div></div>`;
+      }
+      function renderTable() {
+        const items = COUNTRIES.map(countryData).sort((a, b) => (b.population || 0) - (a.population || 0));
+        $("rowCount").textContent = `${items.length} 个国家`;
+        if (!items.length) { $("countryRows").innerHTML = `<tr><td colspan="7" class="empty">没有匹配的国家。</td></tr>`; return; }
+        $("countryRows").innerHTML = items.map(item => {
+          const c = item.country;
+          return `<tr><td><div class="country-cell">${flagImage(c)}<div><div class="country-name">${esc(c.name)}</div><div class="country-meta">${esc(c.market)}市场</div></div></div></td><td>${fmtPopulation(item.population)}</td><td>${genderSplit(item)}</td><td><div class="age-inline">${ageDistribution(item)}</div></td><td>${fmtMoney(item.gni)}</td><td>${item.gini === null ? "—" : item.gini.toFixed(1)}</td><td class="value-muted">${esc(dataYears(item))}</td></tr>`;
+        }).join("");
+      }
+      function render() { renderSelectors(); renderHero(); renderAgePyramid(); renderAdmin(); renderIncomeGuide(); renderTable(); }
+      function loadCache() {
+        try {
+          const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+          if (cached?.payload?.values) { state.data = cached.payload; render(); setStatus(`显示缓存数据 · ${new Date(cached.savedAt).toLocaleString("zh-CN", {hour12:false})}`, "error"); }
+        } catch (_) {}
+      }
+      function loadPreferences() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(PREFS_KEY) || "null");
+          const savedCountry = COUNTRIES.find(country => country.code === saved?.country);
+          const normalizedSavedMarket = saved?.market === "其他市场" ? "欧洲" : saved?.market;
+          const savedMarket = COUNTRIES.some(country => country.market === normalizedSavedMarket) ? normalizedSavedMarket : null;
+          if (savedCountry) { state.country = savedCountry.code; state.market = savedCountry.market; }
+          else if (savedMarket) { state.market = savedMarket; state.country = COUNTRIES.find(country => country.market === savedMarket)?.code || state.country; }
+        } catch (_) {}
+      }
+      function savePreferences() {
+        try { localStorage.setItem(PREFS_KEY, JSON.stringify({ market: state.market, country: state.country, savedAt: Date.now() })); } catch (_) {}
+      }
+      function saveCache(payload) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), payload })); } catch (_) {} }
+      async function fetchOne(key, indicator) {
+        const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 18000);
+        const url = `${API_ROOT}${indicator}?format=json&per_page=2000`;
+        try {
+          const response = await fetch(url, { signal: controller.signal });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const payload = await response.json();
+          if (!Array.isArray(payload) || !Array.isArray(payload[1])) throw new Error("返回格式不可用");
+          return { key, meta: payload[0] || {}, rows: payload[1] };
+        } finally { clearTimeout(timer); }
+      }
+      async function loadLive() {
+        state.loading = true; state.errors = []; setStatus("正在读取世界银行数据…", "loading"); $("refresh").disabled = true;
+        const results = await Promise.allSettled(INDICATOR_KEYS.map(key => fetchOne(key, ALL_INDICATORS[key])));
+        const values = Object.fromEntries(COUNTRIES.map(country => [country.code, {}]));
+        let success = 0, apiUpdated = "";
+        results.forEach((result, index) => {
+          const key = INDICATOR_KEYS[index];
+          if (result.status === "rejected") { state.errors.push(key); return; }
+          success += 1; apiUpdated = result.value.meta.lastupdated || apiUpdated;
+          const byCountry = new Map();
+          COUNTRIES.forEach(country => byCountry.set(country.code, []));
+          result.value.rows.forEach(row => { if (byCountry.has(row.countryiso3code)) byCountry.get(row.countryiso3code).push(row); });
+          byCountry.forEach((rows, code) => { const row = latestRows(rows)[0]; if (row) values[code][key] = { value: Number(row.value), year: String(row.date), name: row.indicator?.value || "" }; });
+        });
+        state.data = { values, apiUpdated, loadedAt: new Date().toISOString() }; state.loading = false; saveCache(state.data); render();
+        if (!success) setStatus("官方数据暂时无法读取 · 请稍后重试", "error");
+        else if (state.errors.length) setStatus(`已载入 ${success}/${INDICATOR_KEYS.length} 项指标 · 部分指标缺失`, "error");
+        else setStatus(`已连接世界银行 · 数据库更新 ${apiUpdated || "最新可用"}`, "online");
+        $("refresh").disabled = false;
+      }
+
+      $("marketTabs").addEventListener("click", event => {
+        const button = event.target.closest("[data-market]");
+        if (!button) return;
+        state.market = button.dataset.market;
+        state.country = COUNTRIES.find(country => country.market === state.market)?.code || state.country;
+        savePreferences();
+        render();
+        loadAdminMap();
+      });
+      $("countryTabs").addEventListener("click", event => {
+        const button = event.target.closest("[data-country]");
+        if (!button) return;
+        state.country = button.dataset.country;
+        state.market = selectedCountry().market;
+        savePreferences();
+        render();
+        loadAdminMap();
+      });
+      $("adminMap").addEventListener("click", event => {
+        const shape = event.target.closest("[data-region-index]");
+        if (!shape) return;
+        state.admin.selected = Number(shape.dataset.regionIndex);
+        renderAdmin();
+      });
+      $("adminMap").addEventListener("keydown", event => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const shape = event.target.closest("[data-region-index]");
+        if (!shape) return;
+        event.preventDefault();
+        state.admin.selected = Number(shape.dataset.regionIndex);
+        renderAdmin();
+      });
+      $("refresh").addEventListener("click", loadLive);
+      loadPreferences();
+      loadCache();
+      render();
+      loadAdminMap();
+      loadLive().catch(error => { state.loading = false; state.errors = [error.message]; setStatus("官方数据暂时无法读取 · 当前仅保留缓存", "error"); $("refresh").disabled = false; render(); });
+    })();
+  </script>
+</body>
+</html>
