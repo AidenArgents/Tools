@@ -155,7 +155,7 @@ function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%
 function safeNumber(v){if(v===''||v===null||v===undefined)return null;var x=Number(v);return Number.isInteger(x)&&x>=0&&x<=365?x:null}
 function routeReady(r){return !!r&&['transit','pickup','delivery','shelving'].every(function(k){return safeNumber(r[k])!==null})}
 var defaultCategories={shopping:true,season:true,culture:true,sport:true,supply:true};
-var defaults={planVersion:2,prepVersion:2,pick:7,prep:4,buffer:0,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},supplyPlan:{pick:7,prep:7,cnyLead:14,nationalLead:7,otherLead:7},routes:[{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,sail:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
+var defaults={planVersion:2,prepVersion:2,pick:7,prep:4,buffer:0,lead:45,tierDays:{S:45,A:30,B:15},tierAssignments:{},supplyPlan:{pick:7,prep:7,cnyLead:14,nationalLead:7,otherLead:7},routes:[{"enabled":false,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":true,"transit":18,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":17,"pickup":2,"delivery":7,"shelving":10},{"enabled":false,"transit":3,"pickup":1,"delivery":3,"shelving":3},{"enabled":false,"transit":40,"pickup":3,"delivery":7,"shelving":10}],show:{start:true,finish:true,depart:true,sail:true,port:true,pickup:true,arrival:true,listed:true},categories:defaultCategories,custom:[],edits:{},hidden:[],tba:[]};
 function normalizeState(raw){
  var s=Object.assign({},defaults,raw||{});
  // 将老版四线路升级为报价单六线路，旧的自定义节日、日期和分类原样保留。
@@ -171,6 +171,13 @@ function normalizeState(raw){
  // 旧14天的默认值升级为45天；用户自填的其他值不覆盖。
  if(migrated&&(!raw||Number(raw.lead)===14))s.lead=45;
  s.planVersion=2;
+ // 更新默认勾选：合德正班与美森加班关闭；只对旧缓存执行一次，
+ // 此后用户手动开关会被保存，不会在每次刷新时强制重置。
+ if(!raw||Number(raw.routeCheckVersion||0)<3){
+  s.routes[0].enabled=false;
+  s.routes[3].enabled=false;
+ }
+ s.routeCheckVersion=3;
  // 只迁移旧版“备货+提货+等船”原始默认7天；升级后不再反复重置用户自填的参数。
  if(!raw||Number(raw.prepVersion||0)<2){
   if(!raw||Number(raw.prep)===7)s.prep=4;
