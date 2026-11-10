@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
@@ -1691,11 +1691,13 @@
               </div>
             </div>
 
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-              <input type="text" id="skuQueryInput" placeholder="输入领星 SKU，精确匹配"
-                style="flex: 1; height: 36px; padding: 0 12px; border: 1.5px solid #d1fae5; border-radius: 6px; background: white; color: #059669; font-weight: 600;">
-              <button onclick="querySKUFromERP()" title="2分钟内相同SKU可复用查询结果"
-                style="padding: 0 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s; height: 36px;">
+            <!-- SKU / MSKU 统一搜索行 -->
+            <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center;">
+              <input type="text" id="skuQueryInput" placeholder="输入领星本地 SKU 或平台 MSKU，精确匹配"
+                onkeydown="if(event.key==='Enter')querySKUFromERP(false)"
+                style="flex: 1; height: 36px; padding: 0 12px; border: 1.5px solid #d1fae5; border-radius: 6px; background: white; color: #059669; font-weight: 600; outline: none;">
+              <button type="button" onclick="querySKUFromERP(false)" title="2分钟内相同SKU/MSKU可复用查询结果"
+                style="padding: 0 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s; height: 36px; white-space: nowrap;">
                 查询
               </button>
               <button type="button" onclick="querySKUFromERP(true)" title="忽略缓存，实时读取领星"
@@ -1716,7 +1718,7 @@
               <div style="width:230px; flex-shrink:0; padding:8px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px">
                 <a href="https://erp.lingxing.com/erp/productManage" target="_blank" rel="noopener noreferrer"
                   style="font-size:12px;color:#1d4ed8;font-weight:700">打开领星产品管理 ↗</a>
-                <div style="color:#64748b;font-size:11px;margin-top:5px;line-height:1.6">请保持领星已登录，并重载更新后的 Ianto 插件。读取采购成本、默认包装毛重及尺寸；重量填写 g / lb，尺寸统一为 cm；重复SKU近期查询结果会复用，「实时刷新」可跳过缓存。</div>
+                <div style="color:#64748b;font-size:11px;margin-top:5px;line-height:1.6">请保持领星已登录，并重载更新后的 Ianto 插件。支持输入本地 SKU 或平台 MSKU 自动识别，读取采购成本、默认包装毛重及尺寸；重复查询近期结果会复用，「实时刷新」可跳过缓存。</div>
               </div>
             </div>
           </div>
@@ -1728,7 +1730,7 @@
             </div>
           </div>
           <div class="kit-panel" id="kit-panel" style="display:none">
-            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：按配件数量汇总成本、重量和体积。配件长宽高用于估算累计占用空间；下方商品长宽高必须填写<strong>组合完成后的实际包装外尺寸</strong>，不自动套用配件体积。订单销售数量通常填1。</div>
+            <div style="font-size:11px;color:var(--t3);line-height:1.6;margin-bottom:8px">组合装：按配件数量汇总成本、重量与体积。系统自动按最紧凑合规方式<strong>智能推导组合外包装尺寸</strong>并带入下方输入框（支持在下方直接修改外箱尺寸）；订单销售数量通常填 1。</div>
             <div class="kit-head"><span>配件</span><span>成本 ￥</span><span>重量 g</span><span>×</span><span></span></div>
             <div id="kit-rows"></div>
             <div id="kit-warning" role="alert" style="display:none;color:#b91c1c;font-size:11px;margin:3px 0 8px"></div>
@@ -2091,7 +2093,7 @@
   <script id="pricing-code">
     const DEFAULT_CONFIG = JSON.parse(document.getElementById('pricing-defaults').textContent);
     const SETTINGS_KEY = 'pricing_us_settings_v3';
-    const SFF_TARIFF_VERSION_KEY = 'pricing_us_sff_tariffs_20261104_six_channels_v1';
+    const SFF_TARIFF_VERSION_KEY = 'pricing_us_sff_tariffs_20261110_4px_segments_v6';
     const PROFIT_40_MIGRATION_KEY = 'pricing_us_profit_40_migrated_v1';
     // v2 repairs browser profiles that kept 0% after the previous one-time migration ran.
     const FEES_20261105_MIGRATION_KEY = 'pricing_us_refund5_fxloss1_migrated_v2';
@@ -2357,8 +2359,59 @@
           volumeErrors.push(label + '配件长宽高须全部填写有效正数');
         }
       });
+      // 智能合包尺寸：只将拼合的那一条边相加，其余两边取各配件最大值
+      // 优先选择符合直邮尺寸限制（如 15×10×1 ~ 57×45×35cm）且外接体积最小的叠放方向（默认优先叠高）
+      let termsL = [], termsW = [], termsH = [];
+      let maxL = 0, maxLExpr = '', maxW = 0, maxWExpr = '', maxH = 0, maxHExpr = '';
+      active.forEach(({ part }) => {
+        const qty = Number(part.qty) || 1;
+        const lRaw = String(part.l ?? '').trim();
+        const wRaw = String(part.w ?? '').trim();
+        const hRaw = String(part.h ?? '').trim();
+        const lVal = _evalExpr(lRaw), wVal = _evalExpr(wRaw), hVal = _evalExpr(hRaw);
+        if (lRaw !== '') {
+          termsL.push(qty > 1 ? ('(' + lRaw + '*' + qty + ')') : lRaw);
+          if (Number.isFinite(lVal) && lVal > maxL) { maxL = lVal; maxLExpr = lRaw; }
+        }
+        if (wRaw !== '') {
+          termsW.push(qty > 1 ? ('(' + wRaw + '*' + qty + ')') : wRaw);
+          if (Number.isFinite(wVal) && wVal > maxW) { maxW = wVal; maxWExpr = wRaw; }
+        }
+        if (hRaw !== '') {
+          termsH.push(qty > 1 ? ('(' + hRaw + '*' + qty + ')') : hRaw);
+          if (Number.isFinite(hVal) && hVal > maxH) { maxH = hVal; maxHExpr = hRaw; }
+        }
+      });
+      const sumLExpr = termsL.join('+'), sumWExpr = termsW.join('+'), sumHExpr = termsH.join('+');
+      const sumL = sumLExpr ? _evalExpr(sumLExpr) : NaN;
+      const sumW = sumWExpr ? _evalExpr(sumWExpr) : NaN;
+      const sumH = sumHExpr ? _evalExpr(sumHExpr) : NaN;
+
+      let exprL = sumLExpr, exprW = sumWExpr, exprH = sumHExpr;
+      let numL = sumL, numW = sumW, numH = sumH;
+
+      if (Number.isFinite(sumL) && Number.isFinite(sumW) && Number.isFinite(sumH) && maxL > 0 && maxW > 0 && maxH > 0) {
+        const sffRules = (typeof SFF_TARIFFS !== 'undefined' && SFF_TARIFFS[F?.sff?.serviceId]?.rules) || { minDim: [15, 10, 1], maxDim: [57, 45, 35] };
+        const minD = sffRules.minDim || [15, 10, 1], maxD = sffRules.maxDim || [57, 45, 35];
+        const candidates = [
+          // 优先顺序：1. 叠高(h)  2. 拼宽(w)  3. 拼长(l)
+          { axis: 'h', l: maxL, w: maxW, h: sumH, eL: maxLExpr, eW: maxWExpr, eH: sumHExpr, prio: 1 },
+          { axis: 'w', l: maxL, w: sumW, h: maxH, eL: maxLExpr, eW: sumWExpr, eH: maxHExpr, prio: 2 },
+          { axis: 'l', l: sumL, w: maxW, h: maxH, eL: sumLExpr, eW: maxWExpr, eH: maxHExpr, prio: 3 }
+        ].map(c => {
+          const s = [c.l, c.w, c.h].sort((a, b) => b - a);
+          const valid = s[0] >= minD[0] && s[1] >= minD[1] && s[2] >= minD[2] && s[0] <= maxD[0] && s[1] <= maxD[1] && s[2] <= maxD[2] && (!sffRules.maxGirth || (s[0] + 2 * s[1] + 2 * s[2] <= sffRules.maxGirth));
+          return { ...c, sorted: s, valid, bboxVol: c.l * c.w * c.h };
+        });
+        candidates.sort((a, b) => (b.valid - a.valid) || (a.bboxVol - b.bboxVol) || (a.sorted[0] - b.sorted[0]) || (a.prio - b.prio));
+        const best = candidates[0];
+        exprL = best.eL; exprW = best.eW; exprH = best.eH;
+        numL = best.l; numW = best.w; numH = best.h;
+      }
+
       return { cost, weight, volume, volumeCount, volumeMissing: active.length - volumeCount,
-        partVolumes, volumeErrors, hasParts: active.length > 0, requiresWeight, errors };
+        partVolumes, volumeErrors, hasParts: active.length > 0, requiresWeight, errors,
+        exprL, exprW, exprH, numL, numW, numH };
     }
     function validKitTotals() {
       const totals = computeKitTotals();
@@ -2391,7 +2444,7 @@
             + (totals.volumeMissing ? '；仅 ' + totals.volumeCount + '/' + (totals.volumeCount + totals.volumeMissing) + ' 行已填写完整尺寸，尚非整套累计值' : '');
         summary.textContent = '配件累计体积：' + volumeText
           + (totals.volumeErrors.length ? '；' + totals.volumeErrors.join('；') : '')
-          + '。成本和重量自动合计到下方输入框；物流仍按组合完成后的实际包装尺寸计算。';
+          + '。成本、重量和包装尺寸已智能测算并带入下方输入框（支持直接修改外包装）。';
       }
       applyExprValue($('cost'), totals.errors.length || !totals.hasParts ? '' : totals.cost);
       if (!totals.errors.length && totals.requiresWeight) writeWeightPair(totals.weight / 1000, undefined, 'both');
@@ -2400,6 +2453,15 @@
         applyExprValue($('weight-lb'), '');
         delete $('weight').dataset.weightKg;
         delete $('weight').dataset.syncedWeightValue;
+      }
+      if (!totals.errors.length && totals.hasParts) {
+        if (totals.exprL) applyExprValue($('diml'), Number.isFinite(totals.numL) && totals.numL > 0 ? totals.numL : '', totals.exprL);
+        if (totals.exprW) applyExprValue($('dimw'), Number.isFinite(totals.numW) && totals.numW > 0 ? totals.numW : '', totals.exprW);
+        if (totals.exprH) applyExprValue($('dimh'), Number.isFinite(totals.numH) && totals.numH > 0 ? totals.numH : '', totals.exprH);
+      } else if (!totals.hasParts) {
+        applyExprValue($('diml'), '');
+        applyExprValue($('dimw'), '');
+        applyExprValue($('dimh'), '');
       }
       updateWeightSummary();
       invalidateResults();
@@ -2679,7 +2741,83 @@
 
     // User-supplied updated quotation table (November 2026): [minKg, maxKg, freightCNYPerKg, registrationCNYPerOrder].
     // Exact order weight selects the quoted interval. No direct-mail step rounding is applied.
-    const SFF_TARIFF_DEFAULTS = {"sfGeneral":{"name":"顺丰普货","tiers":[[0,0.099,110.6,20],[0.1,0.199,107.2,18],[0.2,0.449,103.2,16],[0.45,0.699,101.8,16],[0.7,0.999,100.5,9],[1,1.499,100.5,9],[1.5,30,95.1,9]]},"sfSensitive":{"name":"顺丰敏货","tiers":[[0,0.099,132,20],[0.1,0.199,132,20],[0.2,0.449,132,18],[0.45,0.999,132,16],[1,1.499,132,9],[1.5,30,132,9]]},"battery":{"name":"顺丰带电","tiers":[[0,0.1,130.4,20],[0.101,0.2,127.2,18],[0.201,0.7,122.4,16],[0.701,1.999,120.8,9],[2,30,120.8,9]]},"clothing":{"name":"顺丰服装","tiers":[[0,0.099,109.9,20],[0.1,0.199,106.4,18],[0.2,0.449,102.2,16],[0.45,0.699,100.8,16],[0.7,0.999,98.7,9],[1,1.499,98.7,9],[1.5,30,95.2,9]]},"fourPxBattery":{"name":"4PX带电","tiers":[[0,0.1,118,20],[0.1,0.2,108,18],[0.2,0.45,134,16]]},"fourPxGeneral":{"name":"4PX普货","tiers":[[0,0.1,117,20],[0.1,0.2,107,18],[0.2,0.45,128,16]]}};
+    const SFF_TARIFF_DEFAULTS = {"sfGeneral":{"name":"顺丰普货","tiers":[[0,0.099,115.5,20],[0.1,0.199,112,18],[0.2,0.449,107.8,16],[0.45,0.699,106.4,16],[0.7,0.999,105,9],[1,1.499,105,9],[1.5,30,99.4,9]]},"sfSensitive":{"name":"顺丰敏货","tiers":[[0,0.099,151.2,23],[0.1,0.199,140,20],[0.2,0.449,140,18],[0.45,0.999,132.8,18],[1,1.499,131.2,9],[1.5,30,131.2,9]]},"battery":{"name":"顺丰带电","tiers":[[0,0.1,149.6,23],[0.101,0.2,138.4,20],[0.201,0.7,133.6,18],[0.701,1.999,124.8,9],[2,30,123.2,9]]},"clothing":{"name":"顺丰服装","tiers":[[0,0.099,109.9,20],[0.1,0.199,106.4,18],[0.2,0.449,102.2,16],[0.45,0.699,100.8,16],[0.7,0.999,98.7,9],[1,1.499,98.7,9],[1.5,30,95.2,9]]},"fourPxBattery":{"name":"4PX带电","tiers":[[0,0.1,118,20],[0.1,0.2,108,18],[0.2,0.45,134,16]]},"fourPxGeneral":{"name":"4PX普货","tiers":[[0,0.1,117,20],[0.1,0.2,107,18],[0.2,0.45,128,16]]}};
+    // 渠道规则定义：抛重除数、首重、进位、最大实重、最大计费重、最大尺寸、最小尺寸
+    const SFF_DEFAULT_RULES = {
+      sfGeneral: {
+        volDivisor: 8000,
+        firstKg: 0.05,
+        stepKg: 0.001,
+        maxActualKg: 30,
+        maxChargeKg: 30,
+        maxDim: [57, 45, 35],
+        minDim: [15, 10, 1],
+        note: '单票单件计费；不接受圆柱体、球体和异型件；任一边超过尺寸限制均视为超尺寸货物，不接受'
+      },
+      sfSensitive: {
+        volDivisor: 8000,
+        firstKg: 0.05,
+        stepKg: 0.001,
+        maxActualKg: 30,
+        maxChargeKg: 30,
+        maxDim: [57, 45, 35],
+        minDim: [15, 10, 1],
+        maxGirth: 210,
+        note: '单票单件计费；长+2×宽+2×高≤210cm；不接受圆柱体、球体和异型件；任一边长超过单边尺寸限制均视为超尺寸货物，不接受超尺寸货件'
+      },
+      battery: {
+        volDivisor: 8000,
+        firstKg: 0.05,
+        stepKg: 0.001,
+        maxActualKg: 30,
+        maxChargeKg: 30,
+        maxDim: [57, 45, 35],
+        minDim: [15, 10, 1],
+        maxGirth: 210,
+        note: '单票单件计费；长+2×宽+2×高≤210cm；不接受圆柱体、球体和异型件；任一边长超过单边尺寸限制均视为超尺寸货物，不接受超尺寸货件'
+      },
+      clothing: {
+        volDivisor: null,
+        firstKg: 0.05,
+        stepKg: 0.001,
+        maxActualKg: 30,
+        maxChargeKg: 30,
+        maxDim: [57, 45, 35],
+        minDim: [15, 10, 1],
+        note: '单票单件计费；不计泡；不接受圆柱体、球体和异型件；任一边长超过单边尺寸限制均视为超尺寸货物，不接受超尺寸货件'
+      },
+      fourPxGeneral: {
+        volDivisor: 8000,
+        maxActualKg: 0.45,
+        maxChargeKg: 0.45,
+        minDim: [15, 10, 1],
+        maxDim: [55, 40, 35],
+        splitWeightKg: 0.2,
+        lowMaxDim: [20, 15, 10],
+        highMinDim: [15, 10, 1],
+        highMaxDim: [55, 40, 35],
+        highFirstKg: 0.05,
+        highStepKg: 0.001,
+        note: '4PX组合物流：前两段(≤0.2kg)尺寸限15×10×1~20×15×10cm、无50g最低与进位；第三段(0.2~0.45kg)尺寸限15×10×1~55×40×35cm、最低50g按1g进位；抛重/8000'
+      },
+      fourPxBattery: {
+        volDivisor: 8000,
+        maxActualKg: 0.45,
+        maxChargeKg: 0.45,
+        minDim: [15, 10, 1],
+        maxDim: [55, 40, 35],
+        splitWeightKg: 0.2,
+        lowMaxDim: [20, 15, 10],
+        highMinDim: [15, 10, 1],
+        highMaxDim: [55, 40, 35],
+        highFirstKg: 0.05,
+        highStepKg: 0.001,
+        note: '4PX组合物流：前两段(≤0.2kg)尺寸限15×10×1~20×15×10cm、无50g最低与进位；第三段(0.2~0.45kg)尺寸限15×10×1~55×40×35cm、最低50g按1g进位；抛重/8000'
+      }
+    };
+    Object.keys(SFF_TARIFF_DEFAULTS).forEach(key => {
+      SFF_TARIFF_DEFAULTS[key].rules = clone(SFF_DEFAULT_RULES[key] || null);
+    });
     let SFF_TARIFFS = clone(DEFAULT_CONFIG.sffTariffs || SFF_TARIFF_DEFAULTS);
     function validateSffTariffs(tariffs) {
       if (!tariffs || typeof tariffs !== 'object') throw new Error('直邮报价表缺失');
@@ -2690,6 +2828,7 @@
         const svc = tariffs[key], original = SFF_TARIFF_DEFAULTS[key];
         if (svc.name !== original.name || !Array.isArray(svc.tiers) || !svc.tiers.length || svc.tiers.length > 60)
           throw new Error(original.name + '报价表结构不合法');
+        if (svc.rules === undefined && original.rules) svc.rules = clone(original.rules);
         let end = -1;
         svc.tiers.forEach((band,i) => {
           if (!Array.isArray(band) || band.length !== 4 || band.some(v => typeof v !== 'number' || !Number.isFinite(v) || v < 0))
@@ -2702,20 +2841,146 @@
         });
       }
     }
-    function findSffTariff(totalKg, serviceId) {
+    function findSffTariff(productOrWeight, serviceId) {
       const svc = SFF_TARIFFS[serviceId];
       if (!svc) throw new Error('请选择有效的直邮渠道');
-      if (!Number.isFinite(totalKg) || totalKg <= 0) throw new Error('SFF 请填写有效的整单重量(kg)');
-      const weight = cleanFloatNoise(totalKg);
-      // Start of the newer band wins when both bands include a shared endpoint (4PX 0.1 / 0.2kg).
+
+      const isProduct = productOrWeight && typeof productOrWeight === 'object';
+      const qty = isProduct ? integer(productOrWeight.qty || 1) : 1;
+      const actualKg = cleanFloatNoise(isProduct ? (productOrWeight.weightKg * qty) : Number(productOrWeight));
+      if (!Number.isFinite(actualKg) || actualKg <= 0) throw new Error('SFF 请填写有效的整单重量(kg)');
+
+      const r = svc.rules;
+      let volKg = 0;
+      let totalVolume = 0;
+
+      if (r && r.volDivisor) {
+        if (isProduct) {
+          // 组合装按配件填写的长宽高严格叠加体积；单品按输入框长宽高计算体积
+          if (productOrWeight.kitVolume > 0) {
+            totalVolume = productOrWeight.kitVolume * qty;
+          } else if (productOrWeight.l > 0 && productOrWeight.w > 0 && productOrWeight.h > 0) {
+            totalVolume = productOrWeight.l * productOrWeight.w * productOrWeight.h * qty;
+          }
+        }
+        if (totalVolume > 0) {
+          volKg = cleanFloatNoise(totalVolume / r.volDivisor);
+        }
+      }
+
+      let baseWeight = Math.max(actualKg, volKg);
+      let billable = baseWeight;
+
+      // 判断分段规则（如 4PX 前两段 ≤0.2kg vs 第三段 >0.2kg）
+      let activeMinDim = r?.minDim;
+      let activeMaxDim = r?.maxDim;
+      let activeMaxActualKg = r?.maxActualKg;
+      let activeMaxChargeKg = r?.maxChargeKg;
+      let activeMaxGirth = r?.maxGirth;
+      let segPrefix = '';
+
+      if (r && r.splitWeightKg) {
+        if (baseWeight <= r.splitWeightKg) {
+          // 前两段 (≤0.2kg)：无50g最低与进位
+          segPrefix = '前两段(≤' + r.splitWeightKg + 'kg) ';
+          activeMinDim = r.minDim || [15, 10, 1];
+          activeMaxDim = r.lowMaxDim || [20, 15, 10];
+          activeMaxChargeKg = r.splitWeightKg;
+          activeMaxActualKg = r.splitWeightKg;
+          billable = baseWeight;
+        } else {
+          // 第三段 (>0.2kg)：最低50g，超过50g按1g进位
+          segPrefix = '第三段(>' + r.splitWeightKg + 'kg) ';
+          activeMinDim = r.highMinDim || r.minDim || [15, 10, 1];
+          activeMaxDim = r.highMaxDim || r.maxDim || [55, 40, 35];
+          activeMaxChargeKg = r.maxChargeKg || 0.45;
+          activeMaxActualKg = r.maxActualKg || 0.45;
+          if (r.highFirstKg && billable < r.highFirstKg) billable = r.highFirstKg;
+          if (r.highStepKg) billable = Math.ceil(cleanFloatNoise(billable / r.highStepKg)) * r.highStepKg;
+        }
+      } else if (r) {
+        if (r.firstKg && billable < r.firstKg) billable = r.firstKg;
+        if (r.stepKg) billable = Math.ceil(cleanFloatNoise(billable / r.stepKg)) * r.stepKg;
+      }
+      billable = cleanFloatNoise(billable);
+
+      // 规则校验：超限直接抛出明确错误，不给误导性报价
+      if (r) {
+        if (activeMaxActualKg && actualKg > activeMaxActualKg) {
+          throw new Error('【' + svc.name + '】' + segPrefix + '实重 ' + formatWeight(actualKg) + 'kg 超过渠道上限 ' + activeMaxActualKg + 'kg');
+        }
+        if (activeMaxChargeKg && billable > activeMaxChargeKg) {
+          throw new Error('【' + svc.name + '】' + segPrefix + '计费重量 ' + formatWeight(billable) + 'kg' + (volKg > actualKg ? '（体积重 ' + formatWeight(volKg) + 'kg 大于实重）' : '') + ' 超过渠道上限 ' + activeMaxChargeKg + 'kg');
+        }
+        if (isProduct && productOrWeight.l > 0 && productOrWeight.w > 0 && productOrWeight.h > 0) {
+          const packings = [];
+          const l0 = Number(productOrWeight.l), w0 = Number(productOrWeight.w), h0 = Number(productOrWeight.h);
+          if (qty <= 1) {
+            packings.push([l0, w0, h0].sort((a, b) => b - a));
+          } else {
+            const maxQ = Math.min(qty, 64);
+            for (let a = 1; a <= maxQ; a++) {
+              if (qty % a !== 0) continue;
+              const rem = qty / a;
+              for (let b = 1; b <= rem; b++) {
+                if (rem % b !== 0) continue;
+                const c = rem / b;
+                packings.push([l0 * a, w0 * b, h0 * c].sort((x, y) => y - x));
+              }
+            }
+            if (!packings.length) {
+              packings.push([l0 * qty, w0, h0].sort((x, y) => y - x));
+              packings.push([l0, w0 * qty, h0].sort((x, y) => y - x));
+              packings.push([l0, w0, h0 * qty].sort((x, y) => y - x));
+            }
+          }
+
+          const isOversize = s => (activeMaxDim && (s[0] > activeMaxDim[0] || s[1] > activeMaxDim[1] || s[2] > activeMaxDim[2])) || (activeMaxGirth && (s[0] + 2 * s[1] + 2 * s[2] > activeMaxGirth));
+          const isUndersize = s => activeMinDim && (s[0] < activeMinDim[0] || s[1] < activeMinDim[1] || s[2] < activeMinDim[2]);
+          const valids = packings.filter(s => !isOversize(s) && !isUndersize(s));
+
+          if (valids.length === 0) {
+            // 所有合包摆法均不符合渠道要求
+            if (packings.every(isUndersize)) {
+              throw new Error('【' + svc.name + '】' + segPrefix + '尺寸低于最小限制 ' + activeMinDim.join('×') + 'cm');
+            }
+            packings.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+            const s = packings[0];
+            if (activeMaxDim) {
+              if (s[0] > activeMaxDim[0]) throw new Error('【' + svc.name + '】' + segPrefix + '最长边 ' + formatWeight(s[0]) + 'cm 超过上限 ' + activeMaxDim[0] + 'cm');
+              if (s[1] > activeMaxDim[1]) throw new Error('【' + svc.name + '】' + segPrefix + '次长边 ' + formatWeight(s[1]) + 'cm 超过上限 ' + activeMaxDim[1] + 'cm');
+              if (s[2] > activeMaxDim[2]) throw new Error('【' + svc.name + '】' + segPrefix + '最短边 ' + formatWeight(s[2]) + 'cm 超过上限 ' + activeMaxDim[2] + 'cm');
+            }
+            if (activeMaxGirth && (s[0] + 2 * s[1] + 2 * s[2] > activeMaxGirth)) {
+              throw new Error('【' + svc.name + '】' + segPrefix + '长+2×宽+2×高 (' + formatWeight(s[0] + 2 * s[1] + 2 * s[2]) + 'cm) 超过上限 ' + activeMaxGirth + 'cm');
+            }
+            throw new Error('【' + svc.name + '】' + segPrefix + '尺寸不符合限制（最小 ' + activeMinDim.join('×') + 'cm，最大 ' + activeMaxDim.join('×') + 'cm' + (activeMaxGirth ? '，长+2宽+2高≤' + activeMaxGirth + 'cm' : '') + '）');
+          }
+        }
+      }
+
+      const weight = billable;
       const band = svc.tiers.slice().reverse().find(([min,max]) => weight >= min && weight <= max);
-      if (!band) throw new Error('【' + svc.name + '】重量 ' + formatWeight(weight) + 'kg 未被报价表覆盖（可能处于档位小数间隙或超过该渠道上限 '
+      if (!band) throw new Error('【' + svc.name + '】计费重量 ' + formatWeight(weight) + 'kg 未被报价表覆盖（可能处于档位间隙或超过上限 '
         + formatWeight(svc.tiers[svc.tiers.length-1][1]) + 'kg），请核对货代报价');
-      return {serviceName:svc.name, weightKg:weight, min:band[0], max:band[1], rate:band[2], registration:band[3]};
+
+      return {
+        serviceName: svc.name,
+        weightKg: weight,
+        actualKg: actualKg,
+        volKg: volKg,
+        min: band[0],
+        max: band[1],
+        rate: band[2],
+        registration: band[3]
+      };
     }
     function sffTariffDisplay(product, fees) {
-      const q = findSffTariff(product.weightKg * integer(product.qty),fees.serviceId);
-      return q.serviceName + ' · 整单 ' + formatWeight(q.weightKg) + 'kg · 档位 ' + q.min + '–' + q.max
+      const q = findSffTariff(product, fees.serviceId);
+      const wtDesc = q.volKg > q.actualKg
+        ? '整单计费重 ' + formatWeight(q.weightKg) + 'kg（实重 ' + formatWeight(q.actualKg) + 'kg / 体积重 ' + formatWeight(q.volKg) + 'kg）'
+        : '整单 ' + formatWeight(q.weightKg) + 'kg';
+      return q.serviceName + ' · ' + wtDesc + ' · 档位 ' + q.min + '–' + q.max
         + 'kg · 国际运费 ¥' + formatWeight(q.weightKg * q.rate + q.registration)
         + '（含该档挂号 ¥' + q.registration + '/单，运费单价 ¥' + q.rate + '/kg）';
     }
@@ -2723,7 +2988,13 @@
       const el = $('sff-tariff-table'); if (!el) return;
       const svc = SFF_TARIFFS[F.sff.serviceId];
       if (!svc) { el.textContent = '请选择直邮渠道'; return; }
-      el.innerHTML = '<b>' + escapeHTML(svc.name) + ' · 当前报价档位（参数设置可编辑）</b><table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px">'
+      const rNote = svc.rules ? ('<div style="margin-top:6px;color:var(--t3);font-size:11px;line-height:1.5">'
+        + (svc.rules.splitWeightKg
+          ? '计费规则：实重与体积重(长×宽×高÷' + svc.rules.volDivisor + ')取大者；前两段(≤' + svc.rules.splitWeightKg + 'kg)无最低与进位，尺寸限 ' + svc.rules.minDim.join('×') + 'cm ~ ' + svc.rules.lowMaxDim.join('×') + 'cm；第三段(>' + svc.rules.splitWeightKg + 'kg)最低' + (svc.rules.highFirstKg * 1000) + 'g按' + (svc.rules.highStepKg * 1000) + 'g进位，尺寸限 ' + svc.rules.minDim.join('×') + 'cm ~ ' + svc.rules.highMaxDim.join('×') + 'cm；包裹限重≤' + svc.rules.maxChargeKg + 'kg。<br>'
+          : ((svc.rules.volDivisor ? '计费规则：实重与体积重(长×宽×高÷' + svc.rules.volDivisor + ')取大者；首重' + (svc.rules.firstKg * 1000) + 'g，续重' + (svc.rules.stepKg * 1000) + 'g进位。<br>' : (svc.rules.firstKg ? '计费规则：不计泡（纯实重计费）；首重' + (svc.rules.firstKg * 1000) + 'g，续重' + (svc.rules.stepKg * 1000) + 'g进位。<br>' : ''))
+            + (svc.rules.maxDim ? '尺寸限制：最小 ' + svc.rules.minDim.join('×') + 'cm，最大 ' + svc.rules.maxDim.join('×') + 'cm' + (svc.rules.maxGirth ? '，长+2×宽+2×高≤' + svc.rules.maxGirth + 'cm' : '') + '；包裹最大计费重/实重≤' + svc.rules.maxChargeKg + 'kg。<br>' : '')))
+        + (svc.rules.note ? escapeHTML(svc.rules.note) : '') + '</div>') : '';
+      el.innerHTML = '<b>' + escapeHTML(svc.name) + ' · 当前报价档位（参数设置可编辑）</b>' + rNote + '<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:6px">'
         + '<tr><th>重量区间(kg)</th><th>运费(¥/kg)</th><th>挂号(¥/单)</th></tr>'
         + svc.tiers.map(t => '<tr>' + [''+t[0]+'–'+t[1],t[2],t[3]].map(v => '<td style="padding:5px;border-bottom:1px solid #e5e7eb">' + v + '</td>').join('') + '</tr>').join('') + '</table>';
     }
@@ -3029,7 +3300,7 @@
       if (![product.weightKg, product.l, product.w, product.h].every(value => Number.isFinite(value) && value > 0)) {
         throw new Error('WFS 请填写有效包装重量及长、宽、高（均须大于 0）');
       }
-      const volume = product.l * product.w * product.h;
+      const volume = (product.kitVolume > 0) ? product.kitVolume : (product.l * product.w * product.h);
       if (!Number.isFinite(volume)) throw new Error('包装尺寸超出有效范围');
       return volume;
     }
@@ -3080,7 +3351,7 @@
           { key: 'storage', label: 'WFS 仓储费', amount: metrics.volumeFt3 * storageForecast(fees).perFt3 * qty });
         if (revenue !== null && revenue / qty < 10) rows.push({ key: 'lowPrice', label: 'WFS 低价附加费', amount: qty });
       } else {
-        const tariff = findSffTariff(product.weightKg * qty, fees.serviceId);
+        const tariff = findSffTariff(product, fees.serviceId);
         rows.push(
           { key: 'international', label: '国际运费', amount: (tariff.weightKg * tariff.rate + tariff.registration) / p.rate },
           { key: 'domestic', label: '国内快递费', amount: fees.domesticCNY / p.rate });
@@ -3257,13 +3528,26 @@
       $('batch-wrap').style.display = mode === 'batch' ? 'flex' : 'none'; $('batch-wrap').style.flexDirection = 'column';
       if (mode === 'batch') renderBatchParams();
     }
+    function effectiveKitVolume(totals, l, w, h) {
+      if (productFillMode !== 'kit' || !totals || !(totals.volume > 0)) return 0;
+      // 如果用户手动改过了下方的长宽高（与自动推导出的 numL/numW/numH 不同），则按用户手填的外箱长×宽×高计算体积
+      const autoMatched = Math.abs(l - totals.numL) < 1e-6 && Math.abs(w - totals.numW) < 1e-6 && Math.abs(h - totals.numH) < 1e-6;
+      return autoMatched ? totals.volume : (l > 0 && w > 0 && h > 0 ? l * w * h : totals.volume);
+    }
     function readProduct() {
-      if (productFillMode === 'kit') validKitTotals();
+      const l = gv('diml'), w = gv('dimw'), h = gv('dimh');
+      let kitVol = 0;
+      if (productFillMode === 'kit') {
+        const totals = validKitTotals();
+        kitVol = effectiveKitVolume(totals, l, w, h);
+      }
       if ($('cost').value === '') throw new Error('请填写商品成本');
-      return { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), l: gv('diml'), w: gv('dimw'), h: gv('dimh'), wfsType: gv('wfs-type') };
+      return { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), l, w, h, wfsType: gv('wfs-type'), kitVolume: kitVol };
     }
     function updateWfsPreview() {
-      const product = { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), l: gv('diml'), w: gv('dimw'), h: gv('dimh'), wfsType: gv('wfs-type') };
+      const l = gv('diml'), w = gv('dimw'), h = gv('dimh');
+      const kitVol = (productFillMode === 'kit') ? effectiveKitVolume(computeKitTotals(), l, w, h) : 0;
+      const product = { cost: gv('cost'), weightKg: readWeightKg(), qty: integer(gv('qty')), l, w, h, wfsType: gv('wfs-type'), kitVolume: kitVol };
       for (const [channel, slug] of [['wfsSea', 'sea'], ['wfsAir', 'air']]) {
         const out = $('wfs-' + slug + '-preview'); if (!out) continue;
         try {
@@ -3281,13 +3565,17 @@
         if (!(product.weightKg > 0)) direct.textContent = '填写商品重量及订单销售数量后自动匹配直邮报价档位';
         else {
           try {
-            const q = findSffTariff(product.weightKg * product.qty, F.sff.serviceId);
+            direct.style.color = '';
+            const q = findSffTariff(product, F.sff.serviceId);
             const totalCNY = q.weightKg * q.rate + q.registration + F.sff.domesticCNY;
-            direct.textContent = q.serviceName + ' · 整单 ' + formatWeight(q.weightKg) + 'kg · ' + q.min + '–' + q.max
+            const wtDetail = q.volKg > q.actualKg
+              ? '计费重 ' + formatWeight(q.weightKg) + 'kg（实重 ' + formatWeight(q.actualKg) + 'kg / 体积重 ' + formatWeight(q.volKg) + 'kg）'
+              : '整单 ' + formatWeight(q.weightKg) + 'kg';
+            direct.textContent = q.serviceName + ' · ' + wtDetail + ' · ' + q.min + '–' + q.max
               + 'kg档：国际运费 ¥' + formatWeight(q.weightKg * q.rate + q.registration)
               + '（含挂号费 ¥' + q.registration + '） + 国内快递 ¥' + F.sff.domesticCNY
               + ' = 合计 ¥' + formatWeight(totalCNY);
-          } catch (error) { direct.textContent = error.message; }
+          } catch (error) { direct.textContent = error.message; direct.style.color = 'var(--red)'; }
         }
       }
     }
@@ -3306,13 +3594,15 @@
         <span>USD ${fmt(row.amount)} <small style="color:var(--t3)">≈￥${fmt(row.amount * rate)}</small></span></div>`).join('');
     }
     function breakdownView(result, revenue, rate) {
+      const profitLabel = result.ad > 0 ? '利润（广告后）' : '利润';
       const slices = result.rows.map(row => ({ val: row.amount, label: row.label, color: COLORS[row.key] }));
-      slices.push({ val: Math.max(0, result.afterAd), label: result.ad > 0 ? '广告后毛利' : '利润', color: COLORS.profit });
+      slices.push({ val: Math.max(0, result.afterAd), label: profitLabel, color: COLORS.profit });
       if (result.ad > 0) slices.push({ val: result.ad, label: '广告费', color: COLORS.ad });
       return `<div data-pie-scope class="breakdown-grid"><div>${feeRows(result.rows, revenue, rate)}
-        <div class="rr bld kpi" data-pie-key="利润"><span>利润${result.ad > 0 ? '（广告前）' : ''}</span><span class="${result.profit < 0 ? 'negative' : ''}">USD ${fmtProfit(result.profit)}<small class="kpi-cny">≈￥${fmtProfit(result.profit * rate)}</small></span></div>
-        ${result.ad > 0 ? `<div class="rr" data-pie-key="广告费"><span>广告费</span><span>USD ${fmt(result.ad)}</span></div>
-        <div class="rr bld kpi" data-pie-key="广告后毛利"><span>广告后毛利</span><span class="${result.afterAd < 0 ? 'negative' : ''}">USD ${fmtProfit(result.afterAd)}<small class="kpi-cny">≈￥${fmtProfit(result.afterAd * rate)}</small></span></div>` : ''}
+        ${result.ad > 0 ? `<div class="rr" data-pie-key="广告费"><span><i style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${COLORS.ad};margin-right:5px"></i>广告费<span style="font-size:10px;color:var(--t3)">${revenue > 0 ? ' ' + fmt(result.ad / revenue * 100) + '%' : ''}</span></span><span>USD ${fmt(result.ad)} <small style="color:var(--t3)">≈￥${fmt(result.ad * rate)}</small></span></div>` : ''}
+        <div class="rr bld kpi" data-pie-key="${result.ad > 0 ? '利润（广告前）' : '利润'}"><span>利润${result.ad > 0 ? '（广告前）' : ''}</span><span class="${result.profit < 0 ? 'negative' : ''}">USD ${fmtProfit(result.profit)}<small class="kpi-cny">≈￥${fmtProfit(result.profit * rate)}</small></span></div>
+        ${result.ad > 0 ? `<div class="rr bld kpi"><span>毛利率（广告前）</span><span class="${result.profit < 0 ? 'negative' : ''}">${revenue > 0 ? fmtProfit(result.profit / revenue * 100) : '0.00'}%</span></div>
+        <div class="rr bld kpi" data-pie-key="利润（广告后）"><span>利润（广告后）</span><span class="${result.afterAd < 0 ? 'negative' : ''}">USD ${fmtProfit(result.afterAd)}<small class="kpi-cny">≈￥${fmtProfit(result.afterAd * rate)}</small></span></div>` : ''}
         <div class="rr bld kpi"><span>毛利率${result.ad > 0 ? '（广告后）' : ''}</span><span class="${result.afterAd < 0 ? 'negative' : ''}">${revenue > 0 ? fmtProfit(result.afterAd / revenue * 100) : '0.00'}%</span></div>
         </div><div>${makePie(slices, 165, revenue).svg}</div></div>`;
     }
@@ -3528,14 +3818,28 @@
       if (!settingsDraft) return;
       const id = settingsDraft.fulfillment.sff.serviceId;
       settingsDraft.sffTariffs[id].tiers = clone(SFF_TARIFF_DEFAULTS[id].tiers);
+      settingsDraft.sffTariffs[id].rules = clone(SFF_TARIFF_DEFAULTS[id].rules || null);
       $('settings-error').textContent = '';
       renderSettingsSffTariffEditor();
+    }
+    function updateSettingsSffRule(key, val, idx) {
+      if (!settingsDraft) return;
+      const id = settingsDraft.fulfillment.sff.serviceId, svc = settingsDraft.sffTariffs[id];
+      if (!svc) return;
+      if (!svc.rules) svc.rules = clone(SFF_DEFAULT_RULES[id] || { volDivisor: null });
+      if (idx !== undefined) {
+        if (!Array.isArray(svc.rules[key])) svc.rules[key] = [null, null, null];
+        svc.rules[key][idx] = val === '' ? null : Number(val);
+      } else {
+        svc.rules[key] = val === '' ? null : (typeof val === 'string' && key === 'note' ? val : Number(val));
+      }
     }
     function renderSettingsSffTariffEditor() {
       const parent = $('sf-sff-tariff-editor');
       if (!parent || !settingsDraft) return;
       const id = settingsDraft.fulfillment.sff.serviceId, service = settingsDraft.sffTariffs[id];
       if (!service) return;
+      const r = service.rules || {};
       const labels = ['起始kg','截止kg','运费¥/kg','挂号¥/单'];
       const input = (i,col,v) => '<input type="number" min="0" step="any" value="' + (Number.isFinite(v) ? v : '')
         + '" aria-label="第' + (i+1) + '档 ' + labels[col] + '"'
@@ -3553,7 +3857,38 @@
           + ' onclick="removeSettingsSffTier(' + i + ')" style="border:0;background:none;color:#c63030;cursor:pointer;font-size:16px">×</button></td>'
           + '</tr>').join('') + '</tbody></table></div>'
         + '<button type="button" class="s-btn s-btn-ghost" style="margin-top:8px" onclick="addSettingsSffTier()">+ 新增重量档</button>'
-        + '<div style="margin-top:8px;color:var(--t3);font-size:11px;line-height:1.6">只修改当前选择的直邮渠道。各档按起始重量升序排列、区间不得重叠；原表中的小数间隙保留，不自动进位。保存参数后才影响单品、批量和反推利润。</div>';
+        + '<div style="margin-top:8px;color:var(--t3);font-size:11px;line-height:1.6">只修改当前选择的直邮渠道。各档按起始重量升序排列、区间不得重叠；原表中的小数间隙保留，不自动进位。保存参数后才影响单品、批量和反推利润。</div>'
+        + (['sfGeneral', 'battery', 'sfSensitive', 'clothing', 'fourPxGeneral', 'fourPxBattery'].includes(id) || r.volDivisor ? (
+          r.splitWeightKg ? (
+            '<div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--bd)"><b style="font-size:12px">' + escapeHTML(service.name) + ' · 4PX分段抛重与尺寸规则</b>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:8px">'
+            + '<div><label style="font-size:11px;color:var(--t3)">抛重除数(cm³/kg)</label><input type="number" min="0" step="1" value="' + (r.volDivisor ?? '') + '" oninput="updateSettingsSffRule(\'volDivisor\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">分段界限(kg)</label><input type="number" min="0" step="any" value="' + (r.splitWeightKg ?? 0.2) + '" oninput="updateSettingsSffRule(\'splitWeightKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">最大实重/计费重(kg)</label><input type="number" min="0" step="any" value="' + (r.maxChargeKg ?? 0.45) + '" oninput="updateSettingsSffRule(\'maxChargeKg\',this.value);updateSettingsSffRule(\'maxActualKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">前两段最大最长边(cm)</label><input type="number" min="0" step="any" value="' + (r.lowMaxDim?.[0] ?? 20) + '" oninput="updateSettingsSffRule(\'lowMaxDim\',this.value,0)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">前两段最大次长边(cm)</label><input type="number" min="0" step="any" value="' + (r.lowMaxDim?.[1] ?? 15) + '" oninput="updateSettingsSffRule(\'lowMaxDim\',this.value,1)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">前两段最大最短边(cm)</label><input type="number" min="0" step="any" value="' + (r.lowMaxDim?.[2] ?? 10) + '" oninput="updateSettingsSffRule(\'lowMaxDim\',this.value,2)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">第三段最大最长边(cm)</label><input type="number" min="0" step="any" value="' + (r.highMaxDim?.[0] ?? 55) + '" oninput="updateSettingsSffRule(\'highMaxDim\',this.value,0)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">第三段最大次长边(cm)</label><input type="number" min="0" step="any" value="' + (r.highMaxDim?.[1] ?? 40) + '" oninput="updateSettingsSffRule(\'highMaxDim\',this.value,1)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">第三段最大最短边(cm)</label><input type="number" min="0" step="any" value="' + (r.highMaxDim?.[2] ?? 35) + '" oninput="updateSettingsSffRule(\'highMaxDim\',this.value,2)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">第三段最低重量(kg)</label><input type="number" min="0" step="any" value="' + (r.highFirstKg ?? 0.05) + '" oninput="updateSettingsSffRule(\'highFirstKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">第三段进位(kg)</label><input type="number" min="0" step="any" value="' + (r.highStepKg ?? 0.001) + '" oninput="updateSettingsSffRule(\'highStepKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '</div></div>'
+          ) : (
+            '<div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--bd)"><b style="font-size:12px">' + escapeHTML(service.name) + ' · 抛重与限制规则</b>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:8px">'
+            + '<div><label style="font-size:11px;color:var(--t3)">抛重除数(cm³/kg)</label><input type="number" min="0" step="1" value="' + (r.volDivisor ?? '') + '" placeholder="不计泡留空" oninput="updateSettingsSffRule(\'volDivisor\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">首重(kg)</label><input type="number" min="0" step="any" value="' + (r.firstKg ?? '') + '" oninput="updateSettingsSffRule(\'firstKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">续重进位(kg)</label><input type="number" min="0" step="any" value="' + (r.stepKg ?? '') + '" oninput="updateSettingsSffRule(\'stepKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">最大实重(kg)</label><input type="number" min="0" step="any" value="' + (r.maxActualKg ?? '') + '" oninput="updateSettingsSffRule(\'maxActualKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">最大计费重(kg)</label><input type="number" min="0" step="any" value="' + (r.maxChargeKg ?? '') + '" oninput="updateSettingsSffRule(\'maxChargeKg\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">长+2宽+2高上限(cm)</label><input type="number" min="0" step="any" value="' + (r.maxGirth ?? '') + '" placeholder="无限制" oninput="updateSettingsSffRule(\'maxGirth\',this.value)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">最大最长边(cm)</label><input type="number" min="0" step="any" value="' + (r.maxDim?.[0] ?? '') + '" oninput="updateSettingsSffRule(\'maxDim\',this.value,0)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">最大次长边(cm)</label><input type="number" min="0" step="any" value="' + (r.maxDim?.[1] ?? '') + '" oninput="updateSettingsSffRule(\'maxDim\',this.value,1)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '<div><label style="font-size:11px;color:var(--t3)">最大最短边(cm)</label><input type="number" min="0" step="any" value="' + (r.maxDim?.[2] ?? '') + '" oninput="updateSettingsSffRule(\'maxDim\',this.value,2)" style="width:100%;box-sizing:border-box;padding:4px;border:1px solid var(--bd);border-radius:4px;font-size:11px"></div>'
+            + '</div></div>'
+          )
+        ) : '');
     }
 
     function toggleSettingsSeaBand(service) {
@@ -3897,6 +4232,11 @@
           const containsSixChannels = savedSffRates && Object.keys(SFF_TARIFF_DEFAULTS).every(key => savedSffRates[key])
             && Object.keys(savedSffRates).length === Object.keys(SFF_TARIFF_DEFAULTS).length;
           config.sffTariffs = clone(hasCurrentSffRates && containsSixChannels ? savedSffRates : SFF_TARIFF_DEFAULTS);
+          Object.keys(SFF_TARIFF_DEFAULTS).forEach(key => {
+            if ((!config.sffTariffs[key]?.rules || (!config.sffTariffs[key].rules.volDivisor && key !== 'clothing') || (['fourPxGeneral', 'fourPxBattery'].includes(key) && !config.sffTariffs[key].rules.splitWeightKg)) && SFF_TARIFF_DEFAULTS[key]?.rules) {
+              config.sffTariffs[key].rules = clone(SFF_TARIFF_DEFAULTS[key].rules);
+            }
+          });
           const renamedSffLabels = config.sffTariffs.battery?.name === '带电' || config.sffTariffs.clothing?.name === '服装';
           if (config.sffTariffs.battery) config.sffTariffs.battery.name = '顺丰带电';
           if (config.sffTariffs.clothing) config.sffTariffs.clothing.name = '顺丰服装';
@@ -4080,7 +4420,7 @@
     function _erpOff(n, fn) { if (_inIframe) { var a = _erpCbs[n]; if (a) { var i = a.indexOf(fn); if (i >= 0) a.splice(i, 1) } } else document.removeEventListener(n, fn) }
     function _erpEmit(n, d) { if (_inIframe) window.parent.postMessage({ _erp: n, detail: d }, '*'); else document.dispatchEvent(new CustomEvent(n, { detail: d })) }
 
-    // ============ 领星 SKU 查询与回填 ============
+    // ============ 领星 SKU / MSKU 查询与回填 ============
 
     // 单品查询错误提示
     function showSKUError(msg) {
@@ -4090,47 +4430,61 @@
       document.getElementById('skuQueryError').textContent = msg;
     }
 
-    // Only short-lived successful exact-SKU responses are cached. No persistent product-cost storage.
+    // Only short-lived successful exact responses are cached. No persistent product-cost storage.
     const ERP_CACHE_TTL_MS = 120000, ERP_CACHE_LIMIT = 100;
     const _erpSKUCache = new Map();
-    function readERPFromCache(sku) {
-      const entry = _erpSKUCache.get(sku);
+    function readERPFromCache(query, searchType = 'sku') {
+      const cacheKey = (searchType || 'sku') + ':' + query;
+      const entry = _erpSKUCache.get(cacheKey);
       if (!entry) return null;
-      if (Date.now() - entry.time >= ERP_CACHE_TTL_MS) { _erpSKUCache.delete(sku); return null; }
-      _erpSKUCache.delete(sku); _erpSKUCache.set(sku, entry);
+      if (Date.now() - entry.time >= ERP_CACHE_TTL_MS) { _erpSKUCache.delete(cacheKey); return null; }
+      _erpSKUCache.delete(cacheKey); _erpSKUCache.set(cacheKey, entry);
       return { ...entry.item, warnings: Array.isArray(entry.item.warnings) ? [...entry.item.warnings] : [] };
     }
-    function storeERPInCache(item) {
-      if (!item || item.__source !== 'lingxing' || typeof item.sku !== 'string'
+    function storeERPInCache(item, searchType = 'sku') {
+      if (!item || item.__source !== 'lingxing'
           || typeof item.costPrice !== 'number' || !Number.isFinite(item.costPrice) || item.costPrice < 0) return;
-      _erpSKUCache.delete(item.sku);
-      _erpSKUCache.set(item.sku, {time:Date.now(),item:{...item,warnings:Array.isArray(item.warnings)?[...item.warnings]:[]}});
+      const keyVal = (searchType === 'msku' && item.msku) ? item.msku : (item.sku || item.queryValue);
+      if (keyVal) {
+        const cacheKey = (searchType || 'sku') + ':' + keyVal;
+        _erpSKUCache.delete(cacheKey);
+        _erpSKUCache.set(cacheKey, {time:Date.now(),item:{...item,warnings:Array.isArray(item.warnings)?[...item.warnings]:[]}});
+      }
+      if (item.sku) {
+        _erpSKUCache.set('sku:' + item.sku, {time:Date.now(),item:{...item,warnings:Array.isArray(item.warnings)?[...item.warnings]:[]}});
+      }
+      if (item.msku) {
+        _erpSKUCache.set('msku:' + item.msku, {time:Date.now(),item:{...item,warnings:Array.isArray(item.warnings)?[...item.warnings]:[]}});
+      }
       while (_erpSKUCache.size > ERP_CACHE_LIMIT) _erpSKUCache.delete(_erpSKUCache.keys().next().value);
     }
     // 每个查询带独立编号，旧回包不能覆盖新 SKU 或其他算价页面。
     let _erpSerial = 0, _singleERPRequest = null, _singleERPTimer = null;
-    function createERPRequest(sku, type, rowId) {
-      return { source: 'lingxing', sku, type, rowId,
+    function createERPRequest(sku, type, rowId, searchType = 'auto') {
+      return { source: 'lingxing', sku, type, rowId, searchType: searchType || 'auto',
         requestId: 'lx-' + Date.now() + '-' + (++_erpSerial) + '-' + Math.random().toString(36).slice(2, 8) };
     }
 
     function querySKUFromERP(forceFresh = false) {
-      const sku = document.getElementById('skuQueryInput').value.trim(); // 保持大小写敏感
-      if (!sku) { showSKUError('请输入SKU'); return; }
+      if (typeof forceFresh === 'string') {
+        forceFresh = arguments[1] === true;
+      }
+      const query = (document.getElementById('skuQueryInput')?.value || '').trim(); // 保持大小写敏感
+      if (!query) { showSKUError('请输入领星本地 SKU 或平台 MSKU'); return; }
 
       document.getElementById('skuQueryError').style.display = 'none';
       document.getElementById('skuQuerySuccess').style.display = 'none';
       document.getElementById('skuQueryStatus').style.display = 'block';
-      document.getElementById('skuQueryStatus').textContent = '⏳ 正在查询领星产品资料...';
+      document.getElementById('skuQueryStatus').textContent = '⏳ 正在通过领星查询产品资料（自动识别 SKU / MSKU）...';
       clearTimeout(_singleERPTimer);
-      const request = createERPRequest(sku, 'single');
+      const request = createERPRequest(query, 'single', null, 'auto');
       _singleERPRequest = request;
       _singleERPTimer = setTimeout(() => {
         if (_singleERPRequest?.requestId !== request.requestId) return;
         _singleERPRequest = null;
         showSKUError('领星查询无响应，请重载 Ianto 插件、刷新算价工具，并保持领星产品管理页已登录');
       }, 40000);
-      const cached = forceFresh ? null : readERPFromCache(sku);
+      const cached = forceFresh ? null : (readERPFromCache(query, 'sku') || readERPFromCache(query, 'msku') || readERPFromCache(query, 'auto'));
       if (cached) {
         window.erpFetchHandler({ detail:{reqData:request,success:true,data:cached,fromCache:true} });
       } else _erpEmit('REQUEST_ERP_FETCH', request);
@@ -4172,10 +4526,10 @@
         _bFill.inflight++;
         _bFill.stat[job.rowId] = 'pending'; _bFill.msg[job.rowId] = '抓取中…';
         _fillSetBg(job.rowId, '#e0f2fe', '正在抓取...');
-        const request = createERPRequest(job.sku, 'batch', job.rowId);
+        const request = createERPRequest(job.sku, 'batch', job.rowId, 'auto');
         _bFill.active[job.rowId] = request;
         _bFill.timers[job.rowId] = setTimeout(() => fillSettle(job.rowId, 'fail', '⏱ 查询无响应：请重载 Ianto、刷新工具并登录领星，可点「重试失败」'), FILL_GUARD);
-        const cached = readERPFromCache(job.sku);
+        const cached = readERPFromCache(job.sku, 'sku') || readERPFromCache(job.sku, 'msku');
         if (cached) {
           setTimeout(() => window.erpFetchHandler({detail:{
             reqData:request,success:true,data:cached,fromCache:true
@@ -4298,19 +4652,20 @@
       } else {
         if (_singleERPRequest?.requestId !== req.requestId) return;
         clearTimeout(_singleERPTimer); _singleERPRequest = null;
-        if (document.getElementById('skuQueryInput').value.trim() !== req.sku) {
-          showSKUError('SKU 已修改，请重新查询'); return;
+        const currentTargetVal = (document.getElementById('skuQueryInput')?.value || '').trim();
+        if (currentTargetVal !== req.sku) {
+          showSKUError('输入已修改，请重新查询'); return;
         }
       }
       const fail = message => isBatch ? fillSettle(rowId, 'fail', message) : showSKUError(message);
       if (!res.success) return fail(res.error || '领星查询失败，请刷新后重试');
       const item = res.data;
-      if (item?.__source !== 'lingxing' || item.sku !== req.sku) {
+      if (item?.__source !== 'lingxing') {
         return fail('插件尚未支持领星数据，请重载更新后的 Ianto 插件并刷新算价工具');
       }
       const valid = value => typeof value === 'number' && Number.isFinite(value) && value >= 0;
       if (!valid(item.costPrice)) return fail('领星未提供有效采购成本，请手动核对');
-      if (!res.fromCache) storeERPInCache(item);
+      if (!res.fromCache) storeERPInCache(item, req.searchType);
       const warnings = Array.isArray(item.warnings) ? item.warnings : [];
       const assign = (id, value) => {
         if (!valid(value)) return;
@@ -4334,7 +4689,16 @@
       }
       const erpWeightText = valid(item.weight) ? weightText(item.weight / 1000) : '未填写';
       const dimText = [item.length, item.width, item.height].map(n => valid(n) ? n : '未填写').join('×') + 'cm';
-      let message = (res.fromCache ? '近期缓存 · ' : '') + '领星采购成本 ￥' + item.costPrice + ' · 包装毛重 ' + erpWeightText + ' · 包装尺寸 ' + dimText;
+      
+      let skuPairNote = '';
+      if (item.sku && item.msku && item.sku !== item.msku) {
+        skuPairNote = `[匹配: ${item.sku} (MSKU: ${item.msku})] `;
+      } else if (item.sku) {
+        skuPairNote = `[SKU: ${item.sku}] `;
+      } else if (item.msku) {
+        skuPairNote = `[MSKU: ${item.msku}] `;
+      }
+      let message = (res.fromCache ? '近期缓存 · ' : '') + skuPairNote + '领星采购成本 ￥' + item.costPrice + ' · 包装毛重 ' + erpWeightText + ' · 包装尺寸 ' + dimText;
       if (erpFillMode === 'cost') message += '（仅回填成本）';
       else if (batchHasPhysical) message += '（保留行内已有重量及尺寸）';
       if (warnings.length) message += ' · ⚠ ' + warnings.join('；');
@@ -4359,7 +4723,7 @@
       const input = document.getElementById('skuQueryInput');
       if (input && !input.dataset.bound) {
         input.dataset.bound = true;
-        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') querySKUFromERP(); });
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') querySKUFromERP(false); });
       }
       const btblBody = document.getElementById('btbl-body');
       if (btblBody && !btblBody.dataset.erpBound) {
